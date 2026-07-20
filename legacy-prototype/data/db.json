@@ -1,0 +1,1499 @@
+{
+  "prices": [
+    {
+      "id": "shirt",
+      "category": "male",
+      "name": "শার্ট",
+      "wash": 40,
+      "dry": 60,
+      "combo": 50,
+      "iron": 8
+    },
+    {
+      "id": "pant",
+      "category": "male",
+      "name": "প্যান্ট",
+      "wash": 40,
+      "dry": 60,
+      "combo": 50,
+      "iron": 8
+    },
+    {
+      "id": "tshirt",
+      "category": "male",
+      "name": "টি-শার্ট",
+      "wash": 40,
+      "dry": 60,
+      "combo": 50,
+      "iron": 8
+    },
+    {
+      "id": "panjabi",
+      "category": "male",
+      "name": "পাঞ্জাবি",
+      "wash": 50,
+      "dry": 70,
+      "combo": 60,
+      "iron": 10
+    },
+    {
+      "id": "jubbah",
+      "category": "male",
+      "name": "জুব্বা",
+      "wash": 60,
+      "dry": 80,
+      "combo": 70,
+      "iron": 12
+    },
+    {
+      "id": "pajama",
+      "category": "male",
+      "name": "পায়জামা",
+      "wash": 40,
+      "dry": 60,
+      "combo": 50,
+      "iron": 8
+    },
+    {
+      "id": "coat",
+      "category": "male",
+      "name": "কোট",
+      "wash": 200,
+      "dry": 200,
+      "combo": 210,
+      "iron": 20
+    },
+    {
+      "id": "kuti",
+      "category": "male",
+      "name": "কটি",
+      "wash": 120,
+      "dry": 120,
+      "combo": 130,
+      "iron": 15
+    },
+    {
+      "id": "sweater",
+      "category": "male",
+      "name": "সুইটার",
+      "wash": 100,
+      "dry": 200,
+      "combo": 110,
+      "iron": 20
+    },
+    {
+      "id": "jacket",
+      "category": "male",
+      "name": "জ্যাকেট",
+      "wash": 100,
+      "dry": 200,
+      "combo": 110,
+      "iron": 20
+    },
+    {
+      "id": "shal",
+      "category": "male",
+      "name": "শাল",
+      "wash": 100,
+      "dry": 200,
+      "combo": 110,
+      "iron": 20
+    },
+    {
+      "id": "sherwani",
+      "category": "male",
+      "name": "শেরওয়ানি",
+      "wash": 250,
+      "dry": 250,
+      "combo": 260,
+      "iron": 25
+    },
+    {
+      "id": "suit",
+      "category": "male",
+      "name": "স্যুট",
+      "wash": 250,
+      "dry": 350,
+      "combo": 270,
+      "iron": 25
+    },
+    {
+      "id": "tie",
+      "category": "male",
+      "name": "টাই",
+      "wash": 40,
+      "dry": 40,
+      "combo": 45,
+      "iron": 8
+    },
+    {
+      "id": "borka",
+      "category": "female",
+      "name": "বোরকা",
+      "wash": 80,
+      "dry": 120,
+      "combo": 95,
+      "iron": 15
+    },
+    {
+      "id": "saree",
+      "category": "female",
+      "name": "শাড়ি",
+      "wash": 150,
+      "dry": 400,
+      "combo": 180,
+      "iron": 30
+    },
+    {
+      "id": "salwar",
+      "category": "female",
+      "name": "সালোয়ার, কামিজ, ওড়না",
+      "wash": 120,
+      "dry": 180,
+      "combo": 140,
+      "iron": 25
+    },
+    {
+      "id": "blouse",
+      "category": "female",
+      "name": "ব্লাউজ",
+      "wash": 40,
+      "dry": 60,
+      "combo": 50,
+      "iron": 8
+    },
+    {
+      "id": "lehenga",
+      "category": "female",
+      "name": "লেহেঙ্গা / গাউন",
+      "wash": 300,
+      "dry": 800,
+      "combo": 350,
+      "iron": 40
+    },
+    {
+      "id": "hijab",
+      "category": "female",
+      "name": "হিজাব",
+      "wash": 40,
+      "dry": 60,
+      "combo": 50,
+      "iron": 8
+    },
+    {
+      "id": "bedsheet",
+      "category": "home",
+      "name": "বেডশিট / চাদর",
+      "wash": 60,
+      "dry": 60,
+      "combo": 70,
+      "iron": 15
+    },
+    {
+      "id": "pillow",
+      "category": "home",
+      "name": "বালিশ কভার",
+      "wash": 30,
+      "dry": 30,
+      "combo": 35,
+      "iron": 8
+    },
+    {
+      "id": "towel",
+      "category": "home",
+      "name": "টাওয়েল",
+      "wash": 80,
+      "dry": 80,
+      "combo": 85,
+      "iron": 8
+    },
+    {
+      "id": "curtain",
+      "category": "home",
+      "name": "পর্দা",
+      "wash": 150,
+      "dry": 250,
+      "combo": 180,
+      "iron": 20
+    },
+    {
+      "id": "blanket",
+      "category": "home",
+      "name": "কম্বল",
+      "wash": 300,
+      "dry": 800,
+      "combo": 350,
+      "iron": 30
+    },
+    {
+      "id": "comforter",
+      "category": "home",
+      "name": "কমফোর্টার",
+      "wash": 200,
+      "dry": 650,
+      "combo": 250,
+      "iron": 30
+    },
+    {
+      "id": "nokshi",
+      "category": "home",
+      "name": "নকশী কাঁথা",
+      "wash": 60,
+      "dry": 80,
+      "combo": 70,
+      "iron": 10
+    },
+    {
+      "id": "jainamaz",
+      "category": "home",
+      "name": "জায়নামাজ",
+      "wash": 0,
+      "dry": 0,
+      "combo": 0,
+      "iron": 0
+    }
+  ],
+  "customers": [
+    {
+      "id": "cus_rahim",
+      "name": "Hasan",
+      "phone": "০১৭XXXXXXXX",
+      "address": "House 10, Road 4, পিটিআই স্কুল (PTI) এলাকা",
+      "orders": 2,
+      "area": "পিটিআই স্কুল (PTI) এলাকা",
+      "updatedAt": "2026-06-19T05:21:01.784Z"
+    },
+    {
+      "id": "cus_sumi",
+      "name": "সুমি আক্তার",
+      "phone": "০১৮XXXXXXXX",
+      "address": "সুগন্ধা, কক্সবাজার",
+      "orders": 0
+    },
+    {
+      "id": "cus_1781604154518",
+      "name": "Customer",
+      "phone": "০১৭XXXXXXXXX",
+      "address": "dg, সুগন্ধা",
+      "orders": 14,
+      "area": "সুগন্ধা",
+      "updatedAt": "2026-06-18T18:03:38.084Z"
+    },
+    {
+      "id": "cus_1781711299600",
+      "name": "CustomerCustomer",
+      "phone": "1712345678",
+      "area": "সুগন্ধা",
+      "address": "fdsad, সুগন্ধা",
+      "orders": 1,
+      "updatedAt": "2026-06-17T15:48:19.600Z"
+    },
+    {
+      "id": "cus_1781784436946",
+      "name": "Bengali CustomerZero Prefix Customer",
+      "phone": "01712345670",
+      "area": "Kolatoli",
+      "address": "Kolatoli, Cox's Bazar",
+      "orders": 1,
+      "updatedAt": "2026-06-18T12:07:16.946Z"
+    },
+    {
+      "id": "cus_1781845285336",
+      "name": "CustomerMomin",
+      "phone": "01700000001",
+      "area": "কলাতলী",
+      "address": "Road 2, House 3, কলাতলী",
+      "orders": 0,
+      "updatedAt": "2026-06-19T05:01:25.337Z"
+    },
+    {
+      "id": "cus_1782994137195",
+      "name": "Haider Ali",
+      "phone": "1889415217",
+      "area": "খালুর দোকান",
+      "address": "Koheliya House - Flor 3, খালুর দোকান",
+      "orders": 1,
+      "updatedAt": "2026-07-02T12:11:41.933Z"
+    },
+    {
+      "id": "cus_1783607475430",
+      "name": "Rayhan",
+      "phone": "১৭XXXXXXXXX",
+      "area": "আলীর জাহাঁল",
+      "address": "Home, আলীর জাহাঁল",
+      "orders": 2,
+      "updatedAt": "2026-07-09T14:31:15.430Z"
+    },
+    {
+      "id": "cus_1783654991167",
+      "name": "Test Customer",
+      "phone": "01711115555",
+      "area": "বাস টার্মিনাল",
+      "address": "House 1, Test Road, বাস টার্মিনাল",
+      "orders": 0,
+      "updatedAt": "2026-07-10T03:43:11.167Z"
+    },
+    {
+      "id": "cus_1783655071058",
+      "name": "Test Customer",
+      "phone": "01711116666",
+      "area": "বাস টার্মিনাল",
+      "address": "House 1, Test Road, বাস টার্মিনাল",
+      "orders": 0,
+      "updatedAt": "2026-07-10T03:44:31.058Z"
+    },
+    {
+      "id": "cus_1783655167774",
+      "name": "Test Customer",
+      "phone": "01711117777",
+      "area": "বাস টার্মিনাল",
+      "address": "House 1, Test Road, বাস টার্মিনাল",
+      "orders": 1,
+      "updatedAt": "2026-07-10T03:46:07.774Z"
+    },
+    {
+      "id": "cus_1783655922143",
+      "name": "Test Customer",
+      "phone": "01711118888",
+      "area": "বাস টার্মিনাল",
+      "address": "House 1, Test Road, বাস টার্মিনাল",
+      "orders": 0,
+      "updatedAt": "2026-07-10T03:58:42.143Z"
+    },
+    {
+      "id": "cus_1783666666308",
+      "name": "Chat Test Customer",
+      "phone": "01799990001",
+      "area": "বাস টার্মিনাল",
+      "address": "House 99, Chat Road, বাস টার্মিনাল",
+      "orders": 2,
+      "updatedAt": "2026-07-10T07:12:24.583Z"
+    },
+    {
+      "id": "cus_1784029111715",
+      "name": "",
+      "phone": "01711223344",
+      "password": "newpass99",
+      "area": "",
+      "address": "",
+      "orders": 0
+    }
+  ],
+  "riders": [
+    {
+      "id": "rider_karim",
+      "name": "করিম ভাই",
+      "phone": "01912345678",
+      "online": true,
+      "tasks": 0,
+      "username": "karim",
+      "password": "123"
+    },
+    {
+      "id": "rider_mamun",
+      "name": "মামুন ভাই",
+      "phone": "01612345678",
+      "online": true,
+      "tasks": 0,
+      "username": "mamun",
+      "password": "123"
+    },
+    {
+      "id": "rider_shahin",
+      "name": "শাহিন ভাই",
+      "phone": "01512345678",
+      "online": false,
+      "tasks": 0,
+      "username": "shahin",
+      "password": "123"
+    },
+    {
+      "id": "rider_1781767918385",
+      "name": "Khalil Bhai",
+      "phone": "01812345679",
+      "username": "khalil",
+      "password": "123",
+      "online": false,
+      "tasks": 0
+    }
+  ],
+  "orders": [
+    {
+      "id": "ORD-1257",
+      "customerName": "Chat Test Customer",
+      "phone": "01799990001",
+      "address": "House 99, Chat Road, বাস টার্মিনাল",
+      "service": "ওয়াশ",
+      "items": [
+        {
+          "name": "শার্ট",
+          "service": "wash",
+          "serviceLabel": "ওয়াশ",
+          "qty": 1,
+          "price": 40,
+          "total": 40
+        }
+      ],
+      "subtotal": 40,
+      "delivery": 30,
+      "discount": 0,
+      "total": 70,
+      "deliveryTime": "Pickup After 3-7 Day Complete",
+      "payment": "COD",
+      "status": "অর্ডার পেন্ডিং",
+      "riderId": "rider_karim",
+      "createdAt": "2026-07-10T06:57:48.585Z"
+    },
+    {
+      "id": "ORD-1256",
+      "customerName": "Test Customer",
+      "phone": "01711117777",
+      "address": "House 1, Test Road, বাস টার্মিনাল",
+      "service": "ওয়াশ",
+      "items": [
+        {
+          "name": "শার্ট",
+          "service": "wash",
+          "serviceLabel": "ওয়াশ",
+          "qty": 1,
+          "price": 40,
+          "total": 40
+        },
+        {
+          "name": "প্যান্ট",
+          "service": "wash",
+          "serviceLabel": "ওয়াশ",
+          "qty": 1,
+          "price": 40,
+          "total": 40
+        }
+      ],
+      "subtotal": 80,
+      "delivery": 30,
+      "discount": 0,
+      "total": 110,
+      "deliveryTime": "Pickup After 3-7 Day Complete",
+      "payment": "COD",
+      "riderId": "rider_karim",
+      "createdAt": "2026-07-10T03:46:10.051Z",
+      "updatedAt": "2026-07-10T03:53:18.617Z",
+      "status": "অর্ডার পেন্ডিং"
+    },
+    {
+      "id": "ORD-1255",
+      "customerName": "Rayhan",
+      "phone": "১৭XXXXXXXXX",
+      "address": "Homজাহাঁলe, আলীর",
+      "service": "ওয়াশ + ড্রাই ক্লিন",
+      "items": [
+        {
+          "name": "শার্ট",
+          "service": "wash",
+          "serviceLabel": "ওয়াশ",
+          "qty": 1,
+          "price": 40,
+          "total": 40
+        },
+        {
+          "name": "শাল",
+          "service": "wash",
+          "serviceLabel": "ওয়াশ",
+          "qty": 1,
+          "price": 100,
+          "total": 100
+        },
+        {
+          "name": "সালোয়ার, কামিজ, ওড়না",
+          "service": "wash",
+          "serviceLabel": "ওয়াশ",
+          "qty": 1,
+          "price": 120,
+          "total": 120
+        },
+        {
+          "name": "ব্লাউজ",
+          "service": "wash",
+          "serviceLabel": "ওয়াশ",
+          "qty": 1,
+          "price": 40,
+          "total": 40
+        },
+        {
+          "name": "বোরকা",
+          "service": "dry",
+          "serviceLabel": "ড্রাই ক্লিন",
+          "qty": 1,
+          "price": 120,
+          "total": 120
+        },
+        {
+          "name": "শাড়ি",
+          "service": "dry",
+          "serviceLabel": "ড্রাই ক্লিন",
+          "qty": 1,
+          "price": 400,
+          "total": 400
+        },
+        {
+          "name": "বেডশিট / চাদর",
+          "service": "dry",
+          "serviceLabel": "ড্রাই ক্লিন",
+          "qty": 1,
+          "price": 60,
+          "total": 60
+        },
+        {
+          "name": "বালিশ কভার",
+          "service": "dry",
+          "serviceLabel": "ড্রাই ক্লিন",
+          "qty": 1,
+          "price": 30,
+          "total": 30
+        }
+      ],
+      "subtotal": 910,
+      "delivery": 0,
+      "discount": 0,
+      "total": 910,
+      "deliveryTime": "Pickup After 3-7 Day Complete",
+      "payment": "COD",
+      "status": "কাপড় সংগ্রহ করা হচ্ছে",
+      "riderId": "rider_karim",
+      "createdAt": "2026-07-09T14:39:52.490Z",
+      "updatedAt": "2026-07-10T03:35:48.740Z"
+    },
+    {
+      "id": "ORD-1254",
+      "customerName": "Rayhan",
+      "phone": "১৭XXXXXXXXX",
+      "address": "Home, আলীর জাহাঁল",
+      "service": "ওয়াশ + ড্রাই ক্লিন",
+      "items": [
+        {
+          "name": "শার্ট",
+          "service": "wash",
+          "serviceLabel": "ওয়াশ",
+          "qty": 1,
+          "price": 40,
+          "total": 40
+        },
+        {
+          "name": "শার্ট",
+          "service": "dry",
+          "serviceLabel": "ড্রাই ক্লিন",
+          "qty": 1,
+          "price": 60,
+          "total": 60
+        },
+        {
+          "name": "বেডশিট / চাদর",
+          "service": "wash",
+          "serviceLabel": "ওয়াশ",
+          "qty": 4,
+          "price": 60,
+          "total": 240
+        },
+        {
+          "name": "হিজাব",
+          "service": "wash",
+          "serviceLabel": "ওয়াশ",
+          "qty": 1,
+          "price": 40,
+          "total": 40
+        }
+      ],
+      "subtotal": 380,
+      "delivery": 0,
+      "discount": 0,
+      "total": 380,
+      "deliveryTime": "Pickup After 3-7 Day Complete",
+      "payment": "COD",
+      "riderId": "rider_karim",
+      "createdAt": "2026-07-09T14:32:26.686Z",
+      "updatedAt": "2026-07-10T03:55:02.580Z",
+      "status": "অর্ডার পেন্ডিং"
+    },
+    {
+      "id": "ORD-1253",
+      "customerName": "Haider Ali",
+      "phone": "1889415217",
+      "address": "Koheliya House - Flor 3, খালুর দোকান",
+      "service": "ওয়াশ + ড্রাই ক্লিন",
+      "items": [
+        {
+          "name": "শার্ট",
+          "service": "wash",
+          "serviceLabel": "ওয়াশ",
+          "qty": 1,
+          "price": 40,
+          "total": 40
+        },
+        {
+          "name": "শেরওয়ানি",
+          "service": "dry",
+          "serviceLabel": "ড্রাই ক্লিন",
+          "qty": 2,
+          "price": 250,
+          "total": 500
+        },
+        {
+          "name": "ব্লাউজ",
+          "service": "dry",
+          "serviceLabel": "ড্রাই ক্লিন",
+          "qty": 1,
+          "price": 60,
+          "total": 60
+        },
+        {
+          "name": "লেহেঙ্গা / গাউন",
+          "service": "dry",
+          "serviceLabel": "ড্রাই ক্লিন",
+          "qty": 1,
+          "price": 800,
+          "total": 800
+        },
+        {
+          "name": "বালিশ কভার",
+          "service": "dry",
+          "serviceLabel": "ড্রাই ক্লিন",
+          "qty": 1,
+          "price": 30,
+          "total": 30
+        },
+        {
+          "name": "বেডশিট / চাদর",
+          "service": "dry",
+          "serviceLabel": "ড্রাই ক্লিন",
+          "qty": 1,
+          "price": 60,
+          "total": 60
+        },
+        {
+          "name": "কমফোর্টার",
+          "service": "dry",
+          "serviceLabel": "ড্রাই ক্লিন",
+          "qty": 1,
+          "price": 650,
+          "total": 650
+        },
+        {
+          "name": "কম্বল",
+          "service": "dry",
+          "serviceLabel": "ড্রাই ক্লিন",
+          "qty": 1,
+          "price": 800,
+          "total": 800
+        },
+        {
+          "name": "পর্দা",
+          "service": "dry",
+          "serviceLabel": "ড্রাই ক্লিন",
+          "qty": 1,
+          "price": 250,
+          "total": 250
+        }
+      ],
+      "subtotal": 3190,
+      "delivery": 0,
+      "discount": 0,
+      "total": 3190,
+      "deliveryTime": "Pickup After 3-7 Day Complete",
+      "payment": "COD",
+      "status": "ডেলিভারি সম্পন্ন",
+      "riderId": "rider_karim",
+      "createdAt": "2026-07-02T12:11:50.889Z",
+      "updatedAt": "2026-07-02T12:18:40.167Z"
+    },
+    {
+      "id": "ORD-1252",
+      "customerName": "রহিম উদ্দিন",
+      "phone": "০১৭XXXXXXXX",
+      "address": "বাসা ১২, রোড ৩, কলাতলী",
+      "service": "ওয়াশ",
+      "items": [
+        {
+          "name": "প্যান্ট",
+          "service": "wash",
+          "serviceLabel": "ওয়াশ",
+          "qty": 1,
+          "price": 40,
+          "total": 40
+        },
+        {
+          "name": "টি-শার্ট",
+          "service": "wash",
+          "serviceLabel": "ওয়াশ",
+          "qty": 3,
+          "price": 40,
+          "total": 120
+        },
+        {
+          "name": "পাঞ্জাবি",
+          "service": "wash",
+          "serviceLabel": "ওয়াশ",
+          "qty": 1,
+          "price": 50,
+          "total": 50
+        }
+      ],
+      "subtotal": 210,
+      "delivery": 30,
+      "discount": 0,
+      "total": 240,
+      "deliveryTime": "Pickup After 3-7 Day Complete",
+      "payment": "COD",
+      "status": "অর্ডার কনফার্মড",
+      "riderId": "rider_karim",
+      "createdAt": "2026-06-18T18:09:17.133Z"
+    },
+    {
+      "id": "ORD-1251",
+      "customerName": "Customer",
+      "phone": "০১৭XXXXXXXXX",
+      "address": "dg, সুগন্ধা",
+      "service": "ওয়াশ",
+      "items": [
+        {
+          "name": "প্যান্ট",
+          "service": "wash",
+          "serviceLabel": "ওয়াশ",
+          "qty": 3,
+          "price": 40,
+          "total": 120
+        },
+        {
+          "name": "টি-শার্ট",
+          "service": "wash",
+          "serviceLabel": "ওয়াশ",
+          "qty": 1,
+          "price": 40,
+          "total": 40
+        },
+        {
+          "name": "পাঞ্জাবি",
+          "service": "wash",
+          "serviceLabel": "ওয়াশ",
+          "qty": 1,
+          "price": 50,
+          "total": 50
+        }
+      ],
+      "subtotal": 210,
+      "delivery": 30,
+      "discount": 0,
+      "total": 240,
+      "deliveryTime": "Pickup After 3-7 Day Complete",
+      "payment": "COD",
+      "status": "ডেলিভারি সম্পন্ন",
+      "riderId": "rider_shahin",
+      "createdAt": "2026-06-18T18:06:11.820Z",
+      "updatedAt": "2026-06-18T18:08:27.704Z"
+    },
+    {
+      "id": "ORD-1250",
+      "customerName": "Customer",
+      "phone": "০১৭XXXXXXXXX",
+      "address": "dg, সুগন্ধা",
+      "service": "ওয়াশ",
+      "items": [
+        {
+          "name": "শার্ট",
+          "service": "wash",
+          "serviceLabel": "ওয়াশ",
+          "qty": 3,
+          "price": 40,
+          "total": 120
+        },
+        {
+          "name": "টি-শার্ট",
+          "service": "wash",
+          "serviceLabel": "ওয়াশ",
+          "qty": 3,
+          "price": 40,
+          "total": 120
+        },
+        {
+          "name": "পাঞ্জাবি",
+          "service": "wash",
+          "serviceLabel": "ওয়াশ",
+          "qty": 1,
+          "price": 50,
+          "total": 50
+        }
+      ],
+      "subtotal": 290,
+      "delivery": 30,
+      "discount": 0,
+      "total": 320,
+      "deliveryTime": "Pickup After 3-7 Day Complete",
+      "payment": "COD",
+      "status": "Cancelled",
+      "riderId": "rider_karim",
+      "createdAt": "2026-06-18T18:05:25.071Z",
+      "updatedAt": "2026-06-19T05:08:59.587Z"
+    },
+    {
+      "id": "ORD-1249",
+      "customerName": "Customer",
+      "phone": "০১৭XXXXXXXXX",
+      "address": "dg, সুগন্ধা",
+      "service": "ড্রাই ক্লিন + ওয়াশ",
+      "items": [
+        {
+          "name": "বেডশিট / চাদর",
+          "service": "dry",
+          "serviceLabel": "ড্রাই ক্লিন",
+          "qty": 2,
+          "price": 60,
+          "total": 120
+        },
+        {
+          "name": "বালিশ কভার",
+          "service": "dry",
+          "serviceLabel": "ড্রাই ক্লিন",
+          "qty": 1,
+          "price": 30,
+          "total": 30
+        },
+        {
+          "name": "বালিশ কভার",
+          "service": "wash",
+          "serviceLabel": "ওয়াশ",
+          "qty": 3,
+          "price": 30,
+          "total": 90
+        },
+        {
+          "name": "টাওয়েল",
+          "service": "wash",
+          "serviceLabel": "ওয়াশ",
+          "qty": 1,
+          "price": 80,
+          "total": 80
+        }
+      ],
+      "subtotal": 320,
+      "delivery": 0,
+      "discount": 0,
+      "total": 320,
+      "deliveryTime": "Pickup After 3-7 Day Complete",
+      "payment": "COD",
+      "status": "অর্ডার কনফার্মড",
+      "riderId": "rider_1781767918385",
+      "createdAt": "2026-06-18T18:05:02.586Z",
+      "updatedAt": "2026-07-09T15:19:16.308Z"
+    },
+    {
+      "id": "ORD-1248",
+      "customerName": "Bengali CustomerZero Prefix Customer",
+      "phone": "01712345670",
+      "address": "Kolatoli, Cox's Bazar",
+      "service": "ওয়াশ",
+      "items": [
+        {
+          "name": "শার্ট",
+          "service": "wash",
+          "serviceLabel": "ওয়াশ",
+          "qty": 1,
+          "price": 40,
+          "total": 40
+        }
+      ],
+      "subtotal": 40,
+      "delivery": 30,
+      "discount": 0,
+      "total": 70,
+      "deliveryTime": "Pickup After 3-7 Day Complete",
+      "payment": "COD",
+      "status": "ডেলিভারি সম্পন্ন",
+      "riderId": "rider_karim",
+      "createdAt": "2026-06-18T12:07:37.343Z",
+      "updatedAt": "2026-06-18T12:18:13.677Z"
+    },
+    {
+      "id": "ORD-1247",
+      "customerName": "CustomerCustomer",
+      "phone": "1712345678",
+      "address": "fdsad, সুগন্ধা",
+      "service": "ওয়াশ",
+      "items": [
+        {
+          "name": "শার্ট",
+          "service": "wash",
+          "serviceLabel": "ওয়াশ",
+          "qty": 1,
+          "price": 40,
+          "total": 40
+        }
+      ],
+      "subtotal": 40,
+      "delivery": 30,
+      "discount": 0,
+      "total": 70,
+      "deliveryTime": "Pickup After 3-7 Day Complete",
+      "payment": "COD",
+      "status": "ডেলিভারি সম্পন্ন",
+      "riderId": "rider_karim",
+      "createdAt": "2026-06-18T12:05:56.790Z",
+      "updatedAt": "2026-06-18T12:18:17.578Z"
+    },
+    {
+      "id": "ORD-1246",
+      "customerName": "Customer",
+      "phone": "০১৭XXXXXXXXX",
+      "address": "কক্সবাজার",
+      "service": "ওয়াশ",
+      "items": [
+        {
+          "name": "শার্ট",
+          "service": "wash",
+          "serviceLabel": "ওয়াশ",
+          "qty": 7,
+          "price": 40,
+          "total": 280
+        },
+        {
+          "name": "টি-শার্ট",
+          "service": "wash",
+          "serviceLabel": "ওয়াশ",
+          "qty": 3,
+          "price": 40,
+          "total": 120
+        }
+      ],
+      "subtotal": 400,
+      "delivery": 0,
+      "discount": 0,
+      "total": 400,
+      "deliveryTime": "Pickup After 3-7 Day Complete",
+      "payment": "COD",
+      "status": "ডেলিভারি সম্পন্ন",
+      "riderId": "rider_mamun",
+      "createdAt": "2026-06-18T06:53:21.578Z",
+      "updatedAt": "2026-06-18T06:57:04.445Z"
+    },
+    {
+      "id": "ORD-1245",
+      "customerName": "রহিম উদ্দিন",
+      "phone": "০১৭XXXXXXXX",
+      "address": "বাসা ১২, রোড ৩, কলাতলী",
+      "service": "ওয়াশ",
+      "items": [
+        {
+          "name": "শার্ট",
+          "service": "wash",
+          "serviceLabel": "ওয়াশ",
+          "qty": 1,
+          "price": 40,
+          "total": 40
+        }
+      ],
+      "subtotal": 40,
+      "delivery": 30,
+      "discount": 0,
+      "total": 70,
+      "deliveryTime": "Pickup After 3-7 Day Complete",
+      "payment": "COD",
+      "status": "ডেলিভারি সম্পন্ন",
+      "riderId": "rider_karim",
+      "createdAt": "2026-06-18T06:49:18.162Z",
+      "updatedAt": "2026-06-18T06:51:11.363Z"
+    },
+    {
+      "id": "ORD-1244",
+      "customerName": "Customer",
+      "phone": "০১৭XXXXXXXXX",
+      "address": "কক্সবাজার",
+      "service": "ওয়াশ",
+      "items": [
+        {
+          "name": "শার্ট",
+          "service": "wash",
+          "serviceLabel": "ওয়াশ",
+          "qty": 7,
+          "price": 40,
+          "total": 280
+        },
+        {
+          "name": "টি-শার্ট",
+          "service": "wash",
+          "serviceLabel": "ওয়াশ",
+          "qty": 3,
+          "price": 40,
+          "total": 120
+        }
+      ],
+      "subtotal": 400,
+      "delivery": 0,
+      "discount": 0,
+      "total": 400,
+      "deliveryTime": "Pickup After 3-7 Day Complete",
+      "payment": "COD",
+      "status": "ডেলিভারি সম্পন্ন",
+      "riderId": "rider_karim",
+      "createdAt": "2026-06-18T06:48:36.298Z",
+      "updatedAt": "2026-06-18T12:18:20.788Z"
+    },
+    {
+      "id": "ORD-1243",
+      "customerName": "Customer",
+      "phone": "০১৭XXXXXXXXX",
+      "address": "কক্সবাজার",
+      "service": "ওয়াশ",
+      "items": [
+        {
+          "name": "শার্ট",
+          "service": "wash",
+          "serviceLabel": "ওয়াশ",
+          "qty": 3,
+          "price": 40,
+          "total": 120
+        },
+        {
+          "name": "টি-শার্ট",
+          "service": "wash",
+          "serviceLabel": "ওয়াশ",
+          "qty": 1,
+          "price": 40,
+          "total": 40
+        },
+        {
+          "name": "পাঞ্জাবি",
+          "service": "wash",
+          "serviceLabel": "ওয়াশ",
+          "qty": 1,
+          "price": 50,
+          "total": 50
+        }
+      ],
+      "subtotal": 210,
+      "delivery": 30,
+      "discount": 0,
+      "total": 240,
+      "deliveryTime": "Pickup After 3-7 Day Complete",
+      "payment": "COD",
+      "status": "ডেলিভারি সম্পন্ন",
+      "riderId": "rider_shahin",
+      "createdAt": "2026-06-18T06:39:52.955Z",
+      "updatedAt": "2026-06-18T06:40:55.231Z"
+    },
+    {
+      "id": "ORD-1242",
+      "customerName": "kjhblkju",
+      "phone": "০১৭XXXXXXXXX",
+      "address": ";lkm;lkmnlkj';m, লাবণী",
+      "service": "ওয়াশ",
+      "items": [
+        {
+          "name": "শার্ট",
+          "service": "wash",
+          "serviceLabel": "ওয়াশ",
+          "qty": 1,
+          "price": 40,
+          "total": 40
+        },
+        {
+          "name": "নকশী কাঁথা",
+          "service": "wash",
+          "serviceLabel": "ওয়াশ",
+          "qty": 10,
+          "price": 60,
+          "total": 600
+        }
+      ],
+      "subtotal": 640,
+      "delivery": 0,
+      "discount": 0,
+      "total": 640,
+      "deliveryTime": "Pickup After 3-7 Day Complete",
+      "payment": "COD",
+      "status": "ডেলিভারি সম্পন্ন",
+      "riderId": "rider_shahin",
+      "createdAt": "2026-06-17T15:59:47.585Z",
+      "updatedAt": "2026-06-17T16:01:06.218Z"
+    },
+    {
+      "id": "ORD-1241",
+      "customerName": "Customer",
+      "phone": "০১৭XXXXXXXXX",
+      "address": "কক্সবাজার",
+      "service": "ওয়াশ",
+      "items": [
+        {
+          "name": "প্যান্ট",
+          "service": "wash",
+          "serviceLabel": "ওয়াশ",
+          "qty": 1,
+          "price": 40,
+          "total": 40
+        },
+        {
+          "name": "পাঞ্জাবি",
+          "service": "wash",
+          "serviceLabel": "ওয়াশ",
+          "qty": 18,
+          "price": 50,
+          "total": 900
+        }
+      ],
+      "subtotal": 940,
+      "delivery": 0,
+      "discount": 0,
+      "total": 940,
+      "deliveryTime": "Pickup After 3-7 Day Complete",
+      "payment": "COD",
+      "status": "ডেলিভারি সম্পন্ন",
+      "riderId": "rider_shahin",
+      "createdAt": "2026-06-17T15:55:58.380Z",
+      "updatedAt": "2026-06-17T16:04:24.943Z"
+    },
+    {
+      "id": "ORD-1240",
+      "customerName": "Customer",
+      "phone": "০১৭XXXXXXXXX",
+      "address": "fdsad, সুগন্ধা",
+      "service": "ওয়াশ",
+      "items": [
+        {
+          "name": "শার্ট",
+          "service": "wash",
+          "serviceLabel": "ওয়াশ",
+          "qty": 2,
+          "price": 40,
+          "total": 80
+        },
+        {
+          "name": "প্যান্ট",
+          "service": "wash",
+          "serviceLabel": "ওয়াশ",
+          "qty": 1,
+          "price": 40,
+          "total": 40
+        }
+      ],
+      "subtotal": 120,
+      "delivery": 30,
+      "discount": 0,
+      "total": 150,
+      "deliveryTime": "Pickup After 3-7 Day Complete",
+      "payment": "COD",
+      "status": "ডেলিভারি সম্পন্ন",
+      "riderId": "rider_mamun",
+      "createdAt": "2026-06-17T15:15:55.449Z",
+      "updatedAt": "2026-06-17T15:38:33.408Z"
+    },
+    {
+      "id": "ORD-1239",
+      "customerName": "Customer",
+      "phone": "০১৭XXXXXXXXX",
+      "address": "কক্সবাজার",
+      "service": "ওয়াশ + ড্রাই ক্লিন",
+      "items": [
+        {
+          "name": "শার্ট",
+          "service": "wash",
+          "serviceLabel": "ওয়াশ",
+          "qty": 1,
+          "price": 40,
+          "total": 40
+        },
+        {
+          "name": "প্যান্ট",
+          "service": "dry",
+          "serviceLabel": "ড্রাই ক্লিন",
+          "qty": 1,
+          "price": 60,
+          "total": 60
+        },
+        {
+          "name": "শাড়ি",
+          "service": "wash",
+          "serviceLabel": "ওয়াশ",
+          "qty": 1,
+          "price": 150,
+          "total": 150
+        },
+        {
+          "name": "বেবি ফ্রক",
+          "service": "wash",
+          "serviceLabel": "ওয়াশ",
+          "qty": 1,
+          "price": 30,
+          "total": 30
+        },
+        {
+          "name": "বেবি রম্পার",
+          "service": "wash",
+          "serviceLabel": "ওয়াশ",
+          "qty": 1,
+          "price": 30,
+          "total": 30
+        }
+      ],
+      "subtotal": 310,
+      "delivery": 0,
+      "discount": 0,
+      "total": 310,
+      "deliveryTime": "Pickup After 3-7 Day Complete",
+      "payment": "COD",
+      "status": "ডেলিভারি সম্পন্ন",
+      "riderId": "rider_mamun",
+      "createdAt": "2026-06-17T15:12:53.411Z",
+      "updatedAt": "2026-06-17T15:14:32.325Z"
+    },
+    {
+      "id": "ORD-1238",
+      "customerName": "Customer",
+      "phone": "০১৭XXXXXXXXX",
+      "address": "কক্সবাজার",
+      "service": "ওয়াশ",
+      "items": [
+        {
+          "name": "প্যান্ট",
+          "service": "wash",
+          "serviceLabel": "ওয়াশ",
+          "qty": 2,
+          "price": 40,
+          "total": 80
+        },
+        {
+          "name": "টি-শার্ট",
+          "service": "wash",
+          "serviceLabel": "ওয়াশ",
+          "qty": 1,
+          "price": 40,
+          "total": 40
+        },
+        {
+          "name": "পাঞ্জাবি",
+          "service": "wash",
+          "serviceLabel": "ওয়াশ",
+          "qty": 1,
+          "price": 50,
+          "total": 50
+        },
+        {
+          "name": "জুব্বা",
+          "service": "wash",
+          "serviceLabel": "ওয়াশ",
+          "qty": 1,
+          "price": 60,
+          "total": 60
+        }
+      ],
+      "subtotal": 230,
+      "delivery": 30,
+      "discount": 0,
+      "total": 260,
+      "deliveryTime": "Pickup After 3-7 Day Complete",
+      "payment": "COD",
+      "status": "বাতিল",
+      "riderId": "rider_karim",
+      "createdAt": "2026-06-17T15:11:38.032Z",
+      "updatedAt": "2026-06-17T15:12:24.684Z"
+    },
+    {
+      "id": "ORD-1237",
+      "customerName": "গ্রাহক",
+      "phone": "০১৭XXXXXXXXX",
+      "address": "কক্সবাজার",
+      "service": "ওয়াশ",
+      "items": [
+        {
+          "name": "শার্ট",
+          "service": "wash",
+          "serviceLabel": "ওয়াশ",
+          "qty": 1,
+          "price": 40,
+          "total": 40
+        },
+        {
+          "name": "প্যান্ট",
+          "service": "wash",
+          "serviceLabel": "ওয়াশ",
+          "qty": 1,
+          "price": 40,
+          "total": 40
+        },
+        {
+          "name": "পর্দা",
+          "service": "wash",
+          "serviceLabel": "ওয়াশ",
+          "qty": 1,
+          "price": 150,
+          "total": 150
+        }
+      ],
+      "subtotal": 230,
+      "delivery": 30,
+      "discount": 0,
+      "total": 260,
+      "deliveryTime": "Pickup After 3-7 Day Complete",
+      "payment": "COD",
+      "status": "বাতিল",
+      "riderId": "rider_karim",
+      "createdAt": "2026-06-17T14:17:32.102Z",
+      "updatedAt": "2026-06-17T14:19:50.178Z"
+    },
+    {
+      "id": "ORD-1236",
+      "customerName": "গ্রাহক",
+      "phone": "০১৭XXXXXXXXX",
+      "address": "কক্সবাজার",
+      "service": "ওয়াশ + ড্রাই ক্লিন",
+      "items": [
+        {
+          "name": "শার্ট",
+          "service": "wash",
+          "serviceLabel": "ওয়াশ",
+          "qty": 2,
+          "price": 40,
+          "total": 80
+        },
+        {
+          "name": "বালিশ কভার",
+          "service": "wash",
+          "serviceLabel": "ওয়াশ",
+          "qty": 2,
+          "price": 30,
+          "total": 60
+        },
+        {
+          "name": "বাচ্চার সেট",
+          "service": "wash",
+          "serviceLabel": "ওয়াশ",
+          "qty": 3,
+          "price": 50,
+          "total": 150
+        },
+        {
+          "name": "বেবি গেঞ্জি",
+          "service": "wash",
+          "serviceLabel": "ওয়াশ",
+          "qty": 1,
+          "price": 25,
+          "total": 25
+        },
+        {
+          "name": "বাচ্চার সেট",
+          "service": "dry",
+          "serviceLabel": "ড্রাই ক্লিন",
+          "qty": 2,
+          "price": 80,
+          "total": 160
+        }
+      ],
+      "subtotal": 475,
+      "delivery": 0,
+      "discount": 0,
+      "total": 475,
+      "deliveryTime": "Pickup After 3-7 Day Complete",
+      "payment": "COD",
+      "status": "বাতিল",
+      "riderId": "rider_karim",
+      "createdAt": "2026-06-17T12:38:46.545Z",
+      "updatedAt": "2026-06-17T14:10:28.799Z"
+    },
+    {
+      "id": "ORD-1235",
+      "customerName": "গ্রাহক",
+      "phone": "০১৭XXXXXXXXX",
+      "address": "কক্সবাজার",
+      "service": "ওয়াশ",
+      "items": [
+        {
+          "name": "শার্ট",
+          "service": "wash",
+          "serviceLabel": "ওয়াশ",
+          "qty": 2,
+          "price": 40,
+          "total": 80
+        },
+        {
+          "name": "প্যান্ট",
+          "service": "wash",
+          "serviceLabel": "ওয়াশ",
+          "qty": 2,
+          "price": 40,
+          "total": 80
+        }
+      ],
+      "subtotal": 160,
+      "delivery": 30,
+      "discount": 0,
+      "total": 190,
+      "deliveryTime": "Pickup After 3-7 Day Complete",
+      "payment": "COD",
+      "status": "বাতিল",
+      "riderId": "rider_karim",
+      "createdAt": "2026-06-16T10:02:34.518Z",
+      "updatedAt": "2026-06-17T14:10:31.072Z"
+    }
+  ],
+  "messages": {
+    "ORD-1236": [
+      {
+        "id": "msg_1781699938946_yzl4l",
+        "text": "Hello",
+        "sender": "customer",
+        "createdAt": "2026-06-17T12:38:58.946Z"
+      },
+      {
+        "id": "msg_1781699940459_di7al",
+        "text": "আসসালামু আলাইকুম, আমি ধোপা বাড়ি রাইডার বলছি। আপনার অর্ডারটি কনফার্ম হওয়ার পর আমি আপনার কাপড় সংগ্রহ করতে আসব।",
+        "sender": "rider",
+        "createdAt": "2026-06-17T12:39:00.460Z"
+      }
+    ],
+    "ORD-1239": [
+      {
+        "id": "msg_1781709221780_c8l5d",
+        "text": "Hello boss",
+        "sender": "customer",
+        "createdAt": "2026-06-17T15:13:41.780Z"
+      },
+      {
+        "id": "msg_1781709223286_y3tf3",
+        "text": "Hello! How can I help you?",
+        "sender": "rider",
+        "createdAt": "2026-06-17T15:13:43.286Z"
+      }
+    ],
+    "ORD-1243": [
+      {
+        "id": "msg_1781764819844_3rsnv",
+        "text": "hello",
+        "sender": "customer",
+        "createdAt": "2026-06-18T06:40:19.844Z"
+      },
+      {
+        "id": "msg_1781764821356_n8xo4",
+        "text": "Hello, this is your Dhopa Bari rider. I will come to collect your clothes after the order is confirmed.",
+        "sender": "rider",
+        "createdAt": "2026-06-18T06:40:21.356Z"
+      }
+    ],
+    "ORD-1253": [
+      {
+        "id": "msg_1782994414911_02hf3",
+        "text": "Bhaiya Order kalke rate confrom korbo",
+        "sender": "customer",
+        "createdAt": "2026-07-02T12:13:34.911Z"
+      },
+      {
+        "id": "msg_1782994416417_gwlfj",
+        "text": "Hello, this is your Dhopa Bari rider. I will come to collect your clothes after the order is confirmed.",
+        "sender": "rider",
+        "createdAt": "2026-07-02T12:13:36.417Z"
+      }
+    ],
+    "ORD-1257": [
+      {
+        "id": "msg_1783666670816_lrve6",
+        "text": "Amar order ta koto din e ashbe?",
+        "sender": "customer",
+        "createdAt": "2026-07-10T06:57:50.816Z"
+      }
+    ]
+  }
+}

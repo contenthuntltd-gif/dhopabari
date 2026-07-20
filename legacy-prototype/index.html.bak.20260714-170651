@@ -1,0 +1,3157 @@
+<!doctype html>
+<html lang="bn">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ধোপা বাড়ি Prototype</title>
+  <style>
+    @import url("https://fonts.googleapis.com/css2?family=Noto+Serif+Bengali:wght@400;500;600;700;800;900&display=swap");
+
+    :root {
+      --blue: #0874f8;
+      --blue-dark: #071939;
+      --cyan: #10c9b2;
+      --green: #13c49a;
+      --red: #f43f5e;
+      --ink: #091632;
+      --muted: #727b8e;
+      --line: #e7ebf2;
+      --soft: #f5f8fc;
+      --card: #ffffff;
+      --shadow: 0 12px 30px rgba(9, 22, 50, .09);
+      --app-font: "Noto Serif Bengali", "SolaimanLipi", "Siyam Rupali", "Noto Sans Bengali", "Hind Siliguri", "Segoe UI", Arial, sans-serif;
+      font-family: var(--app-font);
+    }
+
+    * { box-sizing: border-box; }
+    html, body, button, input, textarea { font-family: var(--app-font); }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background: radial-gradient(circle at 20% 10%, #e6f4ff, transparent 28%),
+                  radial-gradient(circle at 80% 85%, #dffbf4, transparent 30%),
+                  #eef3f8;
+      color: var(--ink);
+    }
+
+    button, input, textarea { font: inherit; }
+    button { cursor: pointer; border: 0; color: inherit; background: transparent; }
+
+    .phone {
+      width: min(420px, 100vw);
+      height: min(900px, 100vh);
+      background: #fff;
+      border: 0;
+      border-radius: 0;
+      overflow: hidden;
+      position: relative;
+      box-shadow: none;
+    }
+
+    .island {
+      display: none;
+    }
+
+    .status {
+      display: none;
+      height: 0;
+      padding: 0;
+      justify-content: space-between;
+      align-items: flex-start;
+      font-weight: 800;
+      font-size: 14px;
+      position: relative;
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    .status.light { color: #fff; }
+    .signals { display: flex; align-items: center; gap: 7px; }
+    .bars { display: flex; align-items: flex-end; gap: 2px; height: 13px; }
+    .bars span { width: 3px; background: currentColor; border-radius: 4px; }
+    .bars span:nth-child(1) { height: 5px; }
+    .bars span:nth-child(2) { height: 8px; }
+    .bars span:nth-child(3) { height: 11px; }
+    .bars span:nth-child(4) { height: 13px; }
+    .wifi {
+      width: 16px;
+      height: 12px;
+      border: 3px solid currentColor;
+      border-left-color: transparent;
+      border-right-color: transparent;
+      border-bottom: 0;
+      border-radius: 16px 16px 0 0;
+      position: relative;
+    }
+    .wifi:after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      bottom: -6px;
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: currentColor;
+      transform: translateX(-50%);
+    }
+    .battery {
+      width: 23px;
+      height: 11px;
+      border: 2px solid currentColor;
+      border-radius: 3px;
+      position: relative;
+    }
+    .battery:before { content: ""; position: absolute; right: -5px; top: 2px; width: 3px; height: 5px; background: currentColor; border-radius: 0 2px 2px 0; }
+    .battery:after { content: ""; position: absolute; left: 2px; top: 2px; width: 15px; height: 5px; background: currentColor; border-radius: 1px; }
+
+    .screen {
+      position: absolute;
+      inset: 0;
+      display: none;
+      background: #fff;
+      overflow: hidden;
+    }
+    .screen.active { display: block; }
+    .content {
+      height: 100%;
+      overflow: auto;
+      padding: 22px 22px 96px;
+      scrollbar-width: none;
+    }
+    .content::-webkit-scrollbar { width: 0; height: 0; }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 46px;
+      gap: 12px;
+    }
+    .brand { color: var(--blue); font-weight: 900; font-size: 27px; }
+    h1, h2, h3, p { margin: 0; }
+    .title { font-size: 29px; font-weight: 900; line-height: 1.25; letter-spacing: 0; }
+    .subtitle { color: var(--muted); font-size: 15px; line-height: 1.6; }
+    .back, .icon-btn {
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      color: var(--ink);
+      font-size: 28px;
+    }
+    .icon { width: 26px; height: 26px; display: inline-block; vertical-align: middle; }
+    .bell { position: relative; }
+    .badge {
+      position: absolute;
+      top: 0;
+      right: 0;
+      min-width: 18px;
+      height: 18px;
+      padding: 0 4px;
+      border-radius: 999px;
+      background: var(--red);
+      color: #fff;
+      font-size: 12px;
+      display: grid;
+      place-items: center;
+      border: 2px solid #fff;
+      font-weight: 900;
+    }
+
+    .primary {
+      min-height: 56px;
+      border-radius: 8px;
+      background: var(--blue);
+      color: #fff;
+      font-weight: 900;
+      font-size: 20px;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      box-shadow: 0 10px 20px rgba(8, 116, 248, .2);
+    }
+    .primary.green { background: var(--green); box-shadow: 0 10px 24px rgba(19, 196, 154, .22); }
+    .outline {
+      min-height: 54px;
+      border: 1.5px solid var(--blue);
+      color: var(--blue);
+      border-radius: 8px;
+      font-weight: 900;
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+    }
+
+    .splash {
+      background: linear-gradient(180deg, #0874f8 0%, #07c8b6 100%);
+      color: #fff;
+      display: none;
+    }
+    .splash.active { display: grid; }
+    .splash-inner {
+      height: calc(100% - 48px);
+      display: grid;
+      grid-template-rows: 1fr auto auto;
+      align-items: center;
+      padding: 20px 32px 44px;
+      text-align: center;
+    }
+    .washer-logo {
+      width: 138px;
+      height: 138px;
+      margin: 0 auto 22px;
+      position: relative;
+      display: grid;
+      place-items: center;
+      border-radius: 32px;
+      background: rgba(255,255,255,.14);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.22);
+    }
+    .washer-logo:before {
+      content: "";
+      width: 72px;
+      height: 92px;
+      border: 9px solid #fff;
+      border-radius: 8px;
+      background: linear-gradient(#fff 0 26%, transparent 26%);
+    }
+    .washer-logo:after {
+      content: "";
+      position: absolute;
+      width: 44px;
+      height: 44px;
+      border: 7px solid var(--blue);
+      border-radius: 50%;
+      bottom: 32px;
+      left: 47px;
+      background: radial-gradient(circle at 62% 58%, transparent 0 15px, var(--blue) 16px 18px, transparent 19px);
+    }
+    .spark { position: absolute; color: #fff; font-size: 30px; text-shadow: 0 0 14px rgba(255,255,255,.8); }
+    .spark.one { top: 28px; right: 26px; }
+    .spark.two { bottom: 44px; left: 22px; font-size: 24px; }
+    .splash h1 { font-size: 42px; font-weight: 900; margin-bottom: 8px; }
+    .splash p { font-size: 17px; opacity: .92; }
+    .pill-white {
+      justify-self: center;
+      width: 200px;
+      min-height: 62px;
+      border-radius: 999px;
+      background: #fff;
+      color: var(--blue);
+      font-size: 20px;
+      font-weight: 900;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 36px;
+      box-shadow: 0 18px 34px rgba(5, 54, 119, .18);
+    }
+    .powered { opacity: .74; font-size: 14px; }
+
+    .login-hero {
+      margin: -48px -22px 0;
+      min-height: 255px;
+      background: var(--blue-dark);
+      color: #fff;
+      padding: 90px 22px 0;
+      text-align: center;
+      position: relative;
+    }
+    .login-hero.customer {
+      min-height: 244px;
+      background: linear-gradient(180deg, #0874f8, #1288fb);
+      border-bottom-left-radius: 50% 16%;
+      border-bottom-right-radius: 50% 16%;
+    }
+    .logo-row { display: flex; align-items: center; justify-content: center; gap: 12px; font-weight: 900; font-size: 34px; }
+    .house-mark {
+      width: 62px;
+      height: 52px;
+      position: relative;
+      border: 4px solid #fff;
+      border-top: 0;
+    }
+    .house-mark:before {
+      content: "";
+      position: absolute;
+      left: 4px;
+      top: -25px;
+      width: 43px;
+      height: 43px;
+      border-left: 4px solid #fff;
+      border-top: 4px solid #fff;
+      transform: rotate(45deg);
+    }
+    .rider {
+      width: 240px;
+      height: 138px;
+      margin: 24px auto 0;
+      position: relative;
+    }
+    .rider:before {
+      content: "";
+      position: absolute;
+      left: 24px;
+      right: 16px;
+      bottom: 26px;
+      height: 30px;
+      border: 5px solid #fff;
+      border-top-width: 8px;
+      border-radius: 18px 56px 16px 16px;
+      opacity: .96;
+    }
+    .rider:after {
+      content: "";
+      position: absolute;
+      left: 47px;
+      bottom: 0;
+      width: 122px;
+      height: 48px;
+      background:
+        radial-gradient(circle at 24px 24px, transparent 0 17px, #fff 18px 21px, transparent 22px),
+        radial-gradient(circle at 98px 24px, transparent 0 17px, #fff 18px 21px, transparent 22px);
+    }
+    .delivery-box {
+      position: absolute;
+      left: 20px;
+      bottom: 58px;
+      width: 78px;
+      height: 62px;
+      border: 4px solid var(--blue);
+      color: #fff;
+      display: grid;
+      place-items: center;
+      font-weight: 900;
+      background: #0a1736;
+      font-size: 14px;
+    }
+    .login-panel {
+      margin: -28px -22px 0;
+      background: #fff;
+      border-radius: 28px 28px 0 0;
+      padding: 52px 26px 28px;
+      min-height: 390px;
+      position: relative;
+      z-index: 2;
+    }
+    .login-panel.flat {
+      margin: 36px 0 0;
+      padding: 0;
+      min-height: 0;
+      border-radius: 0;
+    }
+    .field {
+      border: 1.4px solid #dce2eb;
+      border-radius: 8px;
+      min-height: 62px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 0 16px;
+      background: #fff;
+      color: var(--muted);
+      width: 100%;
+      resize: none;
+    }
+    .field input, .field textarea {
+      flex: 1;
+      border: 0;
+      outline: 0;
+      min-width: 0;
+      color: var(--ink);
+      background: transparent;
+      font-size: 18px;
+    }
+    .field textarea { padding: 18px 0; min-height: 96px; }
+    .flag { width: 28px; height: 20px; border-radius: 2px; background: #006a4e; position: relative; box-shadow: 0 0 0 1px rgba(0,0,0,.08); }
+    .flag:after { content: ""; position: absolute; inset: 5px 9px; background: #f42a41; border-radius: 50%; }
+    .divider { width: 1px; align-self: stretch; background: var(--line); margin: 12px 0; }
+    .auth-ill {
+      width: 116px;
+      height: 116px;
+      margin: 32px auto 26px;
+      position: relative;
+      display: grid;
+      place-items: center;
+      color: var(--blue);
+    }
+    .phone-line { width: 66px; height: 98px; border: 5px solid var(--blue); border-radius: 13px; position: relative; }
+    .phone-line:before { content: ""; position: absolute; top: 5px; left: 21px; width: 18px; height: 4px; background: var(--blue); border-radius: 4px; }
+    .code-bubble { position: absolute; right: 0; top: 34px; width: 78px; height: 42px; background: var(--green); color: #fff; border-radius: 6px; display: grid; place-items: center; font-weight: 900; font-size: 24px; box-shadow: 0 10px 20px rgba(19,196,154,.25); }
+    #otp .content { padding-left: 24px; padding-right: 24px; }
+    #otp .auth-ill { margin-top: 18px; margin-bottom: 24px; }
+    #otp .title { font-size: 27px; line-height: 1.18; }
+    #otp .subtitle {
+      max-width: 310px;
+      margin-left: auto;
+      margin-right: auto;
+      overflow-wrap: anywhere;
+    }
+    .otp-boxes {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      width: 100%;
+      max-width: 304px;
+      margin: 28px auto 26px;
+    }
+    .otp-box {
+      width: 100%;
+      min-width: 0;
+      height: 72px;
+      border: 1.5px solid #d9dee8;
+      border-radius: 10px;
+      display: block;
+      text-align: center;
+      font-size: 32px;
+      line-height: 72px;
+      font-weight: 900;
+      color: var(--ink);
+      background: #fff;
+      outline: 0;
+      padding: 0;
+    }
+    .otp-box.active,
+    .otp-box:focus { border: 2px solid var(--blue); color: var(--blue); box-shadow: 0 8px 18px rgba(8,116,248,.12); }
+    #otp .primary { max-width: 304px; margin-left: auto; margin-right: auto; }
+
+    .banner {
+      min-height: 150px;
+      border-radius: 10px;
+      overflow: hidden;
+      margin: 24px 0 14px;
+      background: linear-gradient(120deg, #0874f8, #11c8aa);
+      color: #fff;
+      padding: 24px;
+      display: grid;
+      grid-template-columns: 1fr 126px;
+      gap: 10px;
+      align-items: center;
+      box-shadow: 0 14px 26px rgba(8, 116, 248, .2);
+    }
+    .banner h2 { font-size: 25px; font-weight: 900; margin-bottom: 12px; }
+    .banner p { font-size: 18px; opacity: .92; margin-bottom: 18px; }
+    .mini-outline { width: 125px; min-height: 42px; border: 1.5px solid #fff; border-radius: 8px; color: #fff; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .shirt-stack { width: 116px; height: 104px; position: relative; }
+    .shirt-stack span {
+      position: absolute;
+      left: 8px;
+      width: 94px;
+      height: 26px;
+      border-radius: 6px;
+      background: #fff;
+      box-shadow: 0 6px 10px rgba(3, 67, 125, .2);
+      transform: skewY(-8deg);
+    }
+    .shirt-stack span:nth-child(1) { bottom: 0; }
+    .shirt-stack span:nth-child(2) { bottom: 20px; left: 14px; }
+    .shirt-stack span:nth-child(3) { bottom: 40px; left: 20px; }
+    .shirt-stack span:nth-child(4) { bottom: 60px; left: 26px; height: 34px; }
+    .dots { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
+    .dots span { width: 8px; height: 8px; border-radius: 50%; background: #dce2eb; }
+    .dots span.active { background: var(--blue); }
+    .service-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .service-card {
+      min-height: 104px;
+      background: var(--card);
+      border-radius: 8px;
+      padding: 14px 14px;
+      box-shadow: var(--shadow);
+      border: 1px solid #f1f3f8;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 5px;
+      text-align: left;
+    }
+    .service-card .big-icon { color: var(--blue); font-size: 36px; line-height: 1; height: 38px; display: flex; align-items: center; }
+    .service-card h3 { font-size: 19px; font-weight: 900; }
+    .service-card p { color: var(--muted); font-size: 13px; }
+    .current-order, .card {
+      background: #fff;
+      border: 1px solid #eef1f6;
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+    .current-order {
+      margin-top: 12px;
+      padding: 14px;
+    }
+    .home-hero {
+      margin: 14px 0 12px;
+      padding: 16px;
+      border-radius: 14px;
+      color: #fff;
+      background:
+        radial-gradient(circle at 86% 18%, rgba(255,255,255,.28), transparent 24%),
+        linear-gradient(135deg, #0874f8, #12c5b1);
+      box-shadow: 0 18px 36px rgba(8, 116, 248, .2);
+      display: grid;
+      grid-template-columns: 1fr 76px;
+      gap: 12px;
+      align-items: center;
+    }
+    .home-hero h2 { font-size: 21px; font-weight: 900; line-height: 1.22; margin-bottom: 6px; }
+    .home-hero p { color: rgba(255,255,255,.86); font-size: 13px; line-height: 1.4; margin-bottom: 12px; }
+    .home-hero-art {
+      width: 76px;
+      height: 76px;
+      border-radius: 20px;
+      background: rgba(255,255,255,.18);
+      display: grid;
+      place-items: center;
+      font-size: 42px;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.25);
+    }
+    .home-stats { display: none; }
+    .home-stat {
+      min-height: 70px;
+      border: 1px solid #edf1f7;
+      border-radius: 10px;
+      background: #fff;
+      box-shadow: 0 8px 20px rgba(9, 22, 50, .06);
+      display: grid;
+      place-items: center;
+      text-align: center;
+      padding: 10px 6px;
+    }
+    .home-stat b { color: var(--blue); font-size: 20px; line-height: 1; }
+    .home-stat span { color: var(--muted); font-size: 12px; font-weight: 800; margin-top: 4px; }
+    .section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 12px 0 10px;
+    }
+    .section-head h2 { font-size: 21px; font-weight: 900; }
+    .order-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .link { color: var(--blue); font-weight: 800; }
+    .progress { height: 7px; background: #e1e5ec; border-radius: 8px; overflow: hidden; margin-top: 14px; }
+    .progress span { display: block; height: 100%; width: 64%; background: var(--blue); border-radius: inherit; }
+
+    .bottom-nav {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 78px;
+      background: rgba(255,255,255,.94);
+      backdrop-filter: blur(10px);
+      border-top: 1px solid var(--line);
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      z-index: 12;
+    }
+    .nav-item {
+      display: grid;
+      place-items: center;
+      align-content: center;
+      gap: 2px;
+      color: #687284;
+      font-size: 13px;
+      font-weight: 800;
+      position: relative;
+    }
+    .nav-item.active { color: var(--blue); }
+    .nav-item.active:before { content: ""; position: absolute; top: 0; width: 70%; height: 3px; background: var(--blue); border-radius: 0 0 3px 3px; }
+    .nav-item .nav-ico { font-size: 26px; line-height: 1; }
+
+    .chips { display: flex; gap: 12px; overflow: auto; padding: 8px 0 18px; scrollbar-width: none; }
+    .chip {
+      min-height: 50px;
+      padding: 0 21px;
+      border-radius: 15px;
+      background: #f0f2f6;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 900;
+      white-space: nowrap;
+      box-shadow: inset 0 -1px 0 rgba(0,0,0,.04);
+      font-size: 18px;
+    }
+    .chip.active { background: var(--blue); color: #fff; }
+    .chip.service { border-radius: 999px; min-height: 42px; font-size: 16px; }
+    #order .chips { gap: 8px; padding-bottom: 12px; }
+    #order .chip {
+      min-height: 42px;
+      padding: 0 13px;
+      border-radius: 12px;
+      font-size: 14px;
+      line-height: 1.15;
+      flex: 0 0 auto;
+    }
+    #order .chip.service {
+      min-height: 36px;
+      font-size: 13px;
+      padding: 0 12px;
+    }
+    #order .service-tabs,
+    #order .category-tabs {
+      display: grid;
+      gap: 8px;
+      overflow: visible;
+    }
+    #order .service-tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    #order .category-tabs { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    #order .service-tabs .chip,
+    #order .category-tabs .chip {
+      width: 100%;
+      min-width: 0;
+      justify-content: center;
+      text-align: center;
+      white-space: normal;
+      padding: 0 7px;
+      font-size: 12px;
+      line-height: 1.12;
+    }
+    #order .category-tabs .chip {
+      min-height: 40px;
+      font-size: 13px;
+    }
+    #order .price-note { font-size: 13px; line-height: 1.55; }
+    #order .topbar { min-height: 42px; }
+    #order .title { font-size: 26px; line-height: 1.15; }
+    .item-list { display: grid; gap: 12px; }
+    .item-card[hidden] { display: none; }
+    .item-card {
+      min-height: 118px;
+      border-radius: 8px;
+      padding: 16px;
+      background: #fff;
+      box-shadow: var(--shadow);
+      display: grid;
+      grid-template-columns: 86px 1fr auto;
+      gap: 12px;
+      align-items: center;
+      border: 1px solid #f0f2f6;
+    }
+    .line-art { color: var(--blue); font-size: 50px; text-align: center; }
+    .item-card h3 { font-size: 23px; font-weight: 900; margin-bottom: 6px; }
+    .counter { display: grid; grid-template-columns: 36px 34px 36px; align-items: center; gap: 8px; font-weight: 900; font-size: 25px; }
+    .round-btn { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; font-size: 26px; font-weight: 800; background: #eef0f4; color: #667085; }
+    .round-btn.plus, .round-btn.minus.active { background: var(--blue); color: #fff; }
+    #order .content { padding-bottom: 176px; }
+    .order-footer {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      min-height: 118px;
+      background: rgba(255,255,255,.96);
+      box-shadow: 0 -14px 32px rgba(9,22,50,.11);
+      border-radius: 22px 22px 0 0;
+      display: grid;
+      grid-template-columns: 1fr 82px 170px;
+      gap: 12px 16px;
+      align-items: center;
+      padding: 14px 24px 22px;
+      z-index: 12;
+    }
+    .cart-preview {
+      grid-column: 1 / -1;
+      min-height: 34px;
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      align-items: center;
+    }
+    .cart-preview::-webkit-scrollbar { display: none; }
+    .cart-pill {
+      flex: 0 0 auto;
+      border-radius: 999px;
+      background: #edf5ff;
+      color: var(--blue-dark);
+      border: 1px solid #dceaff;
+      padding: 7px 10px;
+      font-size: 12px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+    .cart-pill.dry { background: #f1f3f7; color: #30394d; border-color: #e2e6ee; }
+    .cart-pill.all { background: var(--blue); color: #fff; border-color: var(--blue); }
+    .see-cart {
+      min-height: 50px;
+      border-radius: 12px;
+      background: #edf5ff;
+      color: var(--blue);
+      border: 1px solid #d8eaff;
+      font-weight: 900;
+      font-size: 14px;
+      line-height: 1.1;
+      display: grid;
+      place-items: center;
+      text-align: center;
+    }
+    .cart-drawer {
+      position: absolute;
+      inset: 0;
+      z-index: 24;
+      display: grid;
+      align-items: end;
+      background: rgba(9,22,50,.28);
+    }
+    .cart-drawer[hidden] { display: none; }
+    .cart-sheet {
+      max-height: 72%;
+      overflow: auto;
+      border-radius: 22px 22px 0 0;
+      background: #fff;
+      box-shadow: 0 -18px 40px rgba(9,22,50,.2);
+      padding: 18px 20px 24px;
+    }
+    .cart-sheet-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .cart-close {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: #eef2f7;
+      color: var(--ink);
+      font-size: 22px;
+      font-weight: 900;
+    }
+    .cart-detail-list { display: grid; gap: 10px; }
+    .cart-detail-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: center;
+      min-height: 78px;
+      padding: 12px;
+      border: 1px solid #edf1f7;
+      border-radius: 10px;
+      background: #fbfcff;
+    }
+    .cart-detail-row h3 { font-size: 18px; line-height: 1.25; }
+    .cart-detail-row p { font-size: 14px; margin-top: 4px; }
+    .cart-detail-actions {
+      display: grid;
+      grid-template-columns: 32px 30px 32px;
+      gap: 7px;
+      align-items: center;
+      justify-items: center;
+      font-weight: 900;
+      font-size: 20px;
+    }
+    .cart-detail-actions .round-btn { width: 32px; height: 32px; font-size: 22px; }
+    .remove-cart-item {
+      grid-column: 1 / -1;
+      min-height: 30px;
+      border-radius: 8px;
+      padding: 0 10px;
+      background: #fff1f2;
+      color: var(--red);
+      font-weight: 900;
+      font-size: 13px;
+    }
+    .price { color: var(--blue); font-size: 32px; font-weight: 900; line-height: 1.1; }
+
+    .stepbar { height: 5px; background: #dce9ff; border-radius: 6px; overflow: hidden; margin: 18px 0 24px; }
+    .stepbar span { display: block; width: 56%; height: 100%; background: var(--blue); border-radius: inherit; }
+    .dropdown-list {
+      border: 1.4px solid #dce2eb;
+      border-radius: 0 0 8px 8px;
+      padding: 18px 44px;
+      margin-top: -1px;
+      color: #333c4d;
+      line-height: 2.2;
+      font-size: 18px;
+    }
+
+    .section-title { display: flex; align-items: center; gap: 8px; font-size: 19px; font-weight: 900; margin: 24px 0 12px; }
+    .date-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 9px; margin-bottom: 16px; }
+    .date-card {
+      min-height: 72px;
+      border: 1px solid #dde3ed;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      color: #687284;
+      font-weight: 800;
+      font-size: 15px;
+      background: #fff;
+    }
+    .date-card b { display: block; font-size: 27px; line-height: 1; }
+    .date-card.blue { background: var(--blue); color: #fff; border-color: var(--blue); }
+    .date-card.green { background: var(--green); color: #fff; border-color: var(--green); }
+    .slot-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; }
+    .slot {
+      min-height: 58px;
+      border: 1px solid #dde3ed;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-weight: 800;
+      background: #fff;
+    }
+    .slot.blue { background: var(--blue); border-color: var(--blue); color: #fff; }
+    .slot.green { background: var(--green); border-color: var(--green); color: #fff; }
+    .address-card {
+      display: grid;
+      grid-template-columns: 42px 1fr auto;
+      align-items: center;
+      gap: 10px;
+      padding: 16px;
+      margin-top: 16px;
+    }
+
+    .summary-card { padding: 18px; }
+    .summary-line { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; font-size: 18px; margin: 11px 0; }
+    .summary-line .dash { border-bottom: 1px dashed #c9d0dc; transform: translateY(4px); }
+    .total-row { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--line); margin-top: 16px; padding-top: 16px; font-size: 22px; font-weight: 900; }
+    .info-list { margin-top: 14px; padding: 0; overflow: hidden; }
+    .info-line { display: grid; grid-template-columns: 34px 1fr auto; gap: 12px; align-items: center; min-height: 58px; padding: 0 16px; border-bottom: 1px solid var(--line); }
+    .info-line:last-child { border-bottom: 0; }
+    .delivery-time-line { grid-template-columns: 34px auto 1fr; }
+    .delivery-time-line span:last-child { text-align: right; font-size: 14px; line-height: 1.25; }
+    .info-line.address-summary { grid-template-columns: 34px auto 1fr auto; }
+    .summary-address-text { text-align: right; line-height: 1.35; color: var(--ink); }
+    .address-change {
+      min-height: 34px;
+      border-radius: 8px;
+      padding: 0 10px;
+      background: #edf5ff;
+      color: var(--blue);
+      font-weight: 900;
+      white-space: nowrap;
+    }
+    .address-edit { padding: 14px 16px 16px; border-bottom: 1px solid var(--line); }
+    .address-edit[hidden] { display: none; }
+    .address-edit .field { min-height: 82px; }
+    .address-edit .primary { min-height: 44px; font-size: 16px; margin-top: 10px; }
+    .payment { display: grid; gap: 10px; }
+    .radio-row {
+      min-height: 58px;
+      border: 1px solid #dce2eb;
+      border-radius: 8px;
+      padding: 0 14px;
+      display: grid;
+      grid-template-columns: 34px 1fr auto;
+      align-items: center;
+      gap: 12px;
+      font-weight: 800;
+    }
+    .radio-row.active { border-color: var(--blue); }
+    .radio {
+      width: 22px;
+      height: 22px;
+      border: 2px solid #b7c0cf;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+    }
+    .radio.active { border-color: var(--blue); }
+    .radio.active:after { content: ""; width: 10px; height: 10px; border-radius: 50%; background: var(--blue); }
+    .success { text-align: center; padding-top: 42px; }
+    .check {
+      width: 140px;
+      height: 140px;
+      margin: 0 auto 28px;
+      border-radius: 50%;
+      background: var(--green);
+      display: grid;
+      place-items: center;
+      color: #fff;
+      font-size: 82px;
+      box-shadow: 0 0 0 20px rgba(19,196,154,.08), 0 14px 28px rgba(19,196,154,.22);
+      position: relative;
+    }
+    .confetti { height: 70px; position: relative; }
+    .confetti span {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      background: var(--blue);
+      border-radius: 50%;
+      left: var(--x);
+      top: var(--y);
+    }
+    .confetti span:nth-child(3n) { background: var(--green); border-radius: 2px; transform: rotate(25deg); }
+    .confetti span:nth-child(4n) { background: #f6a400; }
+
+    .tabs { display: grid; grid-template-columns: repeat(3, 1fr); border-bottom: 1px solid var(--line); margin: 14px -22px 22px; }
+    .tab { min-height: 58px; display: grid; place-items: center; color: #5d6676; font-size: 18px; font-weight: 800; position: relative; }
+    .tab.active { color: var(--blue); }
+    .tab.active:after { content: ""; position: absolute; bottom: 0; width: 72%; height: 3px; border-radius: 4px 4px 0 0; background: var(--blue); }
+    .order-history { display: grid; gap: 14px; }
+    .history-card { padding: 18px; min-height: 146px; }
+    .history-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+    .status-pill { background: #eaf3ff; color: var(--blue); border-radius: 10px; padding: 8px 12px; font-weight: 900; }
+    .status-pill.orange { background: #fff0e5; color: #ef7b2d; }
+
+    .profile-header {
+      margin: -48px -22px 0;
+      min-height: 268px;
+      background: var(--blue);
+      color: #fff;
+      padding: 74px 22px 26px;
+      border-bottom-left-radius: 24px;
+      border-bottom-right-radius: 24px;
+      text-align: center;
+      position: relative;
+    }
+    .avatar {
+      width: 100px;
+      height: 100px;
+      border: 2px solid rgba(255,255,255,.9);
+      border-radius: 50%;
+      margin: 0 auto 10px;
+      display: grid;
+      place-items: center;
+      font-size: 52px;
+      font-weight: 900;
+      background: rgba(9,22,50,.16);
+      position: relative;
+    }
+    .edit-dot { position: absolute; right: -6px; top: 10px; width: 38px; height: 38px; background: #fff; color: var(--blue); border-radius: 50%; display: grid; place-items: center; font-size: 18px; }
+    .menu-list { display: grid; gap: 0; margin-top: 24px; overflow: hidden; }
+    .menu-row { min-height: 64px; display: grid; grid-template-columns: 44px 1fr auto; align-items: center; gap: 12px; padding: 0 16px; border-bottom: 1px solid var(--line); font-size: 19px; font-weight: 800; }
+    .menu-row:last-child { border-bottom: 0; }
+    .menu-icon { width: 34px; height: 34px; display: grid; place-items: center; background: #edf4ff; color: var(--blue); border-radius: 8px; }
+
+    .tracking { padding-top: 10px; }
+    .tracking-list { margin-top: 28px; padding-left: 58px; position: relative; }
+    .track-item { min-height: 104px; position: relative; padding-left: 34px; }
+    .track-item:before {
+      content: "";
+      position: absolute;
+      left: -32px;
+      top: 38px;
+      bottom: -16px;
+      border-left: 2px solid #c8d0db;
+    }
+    .track-item.done:before { border-color: var(--green); }
+    .track-item:last-child:before { display: none; }
+    .track-dot {
+      position: absolute;
+      left: -52px;
+      top: 0;
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      border: 2px solid #c8d0db;
+      background: #fff;
+      color: #fff;
+      font-size: 22px;
+      font-weight: 900;
+    }
+    .track-item.done .track-dot { background: var(--green); border-color: var(--green); }
+    .track-item.current .track-dot { background: var(--blue); border-color: #fff; box-shadow: 0 0 0 10px rgba(8,116,248,.12), 0 0 0 14px #e6f1ff; }
+    .track-item h3 { font-size: 21px; font-weight: 900; color: #5f6878; }
+    .track-item.done h3 { color: var(--ink); }
+    .track-item.current h3 { color: var(--blue); }
+    .rider-card { display: grid; grid-template-columns: 54px 1fr auto auto; gap: 12px; align-items: center; padding: 16px; margin: 4px 0 18px; }
+    .avatar-small { width: 54px; height: 54px; border-radius: 50%; background: var(--blue); color: #fff; display: grid; place-items: center; font-weight: 900; font-size: 26px; }
+    .circle-action { width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; background: var(--green); color: #fff; font-size: 22px; }
+    .circle-action.blue { background: var(--blue); }
+    .eta { background: #eef7ff; border: 1px solid #d9ebff; color: var(--ink); min-height: 62px; display: flex; align-items: center; gap: 12px; padding: 0 16px; border-radius: 8px; font-weight: 900; }
+    .chat-panel {
+      position: absolute;
+      inset: 0;
+      z-index: 40;
+      display: grid;
+      align-items: end;
+      background: rgba(9,22,50,.28);
+    }
+    .chat-panel[hidden] { display: none; }
+    .chat-sheet {
+      max-height: 78%;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      border-radius: 22px 22px 0 0;
+      background: #fff;
+      box-shadow: 0 -18px 40px rgba(9,22,50,.2);
+      overflow: hidden;
+    }
+    .chat-head {
+      display: grid;
+      grid-template-columns: 44px 1fr auto;
+      gap: 12px;
+      align-items: center;
+      padding: 16px;
+      border-bottom: 1px solid var(--line);
+    }
+    .chat-messages { padding: 16px; display: grid; gap: 10px; overflow: auto; background: #f7faff; }
+    .chat-bubble {
+      max-width: 82%;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: #fff;
+      border: 1px solid #e6edf7;
+      box-shadow: 0 4px 12px rgba(9,22,50,.05);
+      font-size: 14px;
+      line-height: 1.45;
+    }
+    .chat-bubble.me { justify-self: end; background: var(--blue); color: #fff; border-color: var(--blue); }
+    .chat-bubble small { display: block; opacity: .72; margin-top: 3px; font-size: 11px; }
+    .chat-compose { display: grid; grid-template-columns: 1fr 48px; gap: 10px; padding: 12px; border-top: 1px solid var(--line); }
+    .chat-compose input { min-height: 46px; border: 1px solid #dce2eb; border-radius: 10px; padding: 0 12px; outline: 0; }
+    .chat-send { border-radius: 10px; background: var(--blue); color: #fff; font-weight: 900; }
+    .chat-close { width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; background: #eef2f7; font-size: 22px; font-weight: 900; }
+    .chat-whatsapp { width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; background: #25d366; color: #fff; font-size: 18px; text-decoration: none; margin-right: 8px; }
+    .muted { color: var(--muted); }
+    .blue { color: var(--blue); }
+    .green-text { color: var(--green); }
+    .role-grid { display: grid; gap: 14px; margin-top: 28px; }
+    .role-card {
+      min-height: 118px;
+      border: 1px solid #e8edf5;
+      border-radius: 10px;
+      background: #fff;
+      box-shadow: var(--shadow);
+      padding: 18px;
+      display: grid;
+      grid-template-columns: 54px 1fr auto;
+      gap: 14px;
+      align-items: center;
+      text-align: left;
+    }
+    .role-icon {
+      width: 54px;
+      height: 54px;
+      border-radius: 14px;
+      background: #edf5ff;
+      color: var(--blue);
+      display: grid;
+      place-items: center;
+      font-size: 28px;
+      font-weight: 900;
+    }
+    .role-icon.green { background: #e9fbf5; color: var(--green); }
+    .role-icon.dark { background: #ecf0f8; color: var(--blue-dark); }
+    .dashboard-head {
+      margin: -16px -22px 18px;
+      padding: 72px 22px 24px;
+      background: linear-gradient(135deg, var(--blue-dark), var(--blue));
+      color: #fff;
+      border-bottom-left-radius: 22px;
+      border-bottom-right-radius: 22px;
+    }
+    .dashboard-head .subtitle { color: rgba(255,255,255,.78); }
+    .metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 18px; }
+    .metric-card {
+      min-height: 92px;
+      border-radius: 10px;
+      background: rgba(255,255,255,.13);
+      border: 1px solid rgba(255,255,255,.18);
+      padding: 14px;
+    }
+    .metric-card b { display: block; font-size: 26px; margin-top: 4px; }
+    .admin-tabs { display: flex; gap: 10px; overflow: auto; padding: 4px 0 16px; scrollbar-width: none; }
+    .admin-tab {
+      white-space: nowrap;
+      min-height: 40px;
+      padding: 0 14px;
+      border-radius: 999px;
+      background: #eef2f7;
+      color: #576174;
+      font-weight: 900;
+    }
+    .admin-tab.active { background: var(--blue); color: #fff; }
+    .queue-card {
+      padding: 16px;
+      display: grid;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .queue-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+    .tiny-pill {
+      border-radius: 999px;
+      padding: 6px 10px;
+      background: #edf5ff;
+      color: var(--blue);
+      font-size: 13px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+    .tiny-pill.green { background: #e8fbf5; color: var(--green); }
+    .tiny-pill.orange { background: #fff1e7; color: #e87324; }
+    .action-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .small-btn {
+      min-height: 42px;
+      border-radius: 8px;
+      background: var(--blue);
+      color: #fff;
+      font-weight: 900;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+    }
+    .small-btn.soft { background: #eef5ff; color: var(--blue); }
+    .management-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .manage-card {
+      min-height: 116px;
+      padding: 16px;
+      border-radius: 10px;
+      background: #fff;
+      border: 1px solid #edf1f7;
+      box-shadow: var(--shadow);
+      display: grid;
+      align-content: space-between;
+    }
+    .manage-card span { font-size: 28px; }
+    .rider-task { padding: 16px; display: grid; gap: 12px; margin-bottom: 12px; }
+    .map-strip {
+      min-height: 122px;
+      border-radius: 12px;
+      background:
+        linear-gradient(90deg, rgba(8,116,248,.16) 1px, transparent 1px),
+        linear-gradient(rgba(8,116,248,.12) 1px, transparent 1px),
+        #f0f7ff;
+      background-size: 34px 34px;
+      position: relative;
+      overflow: hidden;
+    }
+    .map-pin {
+      position: absolute;
+      width: 32px;
+      height: 32px;
+      border-radius: 50% 50% 50% 0;
+      transform: rotate(-45deg);
+      background: var(--blue);
+      display: grid;
+      place-items: center;
+    }
+    .map-pin:after {
+      content: "";
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #fff;
+    }
+    .map-pin.one { left: 74px; top: 36px; }
+    .map-pin.two { right: 82px; bottom: 32px; background: var(--green); }
+    .price-note {
+      background: #eef7ff;
+      border: 1px solid #d8eaff;
+      color: var(--blue-dark);
+      border-radius: 10px;
+      padding: 14px;
+      font-weight: 800;
+      line-height: 1.5;
+    }
+    .price-table {
+      border: 1px solid #d6dde8;
+      border-radius: 10px;
+      overflow: hidden;
+      background: #fff;
+      box-shadow: var(--shadow);
+      margin-top: 16px;
+    }
+    .price-table-row {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      min-height: 42px;
+      border-bottom: 1px solid #e7ebf2;
+      align-items: stretch;
+      font-size: 14px;
+    }
+    .price-table-row:last-child { border-bottom: 0; }
+    .price-table-row.header {
+      background: var(--blue-dark);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 900;
+    }
+    .price-table-row span {
+      padding: 9px 10px;
+      display: flex;
+      align-items: center;
+      border-right: 1px solid #e7ebf2;
+      line-height: 1.35;
+    }
+    .price-table-row.header span { border-right-color: rgba(255,255,255,.25); }
+    .price-table-row span:last-child { border-right: 0; font-weight: 800; justify-content: center; text-align: center; }
+    .price-table-row:nth-child(odd):not(.header) { background: #f8fafc; }
+    .area-list {
+      max-height: 280px;
+      overflow: auto;
+      border: 1.4px solid #dce2eb;
+      border-radius: 10px;
+      padding: 10px;
+      display: grid;
+      gap: 8px;
+      background: #fff;
+      margin-top: 12px;
+    }
+    .area-list[hidden] { display: none; }
+    .area-option {
+      min-height: 42px;
+      border-radius: 8px;
+      background: #f4f7fb;
+      padding: 0 12px;
+      text-align: left;
+      font-weight: 800;
+      color: #394456;
+    }
+    .area-option.active {
+      background: var(--blue);
+      color: #fff;
+      box-shadow: 0 8px 16px rgba(8, 116, 248, .18);
+    }
+    .welcome-card {
+      min-height: calc(100% - 48px);
+      display: grid;
+      align-content: center;
+      justify-items: center;
+      text-align: center;
+      padding: 24px;
+    }
+    .welcome-mark {
+      width: 118px;
+      height: 118px;
+      border-radius: 32px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(145deg, var(--blue), var(--cyan));
+      color: #fff;
+      font-size: 58px;
+      box-shadow: 0 18px 38px rgba(8,116,248,.25);
+      margin-bottom: 26px;
+    }
+    .mt8 { margin-top: 8px; }
+    .mt16 { margin-top: 16px; }
+    .mt24 { margin-top: 24px; }
+    .center { text-align: center; }
+    .spacer { height: 18px; }
+
+    @media (max-width: 430px) {
+      .phone { width: 100vw; height: 100vh; border: 0; border-radius: 0; }
+      .island { top: 12px; }
+      .content { padding-left: 18px; padding-right: 18px; }
+      .login-hero, .profile-header { margin-left: -18px; margin-right: -18px; }
+      .login-panel { margin-left: -18px; margin-right: -18px; }
+      .item-card { grid-template-columns: 70px 1fr auto; }
+      .counter { grid-template-columns: 32px 28px 32px; gap: 5px; font-size: 22px; }
+      .round-btn { width: 32px; height: 32px; }
+      .banner { grid-template-columns: 1fr 100px; padding: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="phone" aria-label="Dhoppa Bari mobile app prototype">
+    <div class="island" aria-hidden="true"></div>
+
+    <section class="screen splash active" id="splash">
+      <div class="status light"><span>9:41</span><span class="signals"><span class="bars"><span></span><span></span><span></span><span></span></span><span class="wifi"></span><span class="battery"></span></span></div>
+      <div class="splash-inner">
+        <div>
+          <div class="washer-logo"><span class="spark one">✦</span><span class="spark two">✦</span></div>
+          <h1>ধোপা বাড়ি</h1>
+          <p>কাপড়ের যত্নে আপনার বিশ্বস্ত পার্টনার।</p>
+        </div>
+        <button class="pill-white" data-screen="portal">শুরু করুন <span>→</span></button>
+        <p class="powered">Powered by Dupa Bari</p>
+      </div>
+    </section>
+
+    <section class="screen" id="portal">
+      <div class="status"><span>9:41</span><span class="signals"><span class="bars"><span></span><span></span><span></span><span></span></span><span class="wifi"></span><span class="battery"></span></span></div>
+      <div class="content">
+        <div class="topbar"><div class="brand">ধোপা বাড়ি</div><span class="tiny-pill green">Customer Deploy</span></div>
+        <h1 class="title mt24">প্রথম ধাপে Customer App live</h1>
+        <p class="subtitle mt8">এখন customer order flow, price, cart, summary, backend order save, history ও tracking ready. Admin/Rider next phase.</p>
+        <div class="role-grid">
+          <button class="role-card" data-screen="login">
+            <span class="role-icon">⌂</span>
+            <span><h2>Customer App</h2><p class="subtitle">অর্ডার, পেমেন্ট, ট্র্যাকিং</p></span>
+            <strong>→</strong>
+          </button>
+          <button class="role-card" data-screen="admin-dashboard">
+            <span class="role-icon dark">▦</span>
+            <span><h2>Admin Dashboard</h2><p class="subtitle">Next phase preview</p></span>
+            <strong>→</strong>
+          </button>
+          <button class="role-card" data-screen="rider-login">
+            <span class="role-icon green">▰</span>
+            <span><h2>Rider App</h2><p class="subtitle">Next phase preview</p></span>
+            <strong>→</strong>
+          </button>
+        </div>
+        <div class="summary-card card mt24">
+          <h2>Latest MVP Modules</h2>
+          <p class="subtitle mt8">OTP login, COD payment, live order status, rider assignment, customer database, pricing control, daily sales report.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="screen" id="login">
+      <div class="status light"><span>9:41</span><span class="signals"><span class="bars"><span></span><span></span><span></span><span></span></span><span class="wifi"></span><span class="battery"></span></span></div>
+      <div class="content">
+        <div class="login-hero customer">
+          <div class="logo-row"><span class="house-mark"></span><span>ধোপা বাড়ি</span></div>
+        </div>
+        <div class="login-panel flat center">
+          <h1 class="title">আপনার মোবাইল নম্বর দিন</h1>
+          <p class="subtitle">লগইন বা রেজিস্ট্রেশনের জন্য</p>
+          <div class="field mt24">
+            <span class="flag"></span><strong>+880⌄</strong><span class="divider"></span>
+            <input id="phone-input" value="১৭XXXXXXXXX" aria-label="মোবাইল নম্বর">
+          </div>
+          <button class="primary mt24" id="send-otp">ওটিপি পাঠান <span>→</span></button>
+          <p class="subtitle mt24">লগইন করে আপনি আমাদের শর্তাবলী মেনে নিচ্ছেন</p>
+          <button class="link mt16" data-screen="rider-login">ডেলিভারি পার্টনার লগইন</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="screen" id="otp">
+      <div class="status"><span>9:41</span><span class="signals"><span class="bars"><span></span><span></span><span></span><span></span></span><span class="wifi"></span><span class="battery"></span></span></div>
+      <div class="content center">
+        <div class="topbar"><button class="back" data-screen="login">←</button><span></span></div>
+        <div class="auth-ill"><div class="phone-line"></div><div class="code-bubble">****</div></div>
+        <h1 class="title">ওটিপি যাচাই করুন</h1>
+        <p class="subtitle"><span class="blue" id="otp-phone-label">০১৭XXXXXXXX</span> নম্বরে পাঠানো ৪ সংখ্যার কোডটি লিখুন</p>
+        <div class="otp-boxes">
+          <input class="otp-box active" maxlength="1" inputmode="numeric" aria-label="OTP digit 1">
+          <input class="otp-box" maxlength="1" inputmode="numeric" aria-label="OTP digit 2">
+          <input class="otp-box" maxlength="1" inputmode="numeric" aria-label="OTP digit 3">
+          <input class="otp-box" maxlength="1" inputmode="numeric" aria-label="OTP digit 4">
+        </div>
+        <button class="primary" id="verify-otp">যাচাই করুন ✓</button>
+        <p class="subtitle mt24">কোড পাননি? <span class="blue">আবার পাঠান (৪৫s)</span></p>
+      </div>
+    </section>
+
+    <section class="screen" id="details">
+      <div class="status"><span>9:41</span><span class="signals"><span class="bars"><span></span><span></span><span></span><span></span></span><span class="wifi"></span><span class="battery"></span></span></div>
+      <div class="content">
+        <div class="topbar"><button class="back" data-screen="otp">←</button><span></span></div>
+        <div class="stepbar"><span></span></div>
+        <p class="subtitle center">ধাপ ১ এর ১</p>
+        <h1 class="title center mt8">আপনার তথ্য দিন</h1>
+        <p class="subtitle center">অর্ডার ও ডেলিভারির জন্য এই তথ্য প্রয়োজন</p>
+        <div class="field mt24"><span>👤</span><input id="full-name-input" value="" placeholder="আপনার পূর্ণ নাম"></div>
+        <button class="field mt16" id="area-picker" type="button"><span>📍</span><input id="area-input" value="" placeholder="এলাকা নির্বাচন করুন" readonly><span>⌄</span></button>
+        <div class="area-list" id="area-list" hidden>
+          <button class="area-option">বাস টার্মিনাল</button>
+          <button class="area-option">কক্সবাজার সিটি কলেজ</button>
+          <button class="area-option">আলীর জাহাঁল</button>
+          <button class="area-option">রুমালিয়ারছড়া - উত্তর</button>
+          <button class="area-option">রুমালিয়ারছড়া - দক্ষিণ</button>
+          <button class="area-option">পিটিআই স্কুল (PTI) এলাকা</button>
+          <button class="area-option">রাস্তার মাথা</button>
+          <button class="area-option">তারাবনিয়া ছড়া</button>
+          <button class="area-option">খালুর দোকান</button>
+          <button class="area-option">টেকপাড়া</button>
+          <button class="area-option">পেশকার পাড়া</button>
+          <button class="area-option">বার্মিজ মার্কেট</button>
+          <button class="area-option">বাজারঘাটা</button>
+          <button class="area-option">ব্রাহ্ম মন্দির</button>
+          <button class="area-option">পেট্রোল পাম্প</button>
+          <button class="area-option">পানবাজার রোড</button>
+          <button class="area-option">ঘুনগাছ তলা</button>
+          <button class="area-option">ঝাউতলা</button>
+          <button class="area-option">হলিডে মোড়</button>
+          <button class="area-option">নুনিয়ারছড়া</button>
+          <button class="area-option">সুগন্ধা পয়েন্ট</button>
+          <button class="area-option">লাবণী পয়েন্ট</button>
+          <button class="area-option">কলাতলী</button>
+        </div>
+        <label class="field mt24"><span>🏠</span><textarea id="address-input" placeholder="বাসা নম্বর, রোড, এলাকা"></textarea></label>
+        <button class="primary mt24" id="save-profile">সেভ করুন ✓</button>
+      </div>
+    </section>
+
+    <section class="screen" id="welcome">
+      <div class="status"><span>9:41</span><span class="signals"><span class="bars"><span></span><span></span><span></span><span></span></span><span class="wifi"></span><span class="battery"></span></span></div>
+      <div class="welcome-card">
+        <div class="welcome-mark">✓</div>
+        <h1 class="title">Welcome to ধোপা বাড়ি</h1>
+        <p class="subtitle mt16" style="font-size:20px">কাপড়ের যত্নে আপনার বিশ্বস্ত পার্টনার।</p>
+        <button class="primary mt24" data-screen="home">অ্যাপে প্রবেশ করুন <span>→</span></button>
+      </div>
+    </section>
+
+    <section class="screen" id="home">
+      <div class="status"><span>9:41</span><span class="signals"><span class="bars"><span></span><span></span><span></span><span></span></span><span class="wifi"></span><span class="battery"></span></span></div>
+      <div class="content">
+        <div class="topbar">
+          <div class="brand">ধোপা বাড়ি</div>
+          <span></span>
+        </div>
+        <h1 class="title mt16">আসসালামু আলাইকুম, রহিম 👋</h1>
+        <p class="subtitle">বৃহস্পতিবার, ২২ মে ২০২৬</p>
+        <div class="home-hero">
+          <div>
+            <h2>আজই কাপড় পিকআপ বুক করুন</h2>
+            <p>সময় বেছে দিন, আমরা বাসা থেকে সংগ্রহ করে পরিষ্কার কাপড় পৌঁছে দেব।</p>
+            <button class="mini-outline" data-screen="order">অর্ডার দিন <span>→</span></button>
+          </div>
+          <div class="home-hero-art">🧺</div>
+        </div>
+        <div class="section-head"><h2>সার্ভিস বেছে নিন</h2><button class="link" data-screen="price-list">প্রাইস লিস্ট</button></div>
+        <div class="service-grid">
+          <button class="service-card" data-screen="order"><span class="big-icon">🧺</span><h3>ওয়াশ</h3><p>৳৪০/পিস থেকে</p></button>
+          <button class="service-card" data-screen="order"><span class="big-icon">👔</span><h3>ড্রাই ক্লিন</h3><p>৳৬০/পিস থেকে</p></button>
+        </div>
+        <div class="current-order">
+          <p class="subtitle">চলমান অর্ডার</p>
+          <div class="order-row mt8"><h2>#ORD-1234 | ৫ পিস</h2><button class="link" data-screen="tracking">বিস্তারিত →</button></div>
+          <p class="blue mt8">ধোয়া হচ্ছে ◌</p>
+          <div class="progress"><span></span></div>
+        </div>
+      </div>
+      <nav class="bottom-nav">
+        <button class="nav-item active" data-screen="home"><span class="nav-ico">⌂</span><span>হোম</span></button>
+        <button class="nav-item" data-screen="orders"><span class="nav-ico">▣</span><span>অর্ডার</span></button>
+        <button class="nav-item" data-chat-open="customer"><span class="nav-ico">••</span><span>Chat</span></button>
+        <button class="nav-item" data-screen="profile"><span class="nav-ico">♙</span><span>প্রোফাইল</span></button>
+      </nav>
+    </section>
+
+    <section class="screen" id="order">
+      <div class="status"><span>9:41</span><span class="signals"><span class="bars"><span></span><span></span><span></span><span></span></span><span class="wifi"></span><span class="battery"></span></span></div>
+      <div class="content">
+        <div class="topbar"><button class="back" data-screen="home">←</button><h1 class="title">নতুন অর্ডার</h1><span></span></div>
+        <div class="chips"><button class="chip service active" id="selected-service-badge">ওয়াশ ×</button></div>
+        <div class="chips service-tabs">
+          <button class="chip active" data-service="wash">ওয়াশ</button><button class="chip" data-service="dry">ড্রাই ক্লিন</button>
+        </div>
+        <div class="chips category-tabs">
+          <button class="chip active" data-category="male">পুরুষ</button><button class="chip" data-category="female">মহিলা</button><button class="chip" data-category="home">HOME</button><button class="chip" data-category="all">All</button>
+        </div>
+        <div class="item-list">
+          <div class="item-card" data-gender="male"><div class="line-art">▯</div><div><h3>শার্ট</h3><p class="subtitle">Wash ৳৪০ /<br>Dry Clean ৳৬০</p></div><div class="counter"><button class="round-btn">−</button><span>0</span><button class="round-btn plus">+</button></div></div>
+          <div class="item-card" data-gender="male"><div class="line-art">▥</div><div><h3>প্যান্ট</h3><p class="subtitle">Wash ৳৪০ /<br>Dry Clean ৳৬০</p></div><div class="counter"><button class="round-btn minus active">−</button><span>3</span><button class="round-btn plus">+</button></div></div>
+          <div class="item-card" data-gender="male"><div class="line-art">□</div><div><h3>টি-শার্ট</h3><p class="subtitle">Wash ৳৪০ /<br>Dry Clean ৳৬০</p></div><div class="counter"><button class="round-btn minus active">−</button><span>2</span><button class="round-btn plus">+</button></div></div>
+          <div class="item-card" data-gender="male"><div class="line-art">◫</div><div><h3>পাঞ্জাবি</h3><p class="subtitle">Wash ৳৫০ /<br>Dry Clean ৳৭০</p></div><div class="counter"><button class="round-btn">−</button><span>0</span><button class="round-btn plus">+</button></div></div>
+          <div class="item-card" data-gender="male"><div class="line-art">▱</div><div><h3>জুব্বা</h3><p class="subtitle">Wash ৳৬০ /<br>Dry Clean ৳৮০</p></div><div class="counter"><button class="round-btn">−</button><span>0</span><button class="round-btn plus">+</button></div></div>
+          <div class="item-card" data-gender="male"><div class="line-art">▤</div><div><h3>পায়জামা</h3><p class="subtitle">Wash ৳৪০ /<br>Dry Clean ৳৬০</p></div><div class="counter"><button class="round-btn">−</button><span>0</span><button class="round-btn plus">+</button></div></div>
+          <div class="item-card" data-gender="male"><div class="line-art">▰</div><div><h3>কোট</h3><p class="subtitle">Dry Clean ৳২০০</p></div><div class="counter"><button class="round-btn">−</button><span>0</span><button class="round-btn plus">+</button></div></div>
+          <div class="item-card" data-gender="male"><div class="line-art">▧</div><div><h3>কটি</h3><p class="subtitle">Dry Clean ৳১২০</p></div><div class="counter"><button class="round-btn">−</button><span>0</span><button class="round-btn plus">+</button></div></div>
+          <div class="item-card" data-gender="male"><div class="line-art">▨</div><div><h3>সুইটার</h3><p class="subtitle">Wash ৳১০০ /<br>Dry Clean ৳২০০</p></div><div class="counter"><button class="round-btn">−</button><span>0</span><button class="round-btn plus">+</button></div></div>
+          <div class="item-card" data-gender="male"><div class="line-art">▩</div><div><h3>জ্যাকেট</h3><p class="subtitle">Wash ৳১০০ /<br>Dry Clean ৳২০০</p></div><div class="counter"><button class="round-btn">−</button><span>0</span><button class="round-btn plus">+</button></div></div>
+          <div class="item-card" data-gender="male"><div class="line-art">◩</div><div><h3>শাল</h3><p class="subtitle">Wash ৳১০০ /<br>Dry Clean ৳২০০</p></div><div class="counter"><button class="round-btn">−</button><span>0</span><button class="round-btn plus">+</button></div></div>
+          <div class="item-card" data-gender="male"><div class="line-art">◪</div><div><h3>শেরওয়ানি</h3><p class="subtitle">Dry Clean ৳২৫০</p></div><div class="counter"><button class="round-btn">−</button><span>0</span><button class="round-btn plus">+</button></div></div>
+          <div class="item-card" data-gender="male"><div class="line-art">▦</div><div><h3>স্যুট</h3><p class="subtitle">Dry Clean ৳২৫০ / ৳৩৫০</p></div><div class="counter"><button class="round-btn">−</button><span>0</span><button class="round-btn plus">+</button></div></div>
+          <div class="item-card" data-gender="male"><div class="line-art">⌁</div><div><h3>টাই</h3><p class="subtitle">Dry Clean ৳৪০</p></div><div class="counter"><button class="round-btn">−</button><span>0</span><button class="round-btn plus">+</button></div></div>
+          <div class="item-card" data-gender="female" hidden><div class="line-art">⌣</div><div><h3>বোরকা</h3><p class="subtitle">Wash ৳৮০ /<br>Dry Clean ৳১২০</p></div><div class="counter"><button class="round-btn">−</button><span>0</span><button class="round-btn plus">+</button></div></div>
+          <div class="item-card" data-gender="female" hidden><div class="line-art">◫</div><div><h3>শাড়ি</h3><p class="subtitle">Wash ৳১৫০ /<br>Dry Clean ৳৪০০</p></div><div class="counter"><button class="round-btn">−</button><span>0</span><button class="round-btn plus">+</button></div></div>
+          <div class="item-card" data-gender="female" hidden><div class="line-art">▥</div><div><h3>সালোয়ার, কামিজ, ওড়না</h3><p class="subtitle">Wash / Dry Clean ৳১২০ - ৳১৮০</p></div><div class="counter"><button class="round-btn">−</button><span>0</span><button class="round-btn plus">+</button></div></div>
+          <div class="item-card" data-gender="female" hidden><div class="line-art">▱</div><div><h3>ব্লাউজ</h3><p class="subtitle">Wash ৳৪০ /<br>Dry Clean ৳৬০</p></div><div class="counter"><button class="round-btn">−</button><span>0</span><button class="round-btn plus">+</button></div></div>
+          <div class="item-card" data-gender="female" hidden><div class="line-art">◈</div><div><h3>লেহেঙ্গা / গাউন</h3><p class="subtitle">Wash ৳৩০০ /<br>Dry Clean ৳৮০০</p></div><div class="counter"><button class="round-btn">−</button><span>0</span><button class="round-btn plus">+</button></div></div>
+          <div class="item-card" data-gender="female" hidden><div class="line-art">◌</div><div><h3>হিজাব</h3><p class="subtitle">Wash ৳৪০ /<br>Dry Clean ৳৬০</p></div><div class="counter"><button class="round-btn">−</button><span>0</span><button class="round-btn plus">+</button></div></div>
+          <div class="item-card" data-gender="home" hidden><div class="line-art">▤</div><div><h3>বেডশিট / চাদর</h3><p class="subtitle">Wash ৳৪০ / ৳৫০ / ৳৬০</p></div><div class="counter"><button class="round-btn">−</button><span>0</span><button class="round-btn plus">+</button></div></div>
+          <div class="item-card" data-gender="home" hidden><div class="line-art">▢</div><div><h3>বালিশ কভার</h3><p class="subtitle">Wash ৳৩০</p></div><div class="counter"><button class="round-btn">−</button><span>0</span><button class="round-btn plus">+</button></div></div>
+          <div class="item-card" data-gender="home" hidden><div class="line-art">▥</div><div><h3>টাওয়েল</h3><p class="subtitle">Wash ৳৪০ - ৳৮০</p></div><div class="counter"><button class="round-btn">−</button><span>0</span><button class="round-btn plus">+</button></div></div>
+          <div class="item-card" data-gender="home" hidden><div class="line-art">▧</div><div><h3>পর্দা</h3><p class="subtitle">Wash / Dry Clean ৳১৫০ - ৳২৫০</p></div><div class="counter"><button class="round-btn">−</button><span>0</span><button class="round-btn plus">+</button></div></div>
+          <div class="item-card" data-gender="home" hidden><div class="line-art">▩</div><div><h3>কম্বল</h3><p class="subtitle">Wash / Dry Clean ৳৩০০ / ৳৬৫০ / ৳৮০০</p></div><div class="counter"><button class="round-btn">−</button><span>0</span><button class="round-btn plus">+</button></div></div>
+          <div class="item-card" data-gender="home" hidden><div class="line-art">▨</div><div><h3>কমফোর্টার</h3><p class="subtitle">Wash / Dry Clean ৳২০০ - ৳৬৫০</p></div><div class="counter"><button class="round-btn">−</button><span>0</span><button class="round-btn plus">+</button></div></div>
+          <div class="item-card" data-gender="home" hidden><div class="line-art">◰</div><div><h3>নকশী কাঁথা</h3><p class="subtitle">Wash ৳৬০ / Dry Clean ৳৮০</p></div><div class="counter"><button class="round-btn">−</button><span>0</span><button class="round-btn plus">+</button></div></div>
+          <div class="item-card" data-gender="home" hidden><div class="line-art">◇</div><div><h3>জায়নামাজ</h3><p class="subtitle">ফ্রি</p></div><div class="counter"><button class="round-btn">−</button><span>0</span><button class="round-btn plus">+</button></div></div>
+        </div>
+      </div>
+      <div class="order-footer">
+        <div class="cart-preview" id="cart-preview"><span class="muted">কার্টে এখনো কোনো item নেই</span></div>
+        <div><h2 id="cart-count">০ পিস</h2><div class="price" id="cart-total">৳০</div></div><button class="see-cart" data-cart-open="true">See<br>All</button><button class="primary" data-screen="summary">পরবর্তী <span>→</span></button>
+      </div>
+      <div class="cart-drawer" id="cart-drawer" hidden>
+        <div class="cart-sheet">
+          <div class="cart-sheet-head">
+            <div><h2>কার্টে যোগ করা item</h2><p class="subtitle">এখান থেকে quantity কমানো, বাড়ানো বা item বাদ দেওয়া যাবে</p></div>
+            <button class="cart-close" id="cart-close">×</button>
+          </div>
+          <div class="cart-detail-list" id="cart-detail-list"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="screen" id="price-list">
+      <div class="status"><span>9:41</span><span class="signals"><span class="bars"><span></span><span></span><span></span><span></span></span><span class="wifi"></span><span class="battery"></span></span></div>
+      <div class="content">
+        <div class="topbar"><button class="back" data-screen="home">←</button><h1 class="title">প্রাইস লিস্ট</h1><span></span></div>
+        <p class="price-note mt16">Wash / Dry Clean price item ও কাপড়ের condition অনুযায়ী final হবে। Admin চাইলে dashboard থেকে এই rate update করতে পারবে।</p>
+        <div class="price-table">
+          <div class="price-table-row header"><span>কাপড়ের ধরন (Item)</span><span>Wash / Dry Clean</span></div>
+          <div class="price-table-row"><span>শার্ট (Shirt)</span><span>৪০ / ৬০ টাকা</span></div>
+          <div class="price-table-row"><span>প্যান্ট (Pant)</span><span>৪০ / ৬০ টাকা</span></div>
+          <div class="price-table-row"><span>টি-শার্ট (T-Shirt)</span><span>৪০ / ৬০ টাকা</span></div>
+          <div class="price-table-row"><span>পাঞ্জাবি (Panjabi)</span><span>৫০ / ৭০ টাকা</span></div>
+          <div class="price-table-row"><span>জুব্বা (Jubbah)</span><span>৬০ / ৮০ টাকা</span></div>
+          <div class="price-table-row"><span>পায়জামা (Pajama)</span><span>৪০ / ৬০ টাকা</span></div>
+          <div class="price-table-row"><span>বোরকা (Borka)</span><span>৮০ / ১২০ টাকা</span></div>
+          <div class="price-table-row"><span>কোট (Coat)</span><span>২০০ টাকা</span></div>
+          <div class="price-table-row"><span>কটি (Kuti)</span><span>১২০ টাকা</span></div>
+          <div class="price-table-row"><span>সুইটার (Sweater)</span><span>১০০ / ২০০ টাকা</span></div>
+          <div class="price-table-row"><span>জ্যাকেট (Jacket)</span><span>১০০ / ২০০ টাকা</span></div>
+          <div class="price-table-row"><span>শাল (Shal)</span><span>১০০ / ২০০ টাকা</span></div>
+          <div class="price-table-row"><span>বেডশিট / চাদর (Bed Sheet)</span><span>৪০ / ৫০ / ৬০ টাকা</span></div>
+          <div class="price-table-row"><span>বালিশ কভার (Cover)</span><span>৩০ টাকা</span></div>
+          <div class="price-table-row"><span>টাওয়েল (Towel)</span><span>৪০ - ৮০ টাকা</span></div>
+          <div class="price-table-row"><span>পর্দা (Curtain / Padda)</span><span>১৫০ - ২৫০ টাকা</span></div>
+          <div class="price-table-row"><span>কম্বল (Blanket)</span><span>৩০০ / ৬৫০ / ৮০০ টাকা</span></div>
+          <div class="price-table-row"><span>শাড়ি (Saree)</span><span>১৫০ - ৪০০ টাকা</span></div>
+          <div class="price-table-row"><span>সালোয়ার, কামিজ, ওড়না</span><span>১২০ - ১৮০ টাকা</span></div>
+          <div class="price-table-row"><span>ব্লাউজ (Blouse)</span><span>৪০ / ৬০ টাকা</span></div>
+          <div class="price-table-row"><span>শেরওয়ানি (Sherwani)</span><span>২৫০ টাকা</span></div>
+          <div class="price-table-row"><span>স্যুট (Suit)</span><span>২৫০ / ৩৫০ টাকা</span></div>
+          <div class="price-table-row"><span>টাই (Tie)</span><span>৪০ টাকা</span></div>
+          <div class="price-table-row"><span>লেহেঙ্গা / গাউন</span><span>৩০০ / ৮০০ টাকা</span></div>
+          <div class="price-table-row"><span>হিজাব (Hijab)</span><span>৪০ / ৬০ টাকা</span></div>
+          <div class="price-table-row"><span>কমফোর্টার (Comforter)</span><span>২০০ - ৬৫০ টাকা</span></div>
+          <div class="price-table-row"><span>নকশী কাঁথা</span><span>৬০ / ৮০ টাকা</span></div>
+          <div class="price-table-row"><span>জায়নামাজ</span><span>ফ্রি</span></div>
+        </div>
+        <button class="primary mt24" data-screen="order">এই প্রাইস দিয়ে অর্ডার করুন</button>
+      </div>
+    </section>
+
+    <section class="screen" id="schedule">
+      <div class="status"><span>9:41</span><span class="signals"><span class="bars"><span></span><span></span><span></span><span></span></span><span class="wifi"></span><span class="battery"></span></span></div>
+      <div class="content">
+        <div class="topbar"><button class="back" data-screen="order">←</button><h1 class="title">সময় নির্ধারণ</h1><span></span></div>
+        <div class="section-title">▣ পিকআপের তারিখ ও সময়</div>
+        <div class="date-row">
+          <button class="date-card blue">শনি<b>২২</b></button><button class="date-card">রবি<b>২৩</b></button><button class="date-card">সোম<b>২৪</b></button><button class="date-card">মঙ্গল<b>২৫</b></button><button class="date-card">বুধ<b>২৬</b></button>
+        </div>
+        <div class="slot-grid">
+          <button class="slot blue">🌤 সকাল ৯-১১</button><button class="slot">☀ দুপুর ১২-২</button><button class="slot">🌥 বিকেল ৩-৫</button><button class="slot">☾ সন্ধ্যা ৬-৮</button>
+        </div>
+        <div class="section-title">▣ ডেলিভারির তারিখ ও সময়</div>
+        <div class="date-row">
+          <button class="date-card">শনি<b>২২</b></button><button class="date-card">রবি<b>২৩</b></button><button class="date-card green">সোম<b>২৪</b></button><button class="date-card">মঙ্গল<b>২৫</b></button><button class="date-card">বুধ<b>২৬</b></button>
+        </div>
+        <div class="slot-grid">
+          <button class="slot">🌥 সকাল ৯-১১</button><button class="slot">☀ দুপুর ১২-২</button><button class="slot green">🌤 বিকেল ৩-৫</button><button class="slot">☾ সন্ধ্যা ৬-৮</button>
+        </div>
+        <div class="address-card card"><span style="font-size:34px;color:var(--green)">📍</span><div><h3>ডেলিভারি ঠিকানা:</h3><p>বাসা ১২, রোড ৩, কলাতলী, কক্সবাজার</p></div><button class="link">✎ পরিবর্তন করুন</button></div>
+        <label class="field mt16"><span>▤</span><textarea>বিশেষ নির্দেশনা লিখুন (ঐচ্ছিক)...</textarea></label>
+        <button class="primary mt24" data-screen="summary">অর্ডার সামারি দেখুন <span>→</span></button>
+      </div>
+    </section>
+
+    <section class="screen" id="summary">
+      <div class="status"><span>9:41</span><span class="signals"><span class="bars"><span></span><span></span><span></span><span></span></span><span class="wifi"></span><span class="battery"></span></span></div>
+      <div class="content">
+        <div class="topbar"><button class="back" data-screen="order">←</button><h1 class="title">অর্ডার সামারি</h1><span></span></div>
+        <div class="summary-card card">
+          <div class="order-row"><h2>▤ অর্ডার বিবরণ</h2><span class="chip service active" id="summary-service">ওয়াশ</span></div>
+          <div id="summary-items"></div>
+          <div class="summary-line mt16"><span>সাবটোটাল:</span><span></span><span id="summary-subtotal">৳০</span></div>
+          <div class="summary-line"><span>ডেলিভারি চার্জ:</span><span></span><span id="summary-delivery">৳৩০</span></div>
+          <div class="total-row"><span>মোট:</span><span class="price" id="summary-total">৳৩০</span></div>
+        </div>
+        <div class="info-list card">
+          <div class="info-line"><span>▣</span><strong>পিকআপ:</strong><span>২২ মে, সকাল ৯-১১টা</span></div>
+          <div class="info-line delivery-time-line"><span>▰</span><strong>ডেলিভারি:</strong><span id="summary-delivery-time">Pickup After 3-7 Day Complete</span></div>
+          <div class="info-line address-summary"><span>📍</span><strong>ঠিকানা:</strong><span class="summary-address-text" id="summary-address">বাসা ১২, রোড ৩, কলাতলী</span><button class="address-change" id="summary-address-change">পরিবর্তন</button></div>
+          <div class="address-edit" id="summary-address-edit" hidden>
+            <label class="field"><textarea id="summary-address-input" placeholder="বাসা নম্বর, রোড, এলাকা"></textarea></label>
+            <button class="primary" id="summary-address-save">ঠিকানা সেভ করুন</button>
+          </div>
+        </div>
+        <div class="section-title">▭ পেমেন্ট পদ্ধতি</div>
+        <div class="payment">
+          <button class="radio-row active"><span>💵</span><span>ক্যাশ অন ডেলিভারি</span><span class="radio active"></span></button>
+          <button class="radio-row"><span>💸</span><span>বিকাশ / নগদ</span><span class="muted">শীঘ্রই আসছে ○</span></button>
+        </div>
+        <button class="primary green mt16" id="confirm-order">✓ অর্ডার নিশ্চিত করুন</button>
+      </div>
+    </section>
+
+    <section class="screen" id="success">
+      <div class="status"><span>9:41</span><span class="signals"><span class="bars"><span></span><span></span><span></span><span></span></span><span class="wifi"></span><span class="battery"></span></span></div>
+      <div class="content success">
+        <div class="confetti">
+          <span style="--x:12%;--y:18px"></span><span style="--x:24%;--y:4px"></span><span style="--x:35%;--y:18px"></span><span style="--x:50%;--y:2px"></span><span style="--x:66%;--y:14px"></span><span style="--x:78%;--y:3px"></span><span style="--x:88%;--y:22px"></span>
+        </div>
+        <div class="check">✓</div>
+        <h1 class="title">অর্ডার জমা হয়েছে! 🎉</h1>
+        <p class="subtitle mt16">অর্ডার নম্বর</p>
+        <h2 class="price mt8" id="success-order-id">#ORD-1234</h2>
+        <div class="summary-card card mt24">
+          <p class="subtitle" style="font-size:20px">অ্যাডমিন approve করলে<br>আপনার অর্ডার confirmed হবে</p>
+          <div class="info-list" style="box-shadow:none;border:0">
+            <div class="info-line"><span>▣</span><span>পিকআপ: ২২ মে, সকাল ৯-১১টা</span><span></span></div>
+            <div class="info-line"><span>▰</span><span>ডেলিভারি: Pickup After 3-7 Day Complete</span><span></span></div>
+            <div class="info-line"><span>📍</span><span>কলাতলী, কক্সবাজার</span><span></span></div>
+          </div>
+        </div>
+        <button class="outline mt24" data-screen="tracking">▣ অর্ডার ট্র্যাক করুন</button>
+        <button class="icon-btn mt16" style="width:100%;border-radius:8px;color:var(--blue);font-size:20px;font-weight:900" data-screen="home">⌂ হোমে ফিরুন</button>
+      </div>
+    </section>
+
+    <section class="screen" id="tracking">
+      <div class="status"><span>9:41</span><span class="signals"><span class="bars"><span></span><span></span><span></span><span></span></span><span class="wifi"></span><span class="battery"></span></span></div>
+      <div class="content tracking">
+        <div class="topbar"><button class="back" data-screen="home">←</button><h1 class="title">অর্ডার ট্র্যাকিং</h1><span class="status-pill" id="tracking-order-id">#ORD-1234</span></div>
+        <div class="tracking-list" id="tracking-list"></div>
+        <div class="rider-card card"><div class="avatar-small" id="tracking-rider-avatar">ক</div><div><h3 id="tracking-rider-name">করিম ভাই</h3><p class="subtitle" id="tracking-rider-phone">ডেলিভারিম্যান • ০১৯১২৩৪৫৬৭৮</p></div><a class="circle-action" id="tracking-rider-call" href="tel:01912345678">☎</a><button class="circle-action blue" data-chat-open="customer">••</button></div>
+        <div class="eta">◴ আনুমানিক ডেলিভারি: Pickup After 3-7 Day Complete</div>
+      </div>
+    </section>
+
+    <section class="screen" id="orders">
+      <div class="status"><span>9:41</span><span class="signals"><span class="bars"><span></span><span></span><span></span><span></span></span><span class="wifi"></span><span class="battery"></span></span></div>
+      <div class="content">
+        <h1 class="title center" style="margin-top:70px">আমার অর্ডার</h1>
+        <div class="tabs"><button class="tab active">চলমান</button><button class="tab">সম্পন্ন</button><button class="tab">বাতিল</button></div>
+        <div class="order-history" id="customer-orders">
+          <button class="history-card card" data-screen="tracking">
+            <div class="history-top"><h2>#ORD-1234</h2><h2 class="price">৳১২৭</h2></div>
+            <p class="subtitle mt16">ওয়াশ + আয়রন | ৮ পিস</p>
+            <div class="order-row mt16"><p class="subtitle">▣ ২২ মে ২০২৬</p><span class="status-pill">ধোয়া হচ্ছে</span></div>
+          </button>
+          <div class="history-card card">
+            <div class="history-top"><h2>#ORD-1230</h2><h2 class="price">৳৮৫</h2></div>
+            <p class="subtitle mt16">আয়রন | ৫ পিস</p>
+            <div class="order-row mt16"><p class="subtitle">▣ ২১ মে ২০২৬</p><span class="status-pill">পিকআপ হয়েছে</span></div>
+          </div>
+          <div class="history-card card">
+            <div class="history-top"><h2>#ORD-1228</h2><h2 class="price">৳২৪০</h2></div>
+            <p class="subtitle mt16">ড্রাই ক্লিন | ২ পিস</p>
+            <div class="order-row mt16"><p class="subtitle">▣ ২০ মে ২০২৬</p><span class="status-pill orange">ডেলিভারির জন্য প্রস্তুত</span></div>
+          </div>
+        </div>
+      </div>
+      <nav class="bottom-nav">
+        <button class="nav-item" data-screen="home"><span class="nav-ico">⌂</span><span>হোম</span></button>
+        <button class="nav-item active" data-screen="orders"><span class="nav-ico">▣</span><span>অর্ডার</span></button>
+        <button class="nav-item" data-chat-open="customer"><span class="nav-ico">••</span><span>Chat</span></button>
+        <button class="nav-item" data-screen="profile"><span class="nav-ico">♙</span><span>প্রোফাইল</span></button>
+      </nav>
+    </section>
+
+    <section class="screen" id="profile">
+      <div class="status light"><span>9:41</span><span class="signals"><span class="bars"><span></span><span></span><span></span><span></span></span><span class="wifi"></span><span class="battery"></span></span></div>
+      <div class="content">
+        <div class="profile-header">
+          <div class="avatar">র<span class="edit-dot">✎</span></div>
+          <h1 class="title">রহিম উদ্দিন</h1>
+          <p>০১৭XXXXXXXX</p>
+        </div>
+        <div class="menu-list card">
+          <button class="menu-row"><span class="menu-icon">📍</span><span>আমার ঠিকানা</span><span class="muted">কলাতলী ›</span></button>
+          <button class="menu-row" data-screen="orders"><span class="menu-icon">▣</span><span>অর্ডার হিস্ট্রি</span><span>›</span></button>
+          <button class="menu-row"><span class="menu-icon">★</span><span>রেটিং ও রিভিউ</span><span>›</span></button>
+          <button class="menu-row"><span class="menu-icon">☎</span><span>যোগাযোগ / সাহায্য</span><span>›</span></button>
+          <button class="menu-row"><span class="menu-icon">i</span><span>আমাদের সম্পর্কে</span><span>›</span></button>
+          <button class="menu-row"><span class="menu-icon">◎</span><span>ভাষা পরিবর্তন</span><span class="muted">বাংলা ›</span></button>
+        </div>
+        <button class="menu-row card mt24" id="logout-button" style="width:100%;color:#d92d20"><span>↪</span><span>লগআউট</span><span></span></button>
+      </div>
+      <nav class="bottom-nav">
+        <button class="nav-item" data-screen="home"><span class="nav-ico">⌂</span><span>হোম</span></button>
+        <button class="nav-item" data-screen="orders"><span class="nav-ico">▣</span><span>অর্ডার</span></button>
+        <button class="nav-item" data-chat-open="customer"><span class="nav-ico">••</span><span>Chat</span></button>
+        <button class="nav-item active" data-screen="profile"><span class="nav-ico">♙</span><span>প্রোফাইল</span></button>
+      </nav>
+    </section>
+
+    <section class="screen" id="rider-login">
+      <div class="status light"><span>9:41</span><span class="signals"><span class="bars"><span></span><span></span><span></span><span></span></span><span class="wifi"></span><span class="battery"></span></span></div>
+      <div class="content">
+        <div class="login-hero">
+          <h1 class="title" style="font-size:40px;color:#fff">ধোপা বাড়ি</h1>
+          <h2 class="blue" style="font-size:31px">ডেলিভারি পার্টনার</h2>
+          <div class="rider"><div class="delivery-box">ধোপা বাড়ি</div></div>
+        </div>
+        <div class="login-panel">
+          <h2 class="title" style="font-size:23px">ইউজারনেম</h2>
+          <div class="field mt16"><input id="rider-username-input" placeholder="username"></div>
+          <h2 class="title mt16" style="font-size:23px">পাসওয়ার্ড</h2>
+          <div class="field mt16"><input id="rider-password-input" type="password" placeholder="password"></div>
+          <p class="form-error" id="rider-login-error" hidden style="color:#f43f5e;margin-top:10px"></p>
+          <button class="primary mt24" id="rider-login-btn">লগইন করুন <span>→</span></button>
+          <p class="subtitle center mt24">অ্যাডমিন থেকে অনুমোদিত রাইডাররাই<br>লগইন করতে পারবেন</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="screen" id="admin-dashboard">
+      <div class="status light"><span>9:41</span><span class="signals"><span class="bars"><span></span><span></span><span></span><span></span></span><span class="wifi"></span><span class="battery"></span></span></div>
+      <div class="content">
+        <div class="dashboard-head">
+          <div class="topbar"><button class="back" style="color:#fff" data-screen="portal">←</button><span class="tiny-pill">Admin</span></div>
+          <h1 class="title mt16">Business Dashboard</h1>
+          <p class="subtitle">আজকের অপারেশন, অর্ডার ও ডেলিভারি কন্ট্রোল</p>
+          <div class="metric-grid">
+            <div class="metric-card"><span>আজকের বিক্রি</span><b id="metric-sales">৳০</b></div>
+            <div class="metric-card"><span>নতুন অর্ডার</span><b id="metric-new-orders">০</b></div>
+            <div class="metric-card"><span>পেন্ডিং পিকআপ</span><b id="metric-pending-pickup">০</b></div>
+            <div class="metric-card"><span>Active Rider</span><b id="metric-active-riders">০</b></div>
+          </div>
+        </div>
+        <div class="admin-tabs">
+          <button class="admin-tab active" data-admin-tab="live">Live Orders</button>
+          <button class="admin-tab" data-admin-tab="pickup">Pickup</button>
+          <button class="admin-tab" data-admin-tab="delivery">Delivery</button>
+          <button class="admin-tab" data-admin-tab="payment">Payment</button>
+        </div>
+        <div id="admin-orders-list"></div>
+        <div class="section-title">▦ Management</div>
+        <div class="management-grid">
+          <button class="manage-card" data-screen="admin-pricing"><span>৳</span><h3>Pricing</h3><p class="subtitle">Service rate edit</p></button>
+          <button class="manage-card" data-screen="admin-customers"><span>◎</span><h3>Customers</h3><p class="subtitle">১,২৪০ users</p></button>
+          <button class="manage-card" data-screen="admin-riders"><span>▰</span><h3>Riders</h3><p class="subtitle">৬ online</p></button>
+          <button class="manage-card" data-screen="admin-reports"><span>▥</span><h3>Reports</h3><p class="subtitle">Sales & growth</p></button>
+        </div>
+      </div>
+    </section>
+
+    <section class="screen" id="admin-order">
+      <div class="status"><span>9:41</span><span class="signals"><span class="bars"><span></span><span></span><span></span><span></span></span><span class="wifi"></span><span class="battery"></span></span></div>
+      <div class="content">
+        <div class="topbar"><button class="back" data-screen="admin-dashboard">←</button><h1 class="title">Order Control</h1><span class="tiny-pill" id="admin-order-id">#ORD-0000</span></div>
+        <div class="summary-card card mt24">
+          <h2>Customer</h2>
+          <p class="subtitle mt8" id="admin-order-customer">—</p>
+          <div class="info-list">
+            <div class="info-line"><span>▣</span><strong>Service</strong><span id="admin-order-service">—</span></div>
+            <div class="info-line"><span>▥</span><strong>Items</strong><span id="admin-order-items">—</span></div>
+            <div class="info-line"><span>৳</span><strong>Payment</strong><span id="admin-order-payment">—</span></div>
+          </div>
+        </div>
+        <div class="action-row mt16"><a class="small-btn soft" id="admin-rider-call" href="tel:">Call Rider</a><button class="small-btn" data-chat-open="admin">Open Chat</button></div>
+        <div class="section-title">Assign Rider</div>
+        <div class="payment" id="admin-order-riders"></div>
+        <div class="section-title">Order Status</div>
+        <div class="chips admin-status-steps" id="admin-order-status-chips">
+          <button class="chip" data-admin-order-status="confirmed">Approve</button><button class="chip" data-admin-order-status="collecting">Assign Rider</button><button class="chip" data-admin-order-status="washing">Washing</button><button class="chip" data-admin-order-status="packaging">Packaging</button><button class="chip" data-admin-order-status="ready">Ready</button>
+        </div>
+        <button class="primary mt24" id="admin-order-update-btn">Update & Notify Customer</button>
+        <p class="modal-note" id="admin-order-note" style="display:none;text-align:center;margin-top:10px;color:var(--muted)"></p>
+      </div>
+    </section>
+
+    <section class="screen" id="admin-pricing">
+      <div class="status"><span>9:41</span><span class="signals"><span class="bars"><span></span><span></span><span></span><span></span></span><span class="wifi"></span><span class="battery"></span></span></div>
+      <div class="content">
+        <div class="topbar"><button class="back" data-screen="admin-dashboard">←</button><h1 class="title">Pricing & Promo</h1><span></span></div>
+        <div class="price-note mt24">Admin এখান থেকে Wash / Dry Clean item-wise price update করবে। নিচের rate list image reference অনুযায়ী বসানো হয়েছে।</div>
+        <div class="price-table" id="admin-price-table">
+          <div class="price-table-row header"><span id="admin-price-header-item">Item</span><span>Wash / Dry Clean</span></div>
+        </div>
+        <div class="summary-card card mt16" id="admin-price-edit" hidden>
+          <h2 id="admin-price-edit-title">Edit Price</h2>
+          <div class="field mt16"><span>Wash</span><input type="number" id="admin-price-wash" min="0"></div>
+          <div class="field mt16"><span>Dry Clean</span><input type="number" id="admin-price-dry" min="0"></div>
+          <div class="field mt16"><span>Combo</span><input type="number" id="admin-price-combo" min="0"></div>
+          <div class="field mt16"><span>Iron</span><input type="number" id="admin-price-iron" min="0"></div>
+          <button class="primary mt16" id="admin-price-save-btn">Save Price</button>
+        </div>
+        <button class="primary mt24" id="admin-price-add-btn">Add New Item</button>
+      </div>
+    </section>
+
+    <section class="screen" id="admin-customers">
+      <div class="status"><span>9:41</span><span class="signals"><span class="bars"><span></span><span></span><span></span><span></span></span><span class="wifi"></span><span class="battery"></span></span></div>
+      <div class="content">
+        <div class="topbar"><button class="back" data-screen="admin-dashboard">←</button><h1 class="title">Customers</h1><span class="tiny-pill">1,240</span></div>
+        <div class="field mt24"><span>⌕</span><input id="admin-customer-search" placeholder="Search customer"></div>
+        <div class="menu-list card mt16" id="admin-customers-list"></div>
+      </div>
+    </section>
+
+    <section class="screen" id="admin-riders">
+      <div class="status"><span>9:41</span><span class="signals"><span class="bars"><span></span><span></span><span></span><span></span></span><span class="wifi"></span><span class="battery"></span></span></div>
+      <div class="content">
+        <div class="topbar"><button class="back" data-screen="admin-dashboard">←</button><h1 class="title">Riders</h1><span class="tiny-pill green">6 online</span></div>
+        <div class="map-strip mt24"><span class="map-pin one"></span><span class="map-pin two"></span></div>
+        <div class="menu-list card mt16" id="admin-riders-list"></div>
+      </div>
+    </section>
+
+    <section class="screen" id="admin-reports">
+      <div class="status"><span>9:41</span><span class="signals"><span class="bars"><span></span><span></span><span></span><span></span></span><span class="wifi"></span><span class="battery"></span></span></div>
+      <div class="content">
+        <div class="topbar"><button class="back" data-screen="admin-dashboard">←</button><h1 class="title">Reports</h1><span></span></div>
+        <div class="summary-card card mt24">
+          <h2 id="admin-reports-title">Performance</h2>
+          <div class="metric-grid" style="color:var(--ink)">
+            <div class="manage-card"><span>৳</span><h3 id="report-revenue">৳০</h3><p class="subtitle">Revenue</p></div>
+            <div class="manage-card"><span>▣</span><h3 id="report-orders">০</h3><p class="subtitle">Orders</p></div>
+            <div class="manage-card"><span>◎</span><h3 id="report-customers">০</h3><p class="subtitle">Customers</p></div>
+            <div class="manage-card"><span>★</span><h3 id="report-avg">৳০</h3><p class="subtitle">Avg Order</p></div>
+          </div>
+        </div>
+        <div class="summary-card card mt16">
+          <h2>Top Services</h2>
+          <p class="subtitle mt8" id="report-services-text">—</p>
+          <div class="progress"><span id="report-services-bar" style="width:0%"></span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="screen" id="rider-dashboard">
+      <div class="status"><span>9:41</span><span class="signals"><span class="bars"><span></span><span></span><span></span><span></span></span><span class="wifi"></span><span class="battery"></span></span></div>
+      <div class="content">
+        <div class="topbar"><button class="back" data-screen="portal">←</button><h1 class="title">Rider Tasks</h1><span class="tiny-pill green" id="rider-name-pill">Online</span></div>
+        <div class="map-strip mt24"><span class="map-pin one"></span><span class="map-pin two"></span></div>
+        <div id="rider-tasks-list"></div>
+      </div>
+    </section>
+
+    <section class="screen" id="rider-task">
+      <div class="status"><span>9:41</span><span class="signals"><span class="bars"><span></span><span></span><span></span><span></span></span><span class="wifi"></span><span class="battery"></span></span></div>
+      <div class="content">
+        <div class="topbar"><button class="back" data-screen="rider-dashboard">←</button><h1 class="title">Pickup Task</h1><span></span></div>
+        <div class="summary-card card mt24">
+          <h2 id="rider-task-id">#—</h2>
+          <p class="subtitle mt8" id="rider-task-customer">—</p>
+          <div class="map-strip mt16"><span class="map-pin one"></span></div>
+          <div class="info-list">
+            <div class="info-line"><span>📍</span><strong>Address</strong><span id="rider-task-address">—</span></div>
+            <div class="info-line"><span>▥</span><strong>Items</strong><span id="rider-task-items">—</span></div>
+            <div class="info-line"><span>৳</span><strong>Collect</strong><span id="rider-task-collect">—</span></div>
+          </div>
+        </div>
+        <button class="primary mt24" id="rider-task-action-btn">Mark as Collected</button>
+        <div class="action-row mt16"><a class="outline" id="rider-task-call" href="tel:">Call Customer</a><button class="outline" data-chat-open="rider">Open Chat</button></div>
+      </div>
+    </section>
+    <div class="chat-panel" id="chat-panel" hidden>
+      <div class="chat-sheet">
+        <div class="chat-head">
+          <div class="avatar-small">ক</div>
+          <div><h3 id="chat-title">Order Chat</h3><p class="subtitle" id="chat-subtitle">Customer • Admin • করিম ভাই</p></div>
+          <a class="chat-whatsapp" id="chat-whatsapp" href="#" target="_blank" rel="noopener" title="WhatsApp-এ মেসেজ করুন" hidden>💬</a>
+          <button class="chat-close" id="chat-close">×</button>
+        </div>
+        <div class="chat-messages" id="chat-messages"></div>
+        <div class="chat-compose">
+          <input id="chat-input" placeholder="মেসেজ লিখুন">
+          <button class="chat-send" id="chat-send">➤</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const screens = [...document.querySelectorAll(".screen")];
+    const statusLightScreens = new Set(["splash", "profile", "rider-login"]);
+    const API_BASE = location.protocol === "file:" ? "http://localhost:4177" : "";
+    let selectedService = "wash";
+    let lastOrderId = "ORD-1234";
+    let orderWorkflowStatus = "pending";
+    const FREE_DELIVERY_MINIMUM = 300;
+    const DELIVERY_TIME_TEXT = "Pickup After 3-7 Day Complete";
+    const orderCart = {};
+    let activeRiderId = "rider_karim";
+    const riders = {
+      rider_karim: { id: "rider_karim", avatar: "ক", name: "করিম ভাই", phone: "01912345678", displayPhone: "০১৯১২৩৪৫৬৭৮" },
+      rider_mamun: { id: "rider_mamun", avatar: "ম", name: "মামুন ভাই", phone: "01612345678", displayPhone: "০১৬১২৩৪৫৬৭৮" },
+      rider_shahin: { id: "rider_shahin", avatar: "শ", name: "শাহিন ভাই", phone: "01512345678", displayPhone: "০১৫১২৩৪৫৬৭৮" }
+    };
+    const userProfile = {
+      phone: "০১৭XXXXXXXX",
+      name: "রহিম",
+      area: "কলাতলী",
+      address: "কলাতলী, কক্সবাজার"
+    };
+    let chatRole = "customer";
+    const workflowSteps = [
+      { key: "pending", title: "অর্ডার পেন্ডিং", note: "অ্যাডমিন approval দিলে অর্ডার confirmed হবে" },
+      { key: "confirmed", title: "অর্ডার কনফার্মড", note: "আপনার অর্ডার গ্রহণ করা হয়েছে" },
+      { key: "collecting", title: "কাপড় সংগ্রহ করা হচ্ছে", note: "ডেলিভারিম্যান আপনার ঠিকানায় যাচ্ছে" },
+      { key: "collected", title: "কাপড় সংগ্রহ করা হয়েছে", note: "ডেলিভারিম্যান কাপড় গ্রহণ করেছেন" },
+      { key: "washing", title: "ধোয়া হচ্ছে", note: "আপনার কাপড় যত্নসহকারে প্রসেস করা হচ্ছে। প্রস্তুত হলে আমরা আপনাকে জানাব।" },
+      { key: "packaging", title: "প্যাকেজিং", note: "কাপড় প্যাকেজিং করা হচ্ছে" },
+      { key: "ready", title: "ডেলিভারির জন্য প্রস্তুত", note: "রাইডার অফিস থেকে প্যাকেজ গ্রহণ করবে" },
+      { key: "delivered", title: "ডেলিভারি সম্পন্ন", note: "অর্ডার সফলভাবে সম্পন্ন হয়েছে" }
+    ];
+
+    const serviceLabels = {
+      wash: "ওয়াশ",
+      dry: "ড্রাই ক্লিন"
+    };
+
+    const priceMap = {
+      "শার্ট": { wash: 40, dry: 60, combo: 50, iron: 8 },
+      "প্যান্ট": { wash: 40, dry: 60, combo: 50, iron: 8 },
+      "টি-শার্ট": { wash: 40, dry: 60, combo: 50, iron: 8 },
+      "পাঞ্জাবি": { wash: 50, dry: 70, combo: 60, iron: 10 },
+      "জুব্বা": { wash: 60, dry: 80, combo: 70, iron: 12 },
+      "পায়জামা": { wash: 40, dry: 60, combo: 50, iron: 8 },
+      "কোট": { wash: 200, dry: 200, combo: 210, iron: 20 },
+      "কটি": { wash: 120, dry: 120, combo: 130, iron: 15 },
+      "সুইটার": { wash: 100, dry: 200, combo: 110, iron: 20 },
+      "জ্যাকেট": { wash: 100, dry: 200, combo: 110, iron: 20 },
+      "শাল": { wash: 100, dry: 200, combo: 110, iron: 20 },
+      "শেরওয়ানি": { wash: 250, dry: 250, combo: 260, iron: 25 },
+      "স্যুট": { wash: 250, dry: 350, combo: 270, iron: 25 },
+      "টাই": { wash: 40, dry: 40, combo: 45, iron: 8 },
+      "বোরকা": { wash: 80, dry: 120, combo: 95, iron: 15 },
+      "শাড়ি": { wash: 150, dry: 400, combo: 180, iron: 30 },
+      "সালোয়ার, কামিজ, ওড়না": { wash: 120, dry: 180, combo: 140, iron: 25 },
+      "ব্লাউজ": { wash: 40, dry: 60, combo: 50, iron: 8 },
+      "লেহেঙ্গা / গাউন": { wash: 300, dry: 800, combo: 350, iron: 40 },
+      "হিজাব": { wash: 40, dry: 60, combo: 50, iron: 8 },
+      "বেডশিট / চাদর": { wash: 60, dry: 60, combo: 70, iron: 15 },
+      "বালিশ কভার": { wash: 30, dry: 30, combo: 35, iron: 8 },
+      "টাওয়েল": { wash: 80, dry: 80, combo: 85, iron: 8 },
+      "পর্দা": { wash: 150, dry: 250, combo: 180, iron: 20 },
+      "কম্বল": { wash: 300, dry: 800, combo: 350, iron: 30 },
+      "কমফোর্টার": { wash: 200, dry: 650, combo: 250, iron: 30 },
+      "নকশী কাঁথা": { wash: 60, dry: 80, combo: 70, iron: 10 },
+      "জায়নামাজ": { wash: 0, dry: 0, combo: 0, iron: 0 }
+    };
+
+    const toBn = value => String(value).replace(/\d/g, digit => "০১২৩৪৫৬৭৮৯"[digit]);
+    const money = value => `৳${toBn(value)}`;
+
+    function getOrderCards() {
+      return [...document.querySelectorAll("#order .item-card[data-gender]")];
+    }
+
+    function cartKey(service, name) {
+      return `${service}::${name}`;
+    }
+
+    function selectedItemPrice(name, service = selectedService) {
+      const prices = priceMap[name] || {};
+      return prices[service] || 0;
+    }
+
+    function selectedItemPriceLabel(name) {
+      const prices = priceMap[name] || {};
+      if (selectedService === "wash") return `Wash ${money(prices.wash || 0)}`;
+      return `Dry Clean ${money(prices.dry || 0)}`;
+    }
+
+    function cardItemName(card) {
+      return card.querySelector("h3").textContent.trim();
+    }
+
+    function currentServiceQty(name) {
+      return orderCart[cartKey(selectedService, name)]?.qty || 0;
+    }
+
+    function updateItemPriceLabels() {
+      getOrderCards().forEach(card => {
+        const name = cardItemName(card);
+        const subtitle = card.querySelector(".subtitle");
+        if (subtitle) subtitle.textContent = selectedItemPriceLabel(name);
+      });
+    }
+
+    function getCart() {
+      return Object.values(orderCart)
+        .filter(item => item.qty > 0)
+        .map(item => ({ ...item, total: item.qty * item.price }));
+    }
+
+    function cartSubtotal() {
+      return getCart().reduce((sum, item) => sum + item.total, 0);
+    }
+
+    function deliveryCharge(subtotal) {
+      if (subtotal <= 0) return 0;
+      return subtotal >= FREE_DELIVERY_MINIMUM ? 0 : 30;
+    }
+
+    function deliveryChargeLabel(subtotal) {
+      return deliveryCharge(subtotal) === 0 && subtotal > 0 ? "ফ্রি" : money(deliveryCharge(subtotal));
+    }
+
+    function updateCartUI() {
+      updateItemPriceLabels();
+
+      const serviceBadge = document.getElementById("selected-service-badge");
+      if (serviceBadge) serviceBadge.textContent = `${serviceLabels[selectedService]} ×`;
+
+      getOrderCards().forEach(card => {
+        const name = cardItemName(card);
+        const qty = currentServiceQty(name);
+        const valueEl = card.querySelector(".counter span");
+        if (valueEl) valueEl.textContent = toBn(qty);
+        const minus = card.querySelector(".round-btn:not(.plus)");
+        if (minus) minus.classList.toggle("active", qty > 0);
+      });
+
+      const count = getCart().reduce((sum, item) => sum + item.qty, 0);
+      const subtotal = cartSubtotal();
+      const countEl = document.getElementById("cart-count");
+      const totalEl = document.getElementById("cart-total");
+      if (countEl) countEl.textContent = `${toBn(count)} পিস`;
+      if (totalEl) totalEl.textContent = money(subtotal);
+      updateCartPreview();
+    }
+
+    function updateCartPreview() {
+      const preview = document.getElementById("cart-preview");
+      if (!preview) return;
+      const cart = getCart();
+      preview.innerHTML = cart.length
+        ? `${cart.map(item => `<button class="cart-pill ${item.service === "dry" ? "dry" : ""}" data-cart-open="true">${serviceLabels[item.service]}: ${item.name} × ${toBn(item.qty)}</button>`).join("")}<button class="cart-pill all" data-cart-open="true">সব দেখুন</button>`
+        : `<span class="muted">কার্টে এখনো কোনো item নেই</span>`;
+      updateCartDrawer();
+    }
+
+    function openCartDrawer() {
+      updateCartDrawer();
+      const drawer = document.getElementById("cart-drawer");
+      if (drawer) drawer.hidden = false;
+    }
+
+    function closeCartDrawer() {
+      const drawer = document.getElementById("cart-drawer");
+      if (drawer) drawer.hidden = true;
+    }
+
+    function updateCartDrawer() {
+      const list = document.getElementById("cart-detail-list");
+      if (!list) return;
+      const cart = getCart();
+      list.innerHTML = cart.length
+        ? cart.map(item => {
+            const key = cartKey(item.service, item.name);
+            return `
+              <div class="cart-detail-row">
+                <div>
+                  <h3>${item.name}</h3>
+                  <p class="subtitle">${item.serviceLabel} • ${money(item.price)} × ${toBn(item.qty)} = ${money(item.total)}</p>
+                </div>
+                <div class="cart-detail-actions" data-cart-key="${key}">
+                  <button class="round-btn minus active" data-cart-delta="-1">−</button>
+                  <span>${toBn(item.qty)}</span>
+                  <button class="round-btn plus" data-cart-delta="1">+</button>
+                  <button class="remove-cart-item" data-cart-remove="true">বাদ দিন</button>
+                </div>
+              </div>
+            `;
+          }).join("")
+        : `<div class="summary-card card"><h2>কার্ট খালি</h2><p class="subtitle mt8">Item add করলে এখানে দেখা যাবে।</p></div>`;
+    }
+
+    function updateCartItem(name, delta) {
+      const key = cartKey(selectedService, name);
+      updateCartLine(key, delta);
+    }
+
+    function updateCartLine(key, delta) {
+      const current = orderCart[key]?.qty || 0;
+      const qty = Math.max(current + delta, 0);
+      if (!qty) {
+        delete orderCart[key];
+        return;
+      }
+      const [service, name] = key.split("::");
+      const price = selectedItemPrice(name, service);
+      orderCart[key] = {
+        name,
+        service,
+        serviceLabel: serviceLabels[service],
+        qty,
+        price,
+        total: qty * price
+      };
+    }
+
+    function removeCartLine(key) {
+      delete orderCart[key];
+    }
+
+    function updateSummary() {
+      const cart = getCart();
+      const summaryItems = document.getElementById("summary-items");
+      const subtotal = cartSubtotal();
+      const delivery = deliveryCharge(subtotal);
+      const discount = 0;
+      const total = Math.max(subtotal + delivery - discount, 0);
+      const summaryAddress = document.getElementById("summary-address");
+      const summaryAddressInput = document.getElementById("summary-address-input");
+
+      const services = [...new Set(cart.map(item => item.serviceLabel))];
+      document.getElementById("summary-service").textContent = services.length <= 1 ? (services[0] || serviceLabels[selectedService]) : `${toBn(services.length)} সার্ভিস`;
+      summaryItems.innerHTML = cart.length
+        ? cart.map(item => `<div class="summary-line"><span>${item.serviceLabel}: ${item.name} × ${toBn(item.qty)}</span><span class="dash"></span><span>${money(item.total)}</span></div>`).join("")
+        : `<p class="subtitle mt16">এখনো কোনো item select করা হয়নি। Back গিয়ে plus চাপুন।</p>`;
+      document.getElementById("summary-subtotal").textContent = money(subtotal);
+      document.getElementById("summary-delivery").textContent = deliveryChargeLabel(subtotal);
+      document.getElementById("summary-total").textContent = money(total);
+      if (summaryAddress) summaryAddress.textContent = userProfile.address || "কলাতলী, কক্সবাজার";
+      if (summaryAddressInput) summaryAddressInput.value = userProfile.address || "";
+    }
+
+    function getOrderPayload() {
+      const cart = getCart();
+      const subtotal = cartSubtotal();
+      const delivery = deliveryCharge(subtotal);
+      const discount = 0;
+      const total = Math.max(subtotal + delivery - discount, 0);
+      return {
+        customerName: userProfile.name || "গ্রাহক",
+        phone: userProfile.phone || "০১৭XXXXXXXX",
+        address: userProfile.address || "কলাতলী, কক্সবাজার",
+        service: [...new Set(cart.map(item => item.serviceLabel))].join(" + ") || serviceLabels[selectedService],
+        items: cart,
+        subtotal,
+        delivery,
+        discount,
+        total,
+        deliveryTime: DELIVERY_TIME_TEXT,
+        status: "অর্ডার পেন্ডিং",
+        riderId: activeRiderId,
+        payment: "COD"
+      };
+    }
+
+    async function api(path, options = {}) {
+      const response = await fetch(`${API_BASE}${path}`, {
+        headers: { "Content-Type": "application/json", ...(options.headers || {}) },
+        ...options
+      });
+      if (!response.ok) throw new Error(`API failed: ${response.status}`);
+      return response.json();
+    }
+
+    async function loadBackendStatus() {
+      try {
+        const health = await api("/api/health");
+        console.log("Backend connected", health);
+        await loadCustomerOrders();
+      } catch (error) {
+        console.warn("Backend is not running yet. Start server.js for persistence.", error);
+      }
+    }
+
+    function syncUserText() {
+      document.querySelectorAll("#home .title").forEach(title => {
+        if (title.textContent.includes("আসসালামু")) title.textContent = `আসসালামু আলাইকুম, ${userProfile.name || "গ্রাহক"} 👋`;
+      });
+      const profileName = document.querySelector("#profile .profile-header .title");
+      const profilePhone = document.querySelector("#profile .profile-header p");
+      const profileArea = document.querySelector("#profile .menu-row .muted");
+      if (profileName) profileName.textContent = userProfile.name || "গ্রাহক";
+      if (profilePhone) profilePhone.textContent = userProfile.phone || "";
+      if (profileArea) profileArea.textContent = `${userProfile.area || "এলাকা"} ›`;
+    }
+
+    function syncRiderText() {
+      const rider = riders[activeRiderId] || riders.rider_karim;
+      const avatar = document.getElementById("tracking-rider-avatar");
+      const name = document.getElementById("tracking-rider-name");
+      const phone = document.getElementById("tracking-rider-phone");
+      const call = document.getElementById("tracking-rider-call");
+      if (avatar) avatar.textContent = rider.avatar;
+      if (name) name.textContent = rider.name;
+      if (phone) phone.textContent = `ডেলিভারিম্যান • ${rider.displayPhone}`;
+      if (call) call.href = `tel:${rider.phone}`;
+    }
+
+    function statusIndex(status) {
+      return workflowSteps.findIndex(step => step.key === status);
+    }
+
+    function workflowStatusLabel(status = orderWorkflowStatus) {
+      return workflowSteps.find(step => step.key === status)?.title || "অর্ডার পেন্ডিং";
+    }
+
+    function renderTrackingStatus() {
+      const list = document.getElementById("tracking-list");
+      if (!list) return;
+      const activeIndex = Math.max(statusIndex(orderWorkflowStatus), 0);
+      list.innerHTML = workflowSteps.map((step, index) => {
+        const done = index < activeIndex;
+        const current = index === activeIndex;
+        return `
+          <div class="track-item ${done ? "done" : ""} ${current ? "current" : ""}">
+            <div class="track-dot">${done ? "✓" : ""}</div>
+            <h3>${step.title}</h3>
+            <p class="subtitle">${step.note}</p>
+          </div>
+        `;
+      }).join("");
+      const homeOrderStatus = document.querySelector("#home .current-order .blue");
+      if (homeOrderStatus) homeOrderStatus.textContent = `${workflowStatusLabel()} ◌`;
+      const orderBadges = document.querySelectorAll("#customer-orders .status-pill");
+      orderBadges.forEach((badge, index) => {
+        if (index === 0) badge.textContent = workflowStatusLabel();
+      });
+    }
+
+    function setOrderStatus(status) {
+      orderWorkflowStatus = status;
+      renderTrackingStatus();
+    }
+
+    async function sendOtp() {
+      const phone = document.getElementById("phone-input").value.trim() || "০১৭XXXXXXXX";
+      userProfile.phone = phone;
+      document.getElementById("otp-phone-label").textContent = phone;
+      try {
+        await api("/api/auth/otp", {
+          method: "POST",
+          body: JSON.stringify({ phone })
+        });
+      } catch (error) {
+        console.warn("OTP API unavailable, demo OTP 1234 will work.", error);
+      }
+      showScreen("otp");
+    }
+
+    async function verifyOtp() {
+      const otp = [...document.querySelectorAll("#otp .otp-box")].map(input => input.value.trim()).join("") || "1234";
+      let res = null;
+      try {
+        res = await api("/api/auth/verify", {
+          method: "POST",
+          body: JSON.stringify({ phone: userProfile.phone, otp })
+        });
+      } catch (error) {
+        console.warn("Verify API unavailable, continuing demo flow.", error);
+      }
+      
+      if (res && res.user) {
+        userProfile.name = res.user.name || "";
+        userProfile.area = res.user.area || "";
+        userProfile.address = res.user.address || "";
+        
+        document.getElementById("full-name-input").value = userProfile.name;
+        document.getElementById("area-input").value = userProfile.area;
+        let cleanAddress = userProfile.address;
+        if (userProfile.area && cleanAddress.endsWith(`, ${userProfile.area}`)) {
+          cleanAddress = cleanAddress.substring(0, cleanAddress.length - userProfile.area.length - 2);
+        }
+        document.getElementById("address-input").value = cleanAddress;
+        
+        syncUserText();
+        
+        if (userProfile.name && userProfile.address) {
+          showScreen("welcome");
+          return;
+        }
+      } else {
+        userProfile.name = "";
+        userProfile.area = "";
+        userProfile.address = "";
+        document.getElementById("full-name-input").value = "";
+        document.getElementById("area-input").value = "";
+        document.getElementById("address-input").value = "";
+        syncUserText();
+      }
+      showScreen("details");
+    }
+
+    async function saveProfile() {
+      const name = document.getElementById("full-name-input").value.trim();
+      const area = document.getElementById("area-input").value.trim();
+      const address = document.getElementById("address-input").value.trim();
+      if (!name) return alert("আপনার পূর্ণ নাম লিখুন।");
+      if (!area) return alert("এলাকা নির্বাচন করুন।");
+      if (!address) return alert("বাসা নম্বর, রোড, এলাকা লিখুন।");
+
+      userProfile.name = name;
+      userProfile.area = area;
+      userProfile.address = `${address}, ${area}`;
+      syncUserText();
+
+      try {
+        await api("/api/customers", {
+          method: "POST",
+          body: JSON.stringify(userProfile)
+        });
+      } catch (error) {
+        console.warn("Customer profile saved locally only.", error);
+      }
+
+      showScreen("welcome");
+    }
+
+    function renderCustomerOrders(orders) {
+      const container = document.getElementById("customer-orders");
+      if (!container || !Array.isArray(orders)) return;
+      if (!orders.length) {
+        container.innerHTML = `<div class="summary-card card"><h2>এখনো কোনো অর্ডার নেই</h2><p class="subtitle mt8">প্রথম অর্ডার দিলে এখানে দেখাবে।</p></div>`;
+        return;
+      }
+
+      container.innerHTML = orders.map(order => {
+        const pieces = (order.items || []).reduce((sum, item) => sum + Number(item.qty || 0), 0);
+        const date = order.createdAt ? new Date(order.createdAt).toLocaleDateString("bn-BD") : "আজ";
+        return `
+          <button class="history-card card" data-order-id="${order.id}" data-screen="tracking">
+            <div class="history-top"><h2>#${order.id}</h2><h2 class="price">${money(order.total || 0)}</h2></div>
+            <p class="subtitle mt16">${order.service || "ওয়াশ"} | ${toBn(pieces)} পিস</p>
+            <div class="order-row mt16"><p class="subtitle">▣ ${date}</p><span class="status-pill">${order.status || "অর্ডার গ্রহণ করা হয়েছে"}</span></div>
+          </button>
+        `;
+      }).join("");
+    }
+
+    async function loadCustomerOrders() {
+      try {
+        const orders = await api("/api/orders");
+        renderCustomerOrders(Array.isArray(orders) ? orders : orders.value || []);
+      } catch (error) {
+        console.warn("Could not load customer orders", error);
+      }
+    }
+
+    async function confirmOrder() {
+      updateSummary();
+      const payload = getOrderPayload();
+      if (!payload.items.length) {
+        alert("কমপক্ষে ১টি item select করুন।");
+        showScreen("order");
+        return;
+      }
+
+      try {
+        const order = await api("/api/orders", {
+          method: "POST",
+          body: JSON.stringify(payload)
+        });
+        lastOrderId = order.id;
+        await loadCustomerOrders();
+      } catch (error) {
+        lastOrderId = `LOCAL-${Date.now().toString().slice(-4)}`;
+        console.warn("Order saved locally only because backend is unavailable.", error);
+      }
+
+      const successId = document.getElementById("success-order-id");
+      if (successId) successId.textContent = `#${lastOrderId}`;
+      const trackingId = document.getElementById("tracking-order-id");
+      if (trackingId) trackingId.textContent = `#${lastOrderId}`;
+      setOrderStatus("pending", "system");
+      showScreen("success");
+    }
+
+    // ==================== ADMIN DASHBOARD (real backend) ====================
+    let adminOrdersCache = [];
+    let adminRidersCache = [];
+    let adminCustomersCache = [];
+    let adminActiveTab = "live";
+    let currentAdminOrderId = null;
+
+    function statusKeyFromTitle(title) {
+      return workflowSteps.find(step => step.title === title)?.key || "pending";
+    }
+    function statusTitleFromKey(key) {
+      return workflowSteps.find(step => step.key === key)?.title || key;
+    }
+    function isSameDay(iso, ref = new Date()) {
+      const d = new Date(iso);
+      return d.getFullYear() === ref.getFullYear() && d.getMonth() === ref.getMonth() && d.getDate() === ref.getDate();
+    }
+    function setText(id, text) {
+      const el = document.getElementById(id);
+      if (el) el.textContent = text;
+    }
+
+    async function loadAdminDashboard() {
+      try {
+        const [orders, riders] = await Promise.all([api("/api/orders"), api("/api/riders")]);
+        adminOrdersCache = orders;
+        adminRidersCache = riders;
+      } catch (error) {
+        console.warn("Could not load admin dashboard data", error);
+      }
+
+      const today = new Date();
+      const todaysOrders = adminOrdersCache.filter(o => isSameDay(o.createdAt, today));
+      const todaysSales = todaysOrders.reduce((sum, o) => sum + (o.total || 0), 0);
+      const pendingPickup = adminOrdersCache.filter(o => ["pending", "confirmed"].includes(statusKeyFromTitle(o.status))).length;
+      const activeRiders = adminRidersCache.filter(r => r.online).length;
+
+      setText("metric-sales", money(todaysSales));
+      setText("metric-new-orders", toBn(todaysOrders.length));
+      setText("metric-pending-pickup", toBn(pendingPickup));
+      setText("metric-active-riders", toBn(activeRiders));
+
+      renderAdminOrderList();
+    }
+
+    function renderAdminOrderList() {
+      const list = document.getElementById("admin-orders-list");
+      if (!list) return;
+
+      let filtered = adminOrdersCache;
+      if (adminActiveTab === "live") {
+        filtered = adminOrdersCache.filter(o => statusKeyFromTitle(o.status) !== "delivered");
+      } else if (adminActiveTab === "pickup") {
+        filtered = adminOrdersCache.filter(o => ["pending", "confirmed"].includes(statusKeyFromTitle(o.status)));
+      } else if (adminActiveTab === "delivery") {
+        filtered = adminOrdersCache.filter(o => ["packaging", "ready"].includes(statusKeyFromTitle(o.status)));
+      } else if (adminActiveTab === "payment") {
+        filtered = adminOrdersCache.filter(o => (o.payment || "COD") === "COD");
+      }
+
+      if (!filtered.length) {
+        list.innerHTML = '<p class="subtitle" style="text-align:center;padding:24px 0">এই তালিকায় কোনো অর্ডার নেই।</p>';
+        return;
+      }
+
+      list.innerHTML = filtered.slice(0, 30).map(order => {
+        const itemCount = (order.items || []).reduce((sum, i) => sum + (i.qty || 1), 0);
+        const statusKey = statusKeyFromTitle(order.status);
+        const pillClass = statusKey === "pending" ? "orange" : (statusKey === "delivered" ? "green" : "");
+        return `
+          <div class="queue-card card">
+            <div class="queue-top"><div><h2>#${order.id}</h2><p class="subtitle">${order.customerName} • ${order.address} • ${toBn(itemCount)} পিস</p></div><span class="tiny-pill ${pillClass}">${order.status}</span></div>
+            <div class="order-row"><span>${order.deliveryTime || ""}</span><strong class="price" style="font-size:24px">${money(order.total)}</strong></div>
+            <div class="action-row"><button class="small-btn soft" data-open-admin-order="${order.id}">বিস্তারিত</button><button class="small-btn" data-open-admin-order="${order.id}">Manage</button></div>
+          </div>`;
+      }).join("");
+    }
+
+    function openAdminOrder(orderId) {
+      currentAdminOrderId = orderId;
+      showScreen("admin-order");
+    }
+
+    function loadAdminOrderDetail() {
+      const order = adminOrdersCache.find(o => o.id === currentAdminOrderId);
+      const riderBox = document.getElementById("admin-order-riders");
+
+      if (!order) {
+        setText("admin-order-id", "#—");
+        setText("admin-order-customer", "কোনো অর্ডার নির্বাচিত নেই");
+        setText("admin-order-service", "—");
+        setText("admin-order-items", "—");
+        setText("admin-order-payment", "—");
+        if (riderBox) riderBox.innerHTML = "";
+        return;
+      }
+
+      setText("admin-order-id", `#${order.id}`);
+      setText("admin-order-customer", `${order.customerName} • ${order.phone} • ${order.address}`);
+      setText("admin-order-service", order.service || "—");
+      const itemCount = (order.items || []).reduce((sum, i) => sum + (i.qty || 1), 0);
+      setText("admin-order-items", `${toBn(itemCount)} পিস`);
+      setText("admin-order-payment", `${order.payment || "COD"} • ${money(order.total)}`);
+
+      const assignedRider = adminRidersCache.find(r => r.id === order.riderId);
+      const call = document.getElementById("admin-rider-call");
+      if (call) call.href = assignedRider ? `tel:${assignedRider.phone}` : "tel:";
+
+      if (riderBox) {
+        riderBox.innerHTML = adminRidersCache.map(rider => `
+          <button class="radio-row ${rider.id === order.riderId ? "active" : ""}" data-admin-assign-rider="${rider.id}">
+            <span>${(rider.name || "?")[0]}</span>
+            <span>${rider.name} • ${rider.phone} • ${rider.online ? "Online" : "Offline"}</span>
+            <span class="radio ${rider.id === order.riderId ? "active" : ""}"></span>
+          </button>`).join("");
+      }
+
+      const currentKey = statusKeyFromTitle(order.status);
+      document.querySelectorAll("[data-admin-order-status]").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.adminOrderStatus === currentKey);
+      });
+
+      const note = document.getElementById("admin-order-note");
+      if (note) note.style.display = "none";
+    }
+
+    async function adminAssignRider(riderId) {
+      if (!currentAdminOrderId) return;
+      try {
+        const updated = await api(`/api/orders/${currentAdminOrderId}/status`, {
+          method: "PATCH",
+          body: JSON.stringify({ riderId })
+        });
+        const idx = adminOrdersCache.findIndex(o => o.id === updated.id);
+        if (idx !== -1) adminOrdersCache[idx] = updated; else adminOrdersCache.unshift(updated);
+        loadAdminOrderDetail();
+        showAdminNote("রাইডার assign করা হয়েছে।");
+      } catch (error) {
+        showAdminNote("রাইডার assign করা যায়নি। আবার চেষ্টা করুন।");
+      }
+    }
+
+    async function adminUpdateOrderStatus() {
+      if (!currentAdminOrderId) return;
+      const activeChip = document.querySelector("[data-admin-order-status].active");
+      const key = activeChip ? activeChip.dataset.adminOrderStatus : "confirmed";
+      const title = statusTitleFromKey(key);
+      try {
+        const updated = await api(`/api/orders/${currentAdminOrderId}/status`, {
+          method: "PATCH",
+          body: JSON.stringify({ status: title })
+        });
+        const idx = adminOrdersCache.findIndex(o => o.id === updated.id);
+        if (idx !== -1) adminOrdersCache[idx] = updated; else adminOrdersCache.unshift(updated);
+        loadAdminOrderDetail();
+        showAdminNote(`স্ট্যাটাস আপডেট হয়েছে: ${title}`);
+      } catch (error) {
+        showAdminNote("স্ট্যাটাস আপডেট করা যায়নি। আবার চেষ্টা করুন।");
+      }
+    }
+
+    function showAdminNote(text) {
+      const note = document.getElementById("admin-order-note");
+      if (!note) return;
+      note.textContent = text;
+      note.style.display = "block";
+    }
+
+    // ---------- Admin Pricing ----------
+    let adminPricesCache = [];
+    async function loadAdminPricing() {
+      try {
+        adminPricesCache = await api("/api/prices");
+      } catch (error) {
+        adminPricesCache = [];
+      }
+      const table = document.getElementById("admin-price-table");
+      if (!table) return;
+      const header = table.querySelector(".price-table-row.header");
+      table.innerHTML = "";
+      if (header) table.appendChild(header);
+      adminPricesCache.forEach(item => {
+        const row = document.createElement("div");
+        row.className = "price-table-row";
+        row.dataset.priceId = item.id;
+        row.style.cursor = "pointer";
+        row.innerHTML = `<span>${item.name}</span><span>${toBn(item.wash)} / ${toBn(item.dry)} টাকা</span>`;
+        table.appendChild(row);
+      });
+    }
+
+    function openAdminPriceEdit(itemId) {
+      const item = itemId ? adminPricesCache.find(p => p.id === itemId) : null;
+      const edit = document.getElementById("admin-price-edit");
+      const title = document.getElementById("admin-price-edit-title");
+      if (!edit) return;
+      edit.hidden = false;
+      edit.dataset.editingId = itemId || "";
+      if (title) title.textContent = item ? `Edit: ${item.name}` : "Add New Item";
+      document.getElementById("admin-price-wash").value = item ? item.wash : 0;
+      document.getElementById("admin-price-dry").value = item ? item.dry : 0;
+      document.getElementById("admin-price-combo").value = item ? item.combo : 0;
+      document.getElementById("admin-price-iron").value = item ? item.iron : 0;
+      edit.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+
+    async function saveAdminPrice() {
+      const edit = document.getElementById("admin-price-edit");
+      const itemId = edit.dataset.editingId;
+      const item = itemId ? adminPricesCache.find(p => p.id === itemId) : null;
+      const name = item ? item.name : prompt("Item name লিখুন:");
+      if (!name) return;
+      const body = {
+        id: itemId || undefined,
+        name,
+        category: item ? item.category : "male",
+        wash: Number(document.getElementById("admin-price-wash").value || 0),
+        dry: Number(document.getElementById("admin-price-dry").value || 0),
+        combo: Number(document.getElementById("admin-price-combo").value || 0),
+        iron: Number(document.getElementById("admin-price-iron").value || 0)
+      };
+      try {
+        await api("/api/prices", { method: "POST", body: JSON.stringify(body) });
+        edit.hidden = true;
+        await loadAdminPricing();
+      } catch (error) {
+        alert("Price update ব্যর্থ হয়েছে।");
+      }
+    }
+
+    // ---------- Admin Customers ----------
+    async function loadAdminCustomers() {
+      try {
+        adminCustomersCache = await api("/api/customers");
+      } catch (error) {
+        adminCustomersCache = [];
+      }
+      renderAdminCustomerList(adminCustomersCache);
+    }
+
+    function renderAdminCustomerList(list) {
+      const box = document.getElementById("admin-customers-list");
+      if (!box) return;
+      if (!list.length) {
+        box.innerHTML = '<p class="subtitle" style="padding:16px">কোনো গ্রাহক পাওয়া যায়নি।</p>';
+        return;
+      }
+      box.innerHTML = list.map(c => `
+        <button class="menu-row"><span class="menu-icon">${(c.name || "?")[0]}</span><span>${c.name}</span><span class="muted">${toBn(c.orders || 0)} orders</span></button>
+      `).join("");
+    }
+
+    // ---------- Admin Riders ----------
+    async function loadAdminRiders() {
+      try {
+        adminRidersCache = await api("/api/riders");
+      } catch (error) {
+        adminRidersCache = [];
+      }
+      const box = document.getElementById("admin-riders-list");
+      if (!box) return;
+      box.innerHTML = adminRidersCache.map(r => `
+        <button class="menu-row"><span class="menu-icon">${(r.name || "?")[0]}</span><span>${r.name}</span><span class="${r.online ? "green-text" : "muted"}">${r.online ? `Online • ${toBn(r.tasks || 0)} task` : "Offline"}</span></button>
+      `).join("");
+    }
+
+    // ---------- Admin Reports ----------
+    async function loadAdminReports() {
+      let orders = adminOrdersCache;
+      let customers = adminCustomersCache;
+      try {
+        if (!orders.length) orders = await api("/api/orders");
+        if (!customers.length) customers = await api("/api/customers");
+      } catch (error) {
+        // fall back to whatever cache we have
+      }
+      const revenue = orders.reduce((sum, o) => sum + (o.total || 0), 0);
+      const avg = orders.length ? Math.round(revenue / orders.length) : 0;
+
+      setText("report-revenue", money(revenue));
+      setText("report-orders", toBn(orders.length));
+      setText("report-customers", toBn(customers.length));
+      setText("report-avg", money(avg));
+
+      const serviceCounts = { wash: 0, dry: 0 };
+      orders.forEach(o => (o.items || []).forEach(item => {
+        if (item.service === "dry") serviceCounts.dry += item.qty || 1;
+        else serviceCounts.wash += item.qty || 1;
+      }));
+      const totalItems = serviceCounts.wash + serviceCounts.dry;
+      const washPct = totalItems ? Math.round((serviceCounts.wash / totalItems) * 100) : 0;
+      const dryPct = totalItems ? 100 - washPct : 0;
+      setText("report-services-text", totalItems ? `Wash ${washPct}% • Dry Clean ${dryPct}%` : "কোনো ডেটা নেই");
+      const bar = document.getElementById("report-services-bar");
+      if (bar) bar.style.width = `${washPct}%`;
+    }
+
+    // ==================== RIDER APP (real backend) ====================
+    let currentRiderId = null;
+    let currentRiderName = "";
+    let riderTasksCache = [];
+    let currentRiderTaskOrderId = null;
+
+    async function riderLogin() {
+      const username = document.getElementById("rider-username-input").value.trim();
+      const password = document.getElementById("rider-password-input").value.trim();
+      const errorEl = document.getElementById("rider-login-error");
+      errorEl.hidden = true;
+      if (!username || !password) {
+        errorEl.textContent = "ইউজারনেম ও পাসওয়ার্ড দিন।";
+        errorEl.hidden = false;
+        return;
+      }
+      try {
+        const res = await api("/api/auth/rider-login", { method: "POST", body: JSON.stringify({ username, password }) });
+        currentRiderId = res.riderId;
+        currentRiderName = res.name;
+        showScreen("rider-dashboard");
+      } catch (error) {
+        errorEl.textContent = "ভুল ইউজারনেম অথবা পাসওয়ার্ড।";
+        errorEl.hidden = false;
+      }
+    }
+
+    async function loadRiderDashboard() {
+      setText("rider-name-pill", currentRiderName ? `${currentRiderName} • Online` : "Online");
+      if (!currentRiderId) {
+        riderTasksCache = [];
+      } else {
+        try {
+          riderTasksCache = await api(`/api/riders/${currentRiderId}/orders`);
+        } catch (error) {
+          riderTasksCache = [];
+        }
+      }
+
+      const list = document.getElementById("rider-tasks-list");
+      if (!list) return;
+
+      const pickupTasks = riderTasksCache.filter(o => ["pending", "confirmed", "collecting"].includes(statusKeyFromTitle(o.status)));
+      const deliveryTasks = riderTasksCache.filter(o => ["packaging", "ready"].includes(statusKeyFromTitle(o.status)));
+
+      if (!pickupTasks.length && !deliveryTasks.length) {
+        list.innerHTML = '<p class="subtitle" style="text-align:center;padding:24px 0">এই মুহূর্তে কোনো টাস্ক নেই।</p>';
+        return;
+      }
+
+      const pickupHtml = pickupTasks.map(order => {
+        const itemCount = (order.items || []).reduce((sum, i) => sum + (i.qty || 1), 0);
+        return `
+          <div class="rider-task card mt16">
+            <div class="queue-top"><div><h2>Pickup #${order.id}</h2><p class="subtitle">${order.customerName} • ${order.address}</p></div><span class="tiny-pill orange">${statusKeyFromTitle(order.status) === "collecting" ? "Collecting" : "Pending"}</span></div>
+            <p>${toBn(itemCount)} পিস • ${order.service} • ${order.payment} ${money(order.total)}</p>
+            <div class="action-row"><a class="small-btn soft" href="tel:${order.phone}">Call Customer</a><button class="small-btn" data-open-rider-task="${order.id}">Start Pickup</button></div>
+          </div>`;
+      }).join("");
+
+      const deliveryHtml = deliveryTasks.map(order => {
+        const itemCount = (order.items || []).reduce((sum, i) => sum + (i.qty || 1), 0);
+        return `
+          <div class="rider-task card mt16">
+            <div class="queue-top"><div><h2>Delivery #${order.id}</h2><p class="subtitle">${order.customerName} • ${order.address}</p></div><span class="tiny-pill green">Ready</span></div>
+            <p>${toBn(itemCount)} পিস • ${order.payment} • ${money(order.total)}</p>
+            <div class="action-row"><button class="small-btn soft" data-rider-navigate="${order.address}">Navigate</button><button class="small-btn" data-rider-deliver="${order.id}">Deliver</button></div>
+          </div>`;
+      }).join("");
+
+      list.innerHTML = pickupHtml + deliveryHtml;
+    }
+
+    function loadRiderTaskDetail() {
+      const order = riderTasksCache.find(o => o.id === currentRiderTaskOrderId);
+      if (!order) {
+        setText("rider-task-id", "#—");
+        setText("rider-task-customer", "কোনো টাস্ক নির্বাচিত নেই");
+        return;
+      }
+      setText("rider-task-id", `#${order.id}`);
+      setText("rider-task-customer", `${order.customerName} • ${order.phone}`);
+      setText("rider-task-address", order.address);
+      const itemCount = (order.items || []).reduce((sum, i) => sum + (i.qty || 1), 0);
+      setText("rider-task-items", `${toBn(itemCount)} পিস`);
+      setText("rider-task-collect", `${order.payment} ${money(order.total)}`);
+      const call = document.getElementById("rider-task-call");
+      if (call) call.href = `tel:${order.phone}`;
+    }
+
+    async function riderMarkCollected() {
+      if (!currentRiderTaskOrderId) return;
+      try {
+        await api(`/api/orders/${currentRiderTaskOrderId}/status`, {
+          method: "PATCH",
+          body: JSON.stringify({ status: statusTitleFromKey("collected") })
+        });
+        showScreen("rider-dashboard");
+      } catch (error) {
+        alert("Status update ব্যর্থ হয়েছে। আবার চেষ্টা করুন।");
+      }
+    }
+
+    async function riderMarkDelivered(orderId) {
+      if (!confirm("এই অর্ডারটি delivered হিসেবে mark করবেন?")) return;
+      try {
+        await api(`/api/orders/${orderId}/status`, {
+          method: "PATCH",
+          body: JSON.stringify({ status: statusTitleFromKey("delivered") })
+        });
+        loadRiderDashboard();
+      } catch (error) {
+        alert("Status update ব্যর্থ হয়েছে। আবার চেষ্টা করুন।");
+      }
+    }
+
+    function showScreen(id) {
+      if (id === "summary") updateSummary();
+      if (id === "orders") loadCustomerOrders();
+      if (id === "tracking") renderTrackingStatus();
+      if (id === "admin-dashboard") loadAdminDashboard();
+      if (id === "admin-order") loadAdminOrderDetail();
+      if (id === "admin-pricing") loadAdminPricing();
+      if (id === "admin-customers") loadAdminCustomers();
+      if (id === "admin-riders") loadAdminRiders();
+      if (id === "admin-reports") loadAdminReports();
+      if (id === "rider-dashboard") loadRiderDashboard();
+      if (id === "rider-task") loadRiderTaskDetail();
+      screens.forEach(screen => screen.classList.toggle("active", screen.id === id));
+      const active = document.getElementById(id);
+      if (active) {
+        const scrollable = active.querySelector(".content");
+        if (scrollable) scrollable.scrollTop = 0;
+      }
+    }
+
+    function filterOrderItems(category) {
+      document.querySelectorAll("[data-category]").forEach(button => {
+        button.classList.toggle("active", button.dataset.category === category);
+      });
+      document.querySelectorAll("#order .item-card[data-gender]").forEach(card => {
+        const visible = category === "all" || card.dataset.gender === category;
+        card.hidden = !visible;
+      });
+    }
+
+    function setActiveOtpBox(activeInput) {
+      document.querySelectorAll("#otp .otp-box").forEach(input => {
+        input.classList.toggle("active", input === activeInput);
+      });
+    }
+
+    function openSummaryAddressEdit() {
+      const edit = document.getElementById("summary-address-edit");
+      const input = document.getElementById("summary-address-input");
+      if (!edit || !input) return;
+      input.value = userProfile.address || "";
+      edit.hidden = false;
+      input.focus();
+    }
+
+    function saveSummaryAddress() {
+      const edit = document.getElementById("summary-address-edit");
+      const input = document.getElementById("summary-address-input");
+      if (!input) return;
+      const address = input.value.trim();
+      if (!address) return alert("ডেলিভারি ঠিকানা লিখুন।");
+      userProfile.address = address;
+      const summaryAddress = document.getElementById("summary-address");
+      if (summaryAddress) summaryAddress.textContent = userProfile.address;
+      if (edit) edit.hidden = true;
+      syncUserText();
+    }
+
+    let currentChatOrderId = null;
+    const chatRoleNames = { customer: "Customer", admin: "Admin", rider: "Rider" };
+
+    function resolveChatOrderId(role) {
+      if (role === "admin") return currentAdminOrderId;
+      if (role === "rider") return currentRiderTaskOrderId;
+      return lastOrderId;
+    }
+
+    function resolveChatOrderPhone(orderId) {
+      const fromAdmin = (typeof adminOrdersCache !== "undefined" ? adminOrdersCache : []).find(o => o.id === orderId);
+      if (fromAdmin) return fromAdmin.phone;
+      const fromRider = (typeof riderTasksCache !== "undefined" ? riderTasksCache : []).find(o => o.id === orderId);
+      if (fromRider) return fromRider.phone;
+      return "";
+    }
+
+    async function openChat(role = "customer") {
+      chatRole = role;
+      currentChatOrderId = resolveChatOrderId(role);
+      const title = document.getElementById("chat-title");
+      if (title) title.textContent = role === "admin" ? "Admin Order Chat" : role === "rider" ? "Rider Order Chat" : "Order Chat";
+      const subtitle = document.getElementById("chat-subtitle");
+      if (subtitle) subtitle.textContent = currentChatOrderId ? `Order #${currentChatOrderId}` : "No order selected";
+
+      const waBtn = document.getElementById("chat-whatsapp");
+      if (waBtn) {
+        const phone = role !== "customer" ? resolveChatOrderPhone(currentChatOrderId) : "";
+        const digits = (phone || "").replace(/\D/g, "");
+        waBtn.href = digits ? `https://wa.me/${digits}` : "#";
+        waBtn.hidden = !digits;
+      }
+
+      const panel = document.getElementById("chat-panel");
+      if (panel) panel.hidden = false;
+      await loadChatMessages();
+    }
+
+    function closeChat() {
+      const panel = document.getElementById("chat-panel");
+      if (panel) panel.hidden = true;
+    }
+
+    async function loadChatMessages() {
+      const box = document.getElementById("chat-messages");
+      if (!box) return;
+      if (!currentChatOrderId) {
+        box.innerHTML = '<p class="subtitle" style="text-align:center;padding:16px">কোনো অর্ডার নির্বাচিত নেই।</p>';
+        return;
+      }
+      let messages = [];
+      try {
+        messages = await api(`/api/orders/${currentChatOrderId}/messages`);
+      } catch (error) {
+        messages = [];
+      }
+      if (!messages.length) {
+        box.innerHTML = '<p class="subtitle" style="text-align:center;padding:16px">এখনো কোনো মেসেজ নেই। প্রথম মেসেজ পাঠান।</p>';
+        return;
+      }
+      box.innerHTML = messages.map(message => {
+        const mine = message.sender === chatRole;
+        const time = new Date(message.createdAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+        return `<div class="chat-bubble ${mine ? "me" : ""}"><strong>${chatRoleNames[message.sender] || message.sender}</strong><br>${message.text}<small>${time}</small></div>`;
+      }).join("");
+      box.scrollTop = box.scrollHeight;
+    }
+
+    async function sendChatMessage() {
+      const input = document.getElementById("chat-input");
+      if (!input || !currentChatOrderId) return;
+      const text = input.value.trim();
+      if (!text) return;
+      input.value = "";
+      try {
+        await api(`/api/orders/${currentChatOrderId}/messages`, {
+          method: "POST",
+          body: JSON.stringify({ text, sender: chatRole })
+        });
+        await loadChatMessages();
+      } catch (error) {
+        alert("মেসেজ পাঠানো যায়নি। আবার চেষ্টা করুন।");
+      }
+    }
+
+    document.querySelectorAll("#otp .otp-box").forEach((input, index, inputs) => {
+      input.addEventListener("focus", () => setActiveOtpBox(input));
+      input.addEventListener("input", () => {
+        input.value = input.value.replace(/\D/g, "").slice(-1);
+        setActiveOtpBox(input);
+        if (input.value && inputs[index + 1]) inputs[index + 1].focus();
+      });
+      input.addEventListener("keydown", event => {
+        if (event.key === "Backspace" && !input.value && inputs[index - 1]) {
+          inputs[index - 1].focus();
+        }
+      });
+    });
+
+    document.getElementById("chat-input")?.addEventListener("keydown", event => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        sendChatMessage();
+      }
+    });
+
+    document.addEventListener("click", event => {
+      const chatTrigger = event.target.closest("[data-chat-open]");
+      if (chatTrigger) {
+        openChat(chatTrigger.dataset.chatOpen || "customer");
+        return;
+      }
+
+      if (event.target.closest("#chat-close")) {
+        closeChat();
+        return;
+      }
+
+      const chatPanel = event.target.closest("#chat-panel");
+      if (chatPanel && event.target === chatPanel) {
+        closeChat();
+        return;
+      }
+
+      if (event.target.closest("#chat-send")) {
+        sendChatMessage();
+        return;
+      }
+
+      const adminTabTrigger = event.target.closest("[data-admin-tab]");
+      if (adminTabTrigger) {
+        adminActiveTab = adminTabTrigger.dataset.adminTab;
+        document.querySelectorAll("[data-admin-tab]").forEach(btn => btn.classList.toggle("active", btn === adminTabTrigger));
+        renderAdminOrderList();
+        return;
+      }
+
+      const openOrderTrigger = event.target.closest("[data-open-admin-order]");
+      if (openOrderTrigger) {
+        openAdminOrder(openOrderTrigger.dataset.openAdminOrder);
+        return;
+      }
+
+      const adminAssignTrigger = event.target.closest("[data-admin-assign-rider]");
+      if (adminAssignTrigger) {
+        adminAssignRider(adminAssignTrigger.dataset.adminAssignRider);
+        return;
+      }
+
+      const adminOrderStatusTrigger = event.target.closest("[data-admin-order-status]");
+      if (adminOrderStatusTrigger) {
+        document.querySelectorAll("[data-admin-order-status]").forEach(btn => btn.classList.toggle("active", btn === adminOrderStatusTrigger));
+        return;
+      }
+
+      if (event.target.closest("#admin-order-update-btn")) {
+        adminUpdateOrderStatus();
+        return;
+      }
+
+      const priceRowTrigger = event.target.closest(".price-table-row[data-price-id]");
+      if (priceRowTrigger) {
+        openAdminPriceEdit(priceRowTrigger.dataset.priceId);
+        return;
+      }
+
+      if (event.target.closest("#admin-price-add-btn")) {
+        openAdminPriceEdit(null);
+        return;
+      }
+
+      if (event.target.closest("#admin-price-save-btn")) {
+        saveAdminPrice();
+        return;
+      }
+
+      if (event.target.closest("#rider-login-btn")) {
+        riderLogin();
+        return;
+      }
+
+      const openRiderTaskTrigger = event.target.closest("[data-open-rider-task]");
+      if (openRiderTaskTrigger) {
+        currentRiderTaskOrderId = openRiderTaskTrigger.dataset.openRiderTask;
+        showScreen("rider-task");
+        return;
+      }
+
+      const navigateTrigger = event.target.closest("[data-rider-navigate]");
+      if (navigateTrigger) {
+        const address = navigateTrigger.dataset.riderNavigate || "";
+        window.open(`https://www.google.com/maps/search/${encodeURIComponent(address)}`, "_blank");
+        return;
+      }
+
+      const deliverTrigger = event.target.closest("[data-rider-deliver]");
+      if (deliverTrigger) {
+        riderMarkDelivered(deliverTrigger.dataset.riderDeliver);
+        return;
+      }
+
+      if (event.target.closest("#rider-task-action-btn")) {
+        riderMarkCollected();
+        return;
+      }
+
+      if (event.target.closest("[data-cart-open]") || event.target.closest("#cart-count") || event.target.closest("#cart-total")) {
+        openCartDrawer();
+        return;
+      }
+
+      if (event.target.closest("#cart-close")) {
+        closeCartDrawer();
+        return;
+      }
+
+      const drawer = event.target.closest("#cart-drawer");
+      if (drawer && event.target === drawer) {
+        closeCartDrawer();
+        return;
+      }
+
+      const cartDeltaButton = event.target.closest("[data-cart-delta]");
+      if (cartDeltaButton) {
+        const actions = cartDeltaButton.closest("[data-cart-key]");
+        updateCartLine(actions.dataset.cartKey, Number(cartDeltaButton.dataset.cartDelta));
+        updateCartUI();
+        return;
+      }
+
+      const cartRemoveButton = event.target.closest("[data-cart-remove]");
+      if (cartRemoveButton) {
+        const actions = cartRemoveButton.closest("[data-cart-key]");
+        removeCartLine(actions.dataset.cartKey);
+        updateCartUI();
+        return;
+      }
+
+      const serviceTrigger = event.target.closest("[data-service]");
+      if (serviceTrigger) {
+        selectedService = serviceTrigger.dataset.service;
+        document.querySelectorAll("[data-service]").forEach(button => {
+          button.classList.toggle("active", button === serviceTrigger);
+        });
+        updateCartUI();
+        return;
+      }
+
+      const areaOption = event.target.closest(".area-option");
+      if (areaOption) {
+        document.querySelectorAll(".area-option").forEach(button => button.classList.toggle("active", button === areaOption));
+        document.getElementById("area-input").value = areaOption.textContent.trim();
+        document.getElementById("area-list").hidden = true;
+        return;
+      }
+
+      if (event.target.closest("#area-picker")) {
+        const areaList = document.getElementById("area-list");
+        areaList.hidden = !areaList.hidden;
+        return;
+      }
+
+      if (event.target.closest("#send-otp")) {
+        sendOtp();
+        return;
+      }
+
+      if (event.target.closest("#verify-otp")) {
+        verifyOtp();
+        return;
+      }
+
+      if (event.target.closest("#save-profile")) {
+        saveProfile();
+        return;
+      }
+
+      if (event.target.closest("#logout-button")) {
+        userProfile.phone = "";
+        userProfile.name = "";
+        userProfile.area = "";
+        userProfile.address = "";
+        syncUserText();
+        showScreen("splash");
+        return;
+      }
+
+      if (event.target.closest("#summary-address-change")) {
+        openSummaryAddressEdit();
+        return;
+      }
+
+      if (event.target.closest("#summary-address-save")) {
+        saveSummaryAddress();
+        return;
+      }
+
+      const categoryTrigger = event.target.closest("[data-category]");
+      if (categoryTrigger) {
+        filterOrderItems(categoryTrigger.dataset.category);
+        return;
+      }
+
+      const counterButton = event.target.closest(".round-btn");
+      if (counterButton) {
+        const card = counterButton.closest(".item-card");
+        const name = cardItemName(card);
+        const delta = counterButton.classList.contains("plus") ? 1 : -1;
+        updateCartItem(name, delta);
+        updateCartUI();
+        return;
+      }
+
+      if (event.target.closest("#confirm-order")) {
+        confirmOrder();
+        return;
+      }
+
+      const trigger = event.target.closest("[data-screen]");
+      if (!trigger) return;
+      const orderCard = event.target.closest("[data-order-id]");
+      if (orderCard) {
+        lastOrderId = orderCard.dataset.orderId;
+        const trackingId = document.getElementById("tracking-order-id");
+        if (trackingId) trackingId.textContent = `#${lastOrderId}`;
+      }
+      showScreen(trigger.dataset.screen);
+    });
+
+    document.addEventListener("keydown", event => {
+      if (event.key === "Escape") showScreen("home");
+    });
+
+    document.addEventListener("input", event => {
+      if (event.target.id === "admin-customer-search") {
+        const q = event.target.value.trim().toLowerCase();
+        const filtered = !q ? adminCustomersCache : adminCustomersCache.filter(c =>
+          (c.name || "").toLowerCase().includes(q) || (c.phone || "").includes(q)
+        );
+        renderAdminCustomerList(filtered);
+      }
+    });
+
+    updateCartUI();
+    syncRiderText();
+    renderTrackingStatus();
+    loadBackendStatus();
+  </script>
+</body>
+</html>
+

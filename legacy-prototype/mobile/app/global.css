@@ -1,0 +1,55 @@
+/* =========================================================
+   Dhopa Bari – Phone-only web layout
+   Locks the app to a max-width of 430px (phone width) and
+   centres it on larger screens so it always looks like a
+   real mobile app, not a stretched desktop page.
+   ========================================================= */
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background-color: #1a1a2e; /* dark surround on desktop */
+  /* Use dvh for mobile browsers that have dynamic address bar */
+  height: 100dvh;
+  overflow: hidden;
+}
+
+/* Centre the app shell */
+#root {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100dvh;
+  min-height: -webkit-fill-available;
+}
+
+/* The Expo web app mounts inside a div with role="main" or
+   the first child of #root. We target the outermost RN View. */
+#root > div {
+  width: 100%;
+  max-width: 430px;
+  min-height: 100dvh;
+  min-height: -webkit-fill-available;
+  height: 100dvh;
+  height: -webkit-fill-available;
+  position: relative;
+  overflow: hidden;
+  background-color: #ffffff;
+  box-shadow: 0 0 60px rgba(0, 0, 0, 0.45);
+}
+
+/* On actual mobile phones, remove max-width constraint and fill screen */
+@media (max-width: 430px) {
+  #root > div {
+    max-width: 100%;
+    box-shadow: none;
+  }
+}
+
+/* Ensure safe area insets are respected on notched phones */
+@supports (padding: env(safe-area-inset-bottom)) {
+  #root > div {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}

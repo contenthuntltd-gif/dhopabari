@@ -1,0 +1,539 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================
+// ENUMS
+// ============================================================
+
+enum Role {
+  CUSTOMER
+  RIDER
+  ADMIN
+}
+
+// FINAL master order status flow (six steps, applies everywhere in the
+// system — customer app, rider app, admin panel, website, receipts,
+// notifications). No intermediate statuses may be added without explicit
+// approval. CANCELLED is kept as the sole terminal exception outside the
+// normal forward flow (an order can be cancelled from CONFIRMED or
+// PICKED_UP only — see orderController.cancelOrder).
+//
+// CONFIRMED -> PICKED_UP -> CLEANING -> PACKAGING_DONE
+//   -> OUT_FOR_DELIVERY -> DELIVERED
+enum OrderStatus {
+  CONFIRMED         // ✅ অর্ডার নিশ্চিত হয়েছে
+  PICKED_UP         // 🚚 কাপড় সংগ্রহ করা হয়েছে
+  CLEANING          // 🧺 কাপড় পরিষ্কার করা হচ্ছে
+  PACKAGING_DONE    // 📦 প্যাকেজিং সম্পন্ন
+  OUT_FOR_DELIVERY  // 🚛 ডেলিভারির পথে
+  DELIVERED         // 🏠 ডেলিভারি সম্পন্ন
+  CANCELLED
+}
+
+enum DeliveryType {
+  FREE
+  EXPRESS
+}
+
+enum PaymentMethod {
+  COD
+  BKASH
+  NAGAD
+  SSLCOMMERZ
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  REFUNDED
+  FAILED
+}
+
+enum CouponType {
+  PERCENT
+  FIXED
+}
+
+enum NotificationType {
+  ORDER_UPDATE
+  OFFER
+  SYSTEM
+}
+
+enum ChatType {
+  SUPPORT
+  RIDER
+}
+
+enum WithdrawalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  PAID
+}
+
+enum ReceiptType {
+  PICKUP
+  DELIVERY
+  PAYMENT
+}
+
+// ============================================================
+// USERS
+// ============================================================
+
+model User {
+  id            String   @id @default(cuid())
+  firebaseUid   String?  @unique // set for customers who signed in with Google (Firebase Authentication)
+  role          Role     @default(CUSTOMER)
+  name          String?
+  phone         String   @unique
+  email         String?  @unique
+  whatsappNumber String? // customer's WhatsApp number — used for order updates/support, may differ from `phone`
+  passwordHash  String? // bcrypt hash — used for Mobile Number + Password login (customer/admin/rider)
+  avatarUrl     String?
+  fcmToken      String? // device token for Firebase Cloud Messaging push notifications
+  isBlocked     Boolean  @default(false)
+  resetPasswordTokenHash  String?   // sha256 hash of the active password-reset token, if any
+  resetPasswordExpiresAt  DateTime? // expiry for the above token
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  addresses         Address[]
+  ordersAsCustomer  Order[]        @relation("CustomerOrders")
+  riderProfile      RiderProfile?
+  notifications     Notification[]
+  sentMessages      Message[]
+  reviewsGiven      Review[]       @relation("ReviewsByCustomer")
+  supportChats      Chat[]         @relation("ChatCustomer")
+  statusChanges     OrderStatusLog[]
+  transactions      Transaction[]
+
+  @@index([role])
+  @@map("users")
+}
+
+model RiderProfile {
+  id               String   @id @default(cuid())
+  userId           String   @unique
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bikeNumber       String?
+  area             String?
+  isOnline         Boolean  @default(false)
+  currentLat       Float?
+  currentLng       Float?
+  rating           Float    @default(5.0)
+  totalDeliveries  Int      @default(0)
+  walletBalance    Int      @default(0) // in poysha/cents-equivalent smallest unit (BDT paisa) — stored as integer taka here
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  orders            Order[]            @relation("RiderOrders")
+  chats             Chat[]             @relation("ChatRider")
+  reviewsReceived   Review[]           @relation("ReviewsAboutRider")
+  withdrawals       WithdrawalRequest[]
+
+  @@map("rider_profiles")
+}
+
+// ============================================================
+// ADDRESSES
+// ============================================================
+
+model Address {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  label       String? // "Home", "Office"
+  addressLine String // House/Building/Flat/Road — the customer's detailed local address
+  area        String // one of the service areas (see Setting["service_areas"]) — editable from Admin Panel
+  landmark    String? // optional, e.g. "Near Sugandha Beach"
+  lat         Float?
+  lng         Float?
+  isDefault   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  orders Order[]
+
+  @@index([userId])
+  @@map("addresses")
+}
+
+// ============================================================
+// SERVICES / CATEGORIES / PRICING
+// ============================================================
+
+model Service {
+  id        String   @id @default(cuid())
+  name      String   @unique // "Wash" | "Dry Clean"
+  nameBn    String
+  icon      String?
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+
+  orders     Order[]
+  priceItems PriceItem[]
+
+  @@map("services")
+}
+
+model Category {
+  id        String   @id @default(cuid())
+  name      String   @unique // "Men" | "Women" | "Kids" | "Home"
+  nameBn    String
+  icon      String?
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+
+  priceItems PriceItem[]
+
+  @@map("categories")
+}
+
+model PriceItem {
+  id         String   @id @default(cuid())
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id])
+  serviceId  String
+  service    Service  @relation(fields: [serviceId], references: [id])
+  name       String
+  nameBn     String
+  price      Int // price in BDT for this item under this service
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  orderItems OrderItem[]
+
+  @@unique([categoryId, serviceId, name])
+  @@index([serviceId])
+  @@map("price_items")
+}
+
+// ============================================================
+// ORDERS
+// ============================================================
+
+model Order {
+  id            String        @id @default(cuid())
+  orderNumber   String        @unique // e.g. "DB123456"
+  customerId    String
+  customer      User          @relation("CustomerOrders", fields: [customerId], references: [id])
+  riderId       String?
+  rider         RiderProfile? @relation("RiderOrders", fields: [riderId], references: [id])
+  serviceId     String
+  service       Service       @relation(fields: [serviceId], references: [id])
+  addressId     String
+  address       Address       @relation(fields: [addressId], references: [id])
+  status        OrderStatus   @default(CONFIRMED)
+
+  pickupDate    DateTime
+  pickupTime    String // "10:00 AM" style slot label
+  deliveryDate  DateTime?
+
+  deliveryType  DeliveryType  @default(FREE)
+  placedOffHours Boolean      @default(false) // true if created outside 1PM-9PM business hours
+
+  subtotal      Int
+  deliveryFee   Int           @default(0) // always 0 — delivery is free; kept for receipt-line compatibility
+  expressCharge Int           @default(0) // ৳50 when deliveryType = EXPRESS, 0 otherwise
+  discount      Int           @default(0)
+  total         Int
+
+  couponId      String?
+  coupon        Coupon?       @relation(fields: [couponId], references: [id])
+
+  paymentMethod PaymentMethod @default(COD)
+  paymentStatus PaymentStatus @default(PENDING)
+
+  notes         String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  items         OrderItem[]
+  statusHistory OrderStatusLog[]
+  chats         Chat[]
+  transactions  Transaction[]
+  review        Review?
+  receipts      Receipt[]
+
+  @@index([customerId])
+  @@index([riderId])
+  @@index([status])
+  @@index([serviceId])
+  @@index([addressId])
+  @@index([couponId])
+  @@map("orders")
+}
+
+model OrderItem {
+  id          String    @id @default(cuid())
+  orderId     String
+  order       Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  priceItemId String?
+  priceItem   PriceItem? @relation(fields: [priceItemId], references: [id])
+  itemName    String // snapshot at time of order
+  quantity    Int
+  unitPrice   Int
+  total       Int
+
+  @@index([orderId])
+  @@map("order_items")
+}
+
+// Permanent, append-only audit trail — every status change on every order
+// is recorded here and never edited/deleted, giving a complete history of
+// Status + Date/Time (createdAt) + Updated By (changedBy) + User Role
+// (changedByRole, snapshotted so it stays accurate even if the user's role
+// changes later) + optional Notes.
+model OrderStatusLog {
+  id        String      @id @default(cuid())
+  orderId   String
+  order     Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  status    OrderStatus
+  note      String?
+  changedById String?
+  changedBy User?       @relation(fields: [changedById], references: [id])
+  changedByRole Role?   // snapshot of the actor's role at the time of the change
+  createdAt DateTime    @default(now())
+
+  @@index([orderId])
+  @@map("order_status_logs")
+}
+
+// ============================================================
+// COUPONS
+// ============================================================
+
+model Coupon {
+  id              String     @id @default(cuid())
+  code            String     @unique
+  type            CouponType
+  value           Int // percent (0-100) or fixed BDT amount, per `type`
+  minOrderAmount  Int        @default(0)
+  maxDiscount     Int?
+  usageLimit      Int?
+  usedCount       Int        @default(0)
+  expiresAt       DateTime?
+  isActive        Boolean    @default(true)
+  createdAt       DateTime   @default(now())
+
+  orders Order[]
+
+  @@map("coupons")
+}
+
+// ============================================================
+// NOTIFICATIONS
+// ============================================================
+
+model Notification {
+  id        String            @id @default(cuid())
+  userId    String? // null = broadcast to all users
+  user      User?             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      NotificationType
+  title     String
+  titleBn   String?
+  body      String
+  bodyBn    String?
+  data      Json?
+  isRead    Boolean           @default(false)
+  createdAt DateTime          @default(now())
+
+  @@index([userId])
+  @@map("notifications")
+}
+
+// ============================================================
+// CHAT
+// ============================================================
+
+model Chat {
+  id         String        @id @default(cuid())
+  orderId    String?
+  order      Order?        @relation(fields: [orderId], references: [id])
+  type       ChatType
+  customerId String
+  customer   User          @relation("ChatCustomer", fields: [customerId], references: [id])
+  riderId    String?
+  rider      RiderProfile? @relation("ChatRider", fields: [riderId], references: [id])
+  createdAt  DateTime      @default(now())
+
+  messages Message[]
+
+  @@index([customerId])
+  @@index([riderId])
+  @@map("chats")
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  chatId    String
+  chat      Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  senderId  String
+  sender    User     @relation(fields: [senderId], references: [id])
+  text      String?
+  imageUrl  String?
+  fileUrl   String?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([chatId])
+  @@index([senderId])
+  @@map("messages")
+}
+
+// ============================================================
+// REVIEWS
+// ============================================================
+
+model Review {
+  id           String        @id @default(cuid())
+  orderId      String        @unique
+  order        Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  customerId   String
+  customer     User          @relation("ReviewsByCustomer", fields: [customerId], references: [id])
+  riderId      String?
+  rider        RiderProfile? @relation("ReviewsAboutRider", fields: [riderId], references: [id])
+  serviceRating Int // 1-5
+  riderRating   Int? // 1-5
+  comment       String?
+  createdAt     DateTime     @default(now())
+
+  @@index([customerId])
+  @@index([riderId])
+  @@map("reviews")
+}
+
+// ============================================================
+// PAYMENTS / TRANSACTIONS
+// ============================================================
+
+model Transaction {
+  id         String        @id @default(cuid())
+  orderId    String?
+  order      Order?        @relation(fields: [orderId], references: [id])
+  userId     String
+  user       User          @relation(fields: [userId], references: [id])
+  amount     Int
+  method     PaymentMethod
+  status     PaymentStatus @default(PENDING)
+  gatewayRef String? // bKash/Nagad/SSLCommerz transaction id
+  rawPayload Json?
+  createdAt  DateTime      @default(now())
+
+  @@index([orderId])
+  @@index([userId])
+  @@map("transactions")
+}
+
+// ============================================================
+// RIDER WITHDRAWALS
+// ============================================================
+
+model WithdrawalRequest {
+  id        String            @id @default(cuid())
+  riderId   String
+  rider     RiderProfile      @relation(fields: [riderId], references: [id], onDelete: Cascade)
+  amount    Int
+  status    WithdrawalStatus  @default(PENDING)
+  note      String?
+  createdAt DateTime          @default(now())
+  resolvedAt DateTime?
+
+  @@index([riderId])
+  @@map("withdrawal_requests")
+}
+
+// ============================================================
+// RECEIPTS (pickup + delivery)
+// ============================================================
+
+// One row per calendar year; `lastNumber` is incremented atomically
+// (inside a transaction, together with the Receipt insert) to produce
+// gap-free, collision-free sequential numbers like DB-RCP-2026-000123.
+model ReceiptCounter {
+  year       Int @id
+  lastNumber Int @default(0)
+
+  @@map("receipt_counters")
+}
+
+// A permanent, append-only record of every pickup / delivery / payment
+// memo ever generated. Rows are never updated after creation (aside from
+// the two explicit confirmation timestamps below) and never deleted —
+// every memo must stay downloadable/printable indefinitely (see SYSTEM
+// requirements: "Never overwrite old receipts").
+model Receipt {
+  id             String      @id @default(cuid())
+  receiptNumber  String      @unique // "DB-MEMO-2026-000123"
+  type           ReceiptType
+  orderId        String
+  order          Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  // Snapshots of the parties involved at the moment the memo was
+  // generated — deliberately denormalized so a memo stays accurate
+  // and immutable even if the underlying user/rider record changes later.
+  customerName   String
+  customerPhone  String
+  customerId     String
+  riderName      String?
+  riderPhone     String?
+  riderId        String?
+
+  pickupAddress  String?
+  pickupAt       DateTime?
+  estimatedDelivery String? // e.g. "৩-৫ দিন" or "২ দিনের মধ্যে" (express)
+
+  deliveredBy    String?
+  deliveredAt    DateTime?
+  customerConfirmedAt DateTime?
+
+  // Array of { itemName, service, quantity, unitPrice, total }
+  items          Json
+  totalQuantity  Int
+  subtotal       Int
+  deliveryFee    Int         @default(0)
+  expressCharge  Int         @default(0)
+  discount       Int         @default(0)
+  grandTotal     Int
+
+  // Only populated on PAYMENT-type memos.
+  paymentMethod  PaymentMethod?
+  paymentStatus  PaymentStatus?
+
+  specialInstructions String?
+  stainNotes          String?
+  fragileNotes        String?
+  otherNotes          String?
+
+  // Future-ready: base64 or object-storage URL once signature capture ships.
+  customerSignatureUrl String?
+  riderSignatureUrl     String?
+
+  confirmedAt    DateTime? // pickup/delivery confirmation button press
+  createdAt      DateTime    @default(now())
+
+  @@index([orderId])
+  @@index([type])
+  @@index([receiptNumber])
+  @@map("receipts")
+}
+
+// ============================================================
+// SETTINGS
+// ============================================================
+
+model Setting {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt
+
+  @@map("settings")
+}

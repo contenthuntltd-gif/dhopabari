@@ -1,0 +1,10 @@
+{
+  "name": "dupa-bari-fullstack-prototype",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Dupa Bari customer app, admin dashboard, rider panel, and local backend API.",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  }
+}

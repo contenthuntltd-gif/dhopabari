@@ -1,0 +1,28 @@
+# ── Secrets — never commit ──────────────────────────────
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+pg_hba.conf.backup
+
+# ── Dependencies ────────────────────────────────────────
+node_modules/
+**/node_modules/
+
+# ── Build output ────────────────────────────────────────
+build/
+**/build/
+dist/
+.dart_tool/
+**/.dart_tool/
+.expo/
+
+# ── Logs ────────────────────────────────────────────────
+*.log
+
+# ── OS / editor cruft ───────────────────────────────────
+.DS_Store
+Thumbs.db
+.idea/
+*.iml

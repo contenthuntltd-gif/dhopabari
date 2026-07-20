@@ -1,0 +1,1957 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ধোপা বাড়ি — কাপড়ের যত্নে আপনার বিশ্বস্ত পার্টনার</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Baloo+Da+2:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0B1F3A;
+    --blue-deep:#0A3FB0;
+    --blue:#1259E8;
+    --blue-soft:#EAF1FF;
+    --teal:#0EA5A0;
+    --teal-soft:#E1F7F4;
+    --amber:#E8A93A;
+    --amber-soft:#FDF3E0;
+    --paper:#F5F7FB;
+    --card:#FFFFFF;
+    --line:#E7EBF3;
+    --muted:#66748F;
+    --danger:#E23F4F;
+    --radius:18px;
+    --shadow: 0 1px 2px rgba(10,25,50,0.04), 0 10px 26px -10px rgba(10,25,50,0.16);
+    --shadow-lg: 0 2px 6px rgba(10,25,50,0.06), 0 24px 48px -18px rgba(10,25,50,0.24);
+    --shadow-btn: 0 10px 22px -8px rgba(18,89,232,0.45), inset 0 1px 0 rgba(255,255,255,0.22);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  html{ background:#DCE4F2; }
+  body{
+    font-family:'Hind Siliguri', sans-serif;
+    background:#DCE4F2;
+    color:var(--ink);
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,.display{
+    font-family:'Baloo Da 2', 'Hind Siliguri', sans-serif;
+    letter-spacing:.1px;
+  }
+
+  /* ---------- App shell: real mobile-width website ---------- */
+  .app-shell{
+    width:100%;
+    max-width:460px;
+    min-height:100vh;
+    background:var(--card);
+    display:flex;
+    flex-direction:column;
+    position:relative;
+    box-shadow: 0 0 1px rgba(11,42,74,0.06), 0 30px 90px rgba(11,42,74,0.16);
+  }
+
+  .screen-body{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+  }
+
+  .tabbar{
+    display:flex;
+    border-top:1px solid var(--line);
+    padding:10px 10px 16px;
+    background:#fff;
+    position:sticky;
+    bottom:0;
+    box-shadow:0 -8px 20px -14px rgba(11,42,74,0.18);
+  }
+  .tab{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:4px;
+    font-size:11px;
+    color:var(--muted);
+    cursor:pointer;
+    padding:4px 0;
+    background:none;
+    border:none;
+    font-family:inherit;
+  }
+  .tab.active{color:var(--blue);}
+  .tab svg{width:22px; height:22px;}
+
+  /* ---------- shared UI pieces used inside screens ---------- */
+  .px{padding-left:22px; padding-right:22px;}
+  .btn{
+    border:none; border-radius:14px; font-family:inherit;
+    font-weight:700; font-size:15px; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    transition:.15s transform, .15s box-shadow;
+  }
+  .btn:active{transform:scale(0.98);}
+  .btn-primary{
+    background:linear-gradient(135deg, var(--blue), var(--blue-deep));
+    color:#fff; padding:15px; width:100%;
+    box-shadow: var(--shadow-btn);
+  }
+  .btn-primary:active{ box-shadow: 0 4px 10px -4px rgba(18,89,232,0.4); }
+  .btn-primary:disabled{background:#B9C8EE; box-shadow:none; cursor:not-allowed;}
+  .btn-confirm{
+    background:linear-gradient(135deg,var(--teal),#0A8480);
+    color:#fff; padding:16px; width:100%;
+    box-shadow: 0 10px 22px -8px rgba(14,165,160,0.45), inset 0 1px 0 rgba(255,255,255,0.22);
+  }
+  .btn-outline{background:#fff; color:var(--blue); border:1.5px solid var(--blue); padding:13px; width:100%;}
+  .btn-ghost{background:none; color:var(--blue); font-weight:600; padding:8px;}
+
+  .input{
+    width:100%; border:1.5px solid var(--line); border-radius:14px;
+    padding:14px 16px; font-family:inherit; font-size:14.5px; color:var(--ink);
+    background:#fff; outline:none; transition:.15s border-color, .15s box-shadow;
+  }
+  .input:focus{border-color:var(--blue); box-shadow:0 0 0 4px rgba(18,89,232,0.10);}
+  .field-icon-wrap{position:relative;}
+  .field-icon-wrap .input{padding-left:44px;}
+  .field-icon-wrap svg{position:absolute; left:14px; top:50%; transform:translateY(-50%); width:18px; height:18px; color:var(--muted);}
+
+  .pill{ letter-spacing:.1px; }
+
+  /* Rider panel theme — distinct from customer (blue) & admin (purple) */
+  .rider-theme{
+    --blue:#E4002B;
+    --blue-deep:#A80020;
+    --blue-soft:#FDE8EC;
+    display:flex; flex-direction:column; flex:1; min-height:100%;
+  }
+  .toggle-switch{
+    width:46px; height:26px; border-radius:20px; position:relative; cursor:pointer; transition:.2s; flex:none;
+  }
+  .toggle-switch .knob{
+    width:20px; height:20px; border-radius:50%; background:#fff; position:absolute; top:3px; left:3px; transition:.2s;
+    box-shadow:0 1px 3px rgba(0,0,0,0.3);
+  }
+
+  .card{
+    background:#fff; border:1px solid rgba(11,42,74,0.055); border-radius:16px;
+    padding:16px; box-shadow:0 1px 2px rgba(11,42,74,0.03), 0 8px 20px -12px rgba(11,42,74,0.14);
+    transition:.15s box-shadow;
+  }
+  .row{display:flex; align-items:center; justify-content:space-between;}
+  .pill{
+    display:inline-flex; align-items:center; padding:5px 12px; border-radius:999px;
+    font-size:12px; font-weight:700;
+  }
+
+  ::selection{background:var(--blue); color:#fff;}
+  .fade-in{animation:fadeIn .35s ease;}
+  @keyframes fadeIn{from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);}}
+</style>
+</head>
+<body>
+
+<div class="app-shell" id="screen"></div>
+
+<script>
+/* ================= STATE ================= */
+const state = {
+  screen: 'splash',
+  language: 'en', // 'en' (default) | 'bn' — user can switch from Profile settings
+  phone: '',
+  otp: ['','','',''],
+  profile: { name:'', area:'', address:'' },
+  user: { name:'রহিম উদ্দিন', phoneMasked:'০১৭XXXXXXXX' },
+  orderDraft: { service:'ওয়াশ', category:'পুরুষ', items:{}, speed:'standard' },
+  activeOrderId: null,
+  ordersTab: 'চলমান',
+  notifCount: 2,
+  chatUnread: 1,
+  chats: {}, // orderId -> [{from:'customer'|'rider'|'admin', text, time}]
+  chatTyping: false,
+  history: [],
+  chatViewerRole: 'customer', // 'customer' | 'admin' | 'rider' — who is looking at the chat screen
+  adminOrdersTab: 'চলমান',
+  currentRiderId: null,
+  riderOnline: true,
+  showRiderPicker: false,
+  showSelectedItems: false,
+};
+
+const SERVICE_AREAS = [
+  'বাস টার্মিনাল','লিংক রোড','পিটিআই স্কুল এলাকা (PTI)','খালুর দোকান','রাস্তার মাথা',
+  'পেট্রোল পাম্প এলাকা','বার্মিজ মার্কেট','পানবাজার রোড','বাজারঘাটা','টেকপাড়া',
+  'ঝাউতলা','নুনিয়ারছড়া','সুগন্ধা','লাবণী','কলাতলী রোড','কলাতলী হোটেল জোন','কলাতলী সৈকত এলাকা',
+];
+const SERVICE_AREAS_EN = [
+  'Bus Terminal','Link Road','PTI School Area','Khalur Dokan','Rastar Matha',
+  'Petrol Pump Area','Burmese Market','Panbazar Road','Bazarghata','Tekpara',
+  'Jhautola','Nuniarchara','Sugandha','Laboni','Kolatoli Road','Kolatoli Hotel Zone','Kolatoli Beach Area',
+];
+function areaText(bnArea){
+  const i = SERVICE_AREAS.indexOf(bnArea);
+  return i>-1 ? t(bnArea, SERVICE_AREAS_EN[i]) : bnArea;
+}
+
+const RIDERS = [
+  {id:'r1', name:'করিম ভাই', phone:'+8801700000001', avatar:'ক'},
+  {id:'r2', name:'রফিক ভাই', phone:'+8801700000002', avatar:'র'},
+  {id:'r3', name:'জসিম ভাই', phone:'+8801700000003', avatar:'জ'},
+];
+function getRider(riderId){ return RIDERS.find(r=>r.id===riderId) || null; }
+function tripEstimate(orderId){
+  const seed = orderId.split('').reduce((a,c)=>a+c.charCodeAt(0),0);
+  const km = (1 + (seed%35)/10).toFixed(1);
+  const min = 8 + (seed%18);
+  return {km, min};
+}
+
+const DELIVERY_OPTIONS = [
+  {key:'standard', label:'স্ট্যান্ডার্ড', labelEn:'Standard', days:7, fee:0, desc:'পিকআপের ৭ দিনের মধ্যে ডেলিভারি', descEn:'Delivered within 7 days of pickup'},
+  {key:'express', label:'এক্সপ্রেস', labelEn:'Express', days:3, fee:50, desc:'পিকআপের ৩ দিনের মধ্যে ডেলিভারি (দ্রুত সার্ভিস)', descEn:'Delivered within 3 days of pickup (faster service)'},
+];
+const BN_DIGITS = {'0':'০','1':'১','2':'২','3':'৩','4':'৪','5':'৫','6':'৬','7':'৭','8':'৮','9':'৯'};
+function toBn(n){ return String(n).split('').map(c=>BN_DIGITS[c]||c).join(''); }
+/* ================= i18n ================= */
+// t(bn, en) returns the right string for the current language. Internal values
+// (o.tab, o.status, category keys, item.key…) stay Bengali/English-identifier
+// as-is everywhere in the logic — only the rendered text changes.
+function t(bn, en){ return state.language==='en' ? (en!==undefined? en : bn) : bn; }
+function toggleLanguage(){ state.language = state.language==='en' ? 'bn' : 'en'; render(); }
+const STATUS_EN = {
+  'অর্ডার গ্রহণ করা হয়েছে':'Order placed',
+  'কাপড় সংগ্রহ করা হয়েছে':'Clothes picked up',
+  'ধোয়া হচ্ছে':'Washing in progress',
+  'পিকআপ হয়েছে':'Picked up',
+  'প্যাকেজিং':'Packaging',
+  'ডেলিভারির জন্য প্রস্তুত':'Ready for delivery',
+  'ডেলিভারি সম্পন্ন':'Delivered',
+  'সম্পন্ন':'Completed',
+  'বাতিল':'Cancelled',
+  'চলমান':'Ongoing',
+};
+function statusText(bnStatus){ return t(bnStatus, STATUS_EN[bnStatus] || bnStatus); }
+const CATEGORY_EN = { 'পুরুষ':'Men', 'মহিলা':'Women', 'শিশু':'Kids', 'ঘরের কাপড়':'Home linen' };
+function categoryText(bnCat){ return t(bnCat, CATEGORY_EN[bnCat] || bnCat); }
+const SERVICE_EN = { 'ওয়াশ':'Wash', 'ড্রাই ক্লিন':'Dry Clean', 'ওয়াশ + আয়রন':'Wash + Iron', 'আয়রন':'Iron' };
+function serviceText(bnService){ return t(bnService, SERVICE_EN[bnService] || bnService); }
+const PICKUP_DAY = 22; // মে — demo pickup date used across the flow
+function deliveryDateLabel(days){ return state.language==='en'? 'May '+(PICKUP_DAY+days)+', 3-5 PM' : toBn(PICKUP_DAY+days)+' মে, বিকেল ৩-৫টা'; }
+function deliveryDateShort(days){ return state.language==='en'? 'May '+(PICKUP_DAY+days) : toBn(PICKUP_DAY+days)+' মে'; }
+
+const PRICES = {
+  'পুরুষ': [
+    {key:'shirt', label:'শার্ট', labelEn:'Shirt', price:15, icon:'shirt'},
+    {key:'pant', label:'প্যান্ট', labelEn:'Pants', price:20, icon:'pant'},
+    {key:'lungi', label:'লুঙ্গি', labelEn:'Lungi', price:12, icon:'lungi'},
+    {key:'tshirt', label:'টি-শার্ট', labelEn:'T-shirt', price:12, icon:'tshirt'},
+    {key:'underwear', label:'আন্ডারওয়্যার', labelEn:'Underwear', price:8, icon:'underwear'},
+  ],
+  'মহিলা': [
+    {key:'saree', label:'শাড়ি', labelEn:'Saree', price:35, icon:'shirt'},
+    {key:'salwar', label:'সালোয়ার কামিজ', labelEn:'Salwar Kameez', price:25, icon:'shirt'},
+    {key:'orna', label:'ওড়না', labelEn:'Orna / Scarf', price:10, icon:'lungi'},
+    {key:'blouse', label:'ব্লাউজ', labelEn:'Blouse', price:12, icon:'tshirt'},
+  ],
+  'শিশু': [
+    {key:'kidsshirt', label:'শার্ট', labelEn:'Shirt', price:8, icon:'shirt'},
+    {key:'kidspant', label:'প্যান্ট', labelEn:'Pants', price:10, icon:'pant'},
+    {key:'frock', label:'ফ্রক', labelEn:'Frock', price:12, icon:'shirt'},
+  ],
+  'ঘরের কাপড়': [
+    {key:'bedsheet', label:'বেডশিট', labelEn:'Bedsheet', price:40, icon:'lungi'},
+    {key:'towel', label:'তোয়ালে', labelEn:'Towel', price:18, icon:'lungi'},
+    {key:'curtain', label:'পর্দা', labelEn:'Curtain', price:60, icon:'lungi'},
+  ],
+};
+
+const SAMPLE_ORDERS = [
+  {id:'#ORD-1234', customerName:'রহিম উদ্দিন', customerPhone:'০১৭১২৩৪৫৬৭৮', area:'কলাতলী রোড', assignedRider:'r1', service:'ওয়াশ + আয়রন', pieces:8, total:127, date:'২২ মে ২০২৬', status:'ধোয়া হচ্ছে', tab:'চলমান', deliveryDays:7, deliveryLabel:'২৯ মে, বিকেল ৩-৫টা',
+    timeline:[
+      {label:'অর্ডার গ্রহণ করা হয়েছে', time:'২২ মে, ৯:০৫ AM', done:true},
+      {label:'কাপড় সংগ্রহ করা হয়েছে', time:'২২ মে, ১০:৩০ AM', note:'করিম ভাই ৮টি পিস সংগ্রহ করেছেন', done:true},
+      {label:'ধোয়া হচ্ছে', time:'আনুমানিক সময়: ২৪ ঘণ্টা', current:true},
+      {label:'প্যাকেজিং'},
+      {label:'ডেলিভারির জন্য প্রস্তুত'},
+      {label:'ডেলিভারি সম্পন্ন'},
+    ]},
+  {id:'#ORD-1230', customerName:'সাবিনা আক্তার', customerPhone:'০১৮৪৪৫৫৬৬৭৭', area:'সুগন্ধা', assignedRider:'r1', service:'আয়রন', pieces:5, total:85, date:'২১ মে ২০২৬', status:'পিকআপ হয়েছে', tab:'চলমান', deliveryDays:7, deliveryLabel:'২৮ মে, বিকেল ৩-৫টা',
+    timeline:[
+      {label:'অর্ডার গ্রহণ করা হয়েছে', time:'২১ মে, ৮:১৫ AM', done:true},
+      {label:'কাপড় সংগ্রহ করা হয়েছে', time:'২১ মে, ৯:৪০ AM', note:'করিম ভাই ৫টি পিস সংগ্রহ করেছেন', current:true},
+      {label:'ধোয়া হচ্ছে'},{label:'প্যাকেজিং'},{label:'ডেলিভারির জন্য প্রস্তুত'},{label:'ডেলিভারি সম্পন্ন'},
+    ]},
+  {id:'#ORD-1228', customerName:'ফরিদ হোসেন', customerPhone:'০১৯৯৯১১২২৩৩', area:'লাবণী', assignedRider:'r2', service:'ড্রাই ক্লিন', pieces:2, total:240, date:'২০ মে ২০২৬', status:'ডেলিভারির জন্য প্রস্তুত', tab:'চলমান', deliveryDays:3, deliveryLabel:'২৩ মে, বিকেল ৩-৫টা',
+    timeline:[
+      {label:'অর্ডার গ্রহণ করা হয়েছে', time:'২০ মে, ৯:০০ AM', done:true},
+      {label:'কাপড় সংগ্রহ করা হয়েছে', time:'২০ মে, ১০:০০ AM', done:true},
+      {label:'ধোয়া হচ্ছে', done:true},
+      {label:'প্যাকেজিং', done:true},
+      {label:'ডেলিভারির জন্য প্রস্তুত', current:true},
+      {label:'ডেলিভারি সম্পন্ন'},
+    ]},
+  {id:'#ORD-1210', customerName:'নাসরিন সুলতানা', customerPhone:'০১৬১২৩৪৫৬৭', area:'ঝাউতলা', assignedRider:'r2', service:'ওয়াশ', pieces:6, total:72, date:'১০ মে ২০২৬', status:'সম্পন্ন', tab:'সম্পন্ন', deliveryDays:7, deliveryLabel:'১৭ মে', timeline:[]},
+  {id:'#ORD-1198', customerName:'কামাল হাসান', customerPhone:'০১৫৫৫৬৬৭৭৮', area:'বাজারঘাটা', assignedRider:'r3', service:'আয়রন', pieces:4, total:48, date:'২ মে ২০২৬', status:'বাতিল', tab:'বাতিল', deliveryDays:7, deliveryLabel:'৯ মে', timeline:[]},
+];
+let orders = JSON.parse(JSON.stringify(SAMPLE_ORDERS));
+
+/* ================= ICONS ================= */
+const ICONS = {
+  shirt:'<svg viewBox="0 0 24 24" fill="none"><path d="M8 3l4 2 4-2 4 4-3 3v11H7V10L4 7l4-4z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>',
+  pant:'<svg viewBox="0 0 24 24" fill="none"><path d="M7 3h10l1 8-2 10h-3l-1-9-1 9H8L6 11l1-8z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>',
+  lungi:'<svg viewBox="0 0 24 24" fill="none"><path d="M6 5c4 2 8 2 12 0v3c-4 2-8 2-12 0V5z" stroke="currentColor" stroke-width="1.5"/><path d="M6 8v11M18 8v11" stroke="currentColor" stroke-width="1.5"/></svg>',
+  tshirt:'<svg viewBox="0 0 24 24" fill="none"><path d="M9 4H7L3 8l2 2 2-1v11h10V9l2 1 2-2-4-4h-2a3 3 0 01-6 0z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>',
+  underwear:'<svg viewBox="0 0 24 24" fill="none"><path d="M4 5h16l-1 6-2 2-3 6-2-5-2 5-3-6-2-2-1-6z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>',
+  location:'<svg viewBox="0 0 24 24" fill="none"><path d="M12 22s7-7.4 7-12.5A7 7 0 105 9.5C5 14.6 12 22 12 22z" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="9.5" r="2.4" stroke="currentColor" stroke-width="1.6"/></svg>',
+  clipboard:'<svg viewBox="0 0 24 24" fill="none"><rect x="5" y="4" width="14" height="17" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M9 4V3a1 1 0 011-1h4a1 1 0 011 1v1" stroke="currentColor" stroke-width="1.6"/><path d="M8 10h8M8 14h8M8 18h5" stroke="currentColor" stroke-width="1.6"/></svg>',
+  tag:'<svg viewBox="0 0 24 24" fill="none"><path d="M11 3H4v7l10 10 7-7L11 3z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="8" cy="8" r="1.3" fill="currentColor"/></svg>',
+  star:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3 6.6 7 .9-5.2 4.8 1.4 7-6.2-3.6L5.8 21.3l1.4-7L2 8.5l7-.9L12 2z"/></svg>',
+  phone:'<svg viewBox="0 0 24 24" fill="none"><path d="M6 3h3l2 5-2.5 1.8a12 12 0 006.7 6.7L17 14l5 2v3a2 2 0 01-2 2C10.4 21 3 13.6 3 5a2 2 0 012-2z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>',
+  info:'<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/><path d="M12 11v6M12 8v.1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
+  globe:'<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/><path d="M3 12h18M12 3c2.5 2.5 3.5 6 3.5 9s-1 6.5-3.5 9c-2.5-2.5-3.5-6-3.5-9s1-6.5 3.5-9z" stroke="currentColor" stroke-width="1.6"/></svg>',
+  logout:'<svg viewBox="0 0 24 24" fill="none"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  home:'<svg viewBox="0 0 24 24" fill="none"><path d="M3 11l9-8 9 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 10v10h14V10" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>',
+  menu:'<svg viewBox="0 0 24 24" fill="none"><path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
+  logoMark:'<svg viewBox="0 0 24 24" fill="none"><path d="M6 10l6-6 6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><rect x="5" y="10" width="14" height="11" rx="2" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="15.5" r="3.2" stroke="currentColor" stroke-width="1.8"/></svg>',
+  user:'<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.8"/><path d="M4 21c1.5-4.5 5-6 8-6s6.5 1.5 8 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
+  bell:'<svg viewBox="0 0 24 24" fill="none"><path d="M6 10a6 6 0 1112 0c0 4 1.5 5.5 1.5 5.5H4.5S6 14 6 10z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M10 19a2 2 0 004 0" stroke="currentColor" stroke-width="1.6"/></svg>',
+  back:'<svg viewBox="0 0 24 24" fill="none"><path d="M15 5l-7 7 7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  chevron:'<svg viewBox="0 0 24 24" fill="none"><path d="M9 5l7 7-7 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  edit:'<svg viewBox="0 0 24 24" fill="none"><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4L16.5 3.5z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>',
+  check:'<svg viewBox="0 0 24 24" fill="none"><path d="M4 12l6 6L20 6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  truck:'<svg viewBox="0 0 24 24" fill="none"><path d="M2 7h11v10H2V7z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M13 10h4l4 3v4h-8v-7z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="6" cy="18.5" r="1.7" stroke="currentColor" stroke-width="1.5"/><circle cx="17.5" cy="18.5" r="1.7" stroke="currentColor" stroke-width="1.5"/></svg>',
+  calendar:'<svg viewBox="0 0 24 24" fill="none"><rect x="3.5" y="5" width="17" height="16" rx="2.5" stroke="currentColor" stroke-width="1.6"/><path d="M3.5 10h17M8 3v4M16 3v4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>',
+  card:'<svg viewBox="0 0 24 24" fill="none"><rect x="2.5" y="5.5" width="19" height="13" rx="2.5" stroke="currentColor" stroke-width="1.6"/><path d="M2.5 10h19" stroke="currentColor" stroke-width="1.6"/></svg>',
+  cash:'<svg viewBox="0 0 24 24" fill="none"><rect x="2.5" y="6" width="19" height="12" rx="2" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.6"/></svg>',
+  msg:'<svg viewBox="0 0 24 24" fill="none"><path d="M4 4h16v12H8l-4 4V4z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>',
+  call:'<svg viewBox="0 0 24 24" fill="none"><path d="M6 3h3l2 5-2.5 1.8a12 12 0 006.7 6.7L17 14l5 2v3a2 2 0 01-2 2C10.4 21 3 13.6 3 5a2 2 0 012-2z" fill="currentColor"/></svg>',
+  plus:'<svg viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>',
+  minus:'<svg viewBox="0 0 24 24" fill="none"><path d="M5 12h14" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>',
+  send:'<svg viewBox="0 0 24 24" fill="none"><path d="M4 12l16-8-6 8 6 8-16-8z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" fill="currentColor"/></svg>',
+  trash:'<svg viewBox="0 0 24 24" fill="none"><path d="M4 7h16M9 7V4h6v3M6 7l1 13a2 2 0 002 2h6a2 2 0 002-2l1-13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  close:'<svg viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
+};
+function icon(name, cls){ return `<span class="${cls||''}" style="display:inline-flex">${ICONS[name]||''}</span>`; }
+
+function setScreen(screen){
+  state.screen = screen;
+  render();
+  if(screen==='chat') scrollChatToBottom();
+}
+function goTo(screen){
+  if(state.screen !== screen){
+    state.history.push(state.screen);
+  }
+  setScreen(screen);
+}
+function goBack(){
+  const prev = state.history.pop();
+  setScreen(prev || 'home');
+}
+
+/* ================= HELPERS ================= */
+function money(n){ return '৳' + n; }
+function calcOrder(){
+  let items = [];
+  let subtotal = 0;
+  const list = PRICES[state.orderDraft.category] || [];
+  Object.keys(state.orderDraft.items).forEach(k=>{
+    const qty = state.orderDraft.items[k];
+    if(qty > 0){
+      const def = list.find(x=>x.key===k) || Object.values(PRICES).flat().find(x=>x.key===k);
+      if(def){
+        items.push({...def, qty, total: def.price*qty});
+        subtotal += def.price*qty;
+      }
+    }
+  });
+  const deliveryFee = 0; // delivery is always free
+  const speedOpt = DELIVERY_OPTIONS.find(d=>d.key===(state.orderDraft.speed||'standard')) || DELIVERY_OPTIONS[0];
+  const expressFee = speedOpt.fee;
+  const total = subtotal + deliveryFee + expressFee;
+  const totalPieces = items.reduce((a,b)=>a+b.qty,0);
+  return {items, subtotal, deliveryFee, expressFee, speedOpt, total, totalPieces};
+}
+
+function statusColor(status){
+  if(status==='ধোয়া হচ্ছে') return {bg:'#E8F0FF', fg:'#1259E8'};
+  if(status==='পিকআপ হয়েছে') return {bg:'#E8F0FF', fg:'#1259E8'};
+  if(status==='ডেলিভারির জন্য প্রস্তুত') return {bg:'#FFF3DF', fg:'#B5760A'};
+  if(status==='সম্পন্ন') return {bg:'#E4FBF7', fg:'#0A6B5F'};
+  if(status==='বাতিল') return {bg:'#FDE8E8', fg:'#C23A3A'};
+  return {bg:'#EEE', fg:'#555'};
+}
+
+/* ================= ADMIN / RIDER shared order controls ================= */
+function advanceOrderStatus(orderId){
+  const ord = orders.find(o=>o.id===orderId);
+  if(!ord || !ord.timeline || !ord.timeline.length) return;
+  const idx = ord.timeline.findIndex(s=>s.current);
+  if(idx===-1) return;
+  const isLast = idx === ord.timeline.length-1;
+  ord.timeline[idx].done = true;
+  ord.timeline[idx].current = false;
+  if(isLast){
+    ord.status = 'সম্পন্ন';
+    ord.tab = 'সম্পন্ন';
+  } else {
+    ord.timeline[idx+1].current = true;
+    ord.timeline[idx+1].time = 'এখনই';
+    ord.status = ord.timeline[idx+1].label;
+  }
+  render();
+}
+function cancelOrder(orderId){
+  const ord = orders.find(o=>o.id===orderId);
+  if(!ord) return;
+  ord.status = 'বাতিল';
+  ord.tab = 'বাতিল';
+  render();
+}
+function customerCancelOrder(orderId){
+  const ord = orders.find(o=>o.id===orderId);
+  if(!ord || ord.assignedRider) return; // no longer cancellable once admin has approved (assigned a rider)
+  if(!confirm('আপনি কি নিশ্চিত এই অর্ডারটি বাতিল করতে চান?')) return;
+  cancelOrder(orderId);
+  state.ordersTab = 'বাতিল';
+  goTo('orders');
+}
+function removeCompletedOrder(orderId){
+  const ord = orders.find(o=>o.id===orderId);
+  if(!ord || ord.tab!=='সম্পন্ন') return;
+  if(!confirm('এই অর্ডার ও এর চ্যাট হিস্ট্রি স্থায়ীভাবে মুছে ফেলতে চান?')) return;
+  const idx = orders.findIndex(o=>o.id===orderId);
+  if(idx>-1) orders.splice(idx,1);
+  delete state.chats[orderId];
+  render();
+}
+function assignRider(orderId, riderId){
+  const ord = orders.find(o=>o.id===orderId);
+  const rider = getRider(riderId);
+  if(!ord || !rider) return;
+  const wasUnassigned = !ord.assignedRider;
+  ord.assignedRider = riderId;
+  getChat(orderId).push({from:'admin', name:'অ্যাডমিন টিম', text:(wasUnassigned?'':'') + rider.name + '-কে এই অর্ডারে রাইডার হিসেবে বরাদ্দ করা হয়েছে।', time:'এখনই'});
+  render();
+}
+
+/* ================= SCREENS ================= */
+
+function screenSplash(){
+  return `
+  <div class="screen-body fade-in" style="position:relative; overflow:hidden; background:
+      radial-gradient(120% 70% at 15% 0%, #2E7CFF 0%, transparent 55%),
+      radial-gradient(120% 70% at 100% 100%, #0AA89E 0%, transparent 55%),
+      linear-gradient(160deg,#0A3FB0 0%, #1259E8 45%, #0EA5A0 100%);
+      align-items:center; justify-content:center; text-align:center; color:#fff; padding:40px 30px;">
+    <div style="position:absolute; top:-60px; right:-60px; width:220px; height:220px; border-radius:50%; background:radial-gradient(circle, rgba(255,255,255,0.14), transparent 70%);"></div>
+    <div style="position:absolute; bottom:-80px; left:-40px; width:260px; height:260px; border-radius:50%; background:radial-gradient(circle, rgba(255,255,255,0.10), transparent 70%);"></div>
+    <div style="flex:1"></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:24px;position:relative;">
+      <div style="width:92px;height:92px;border-radius:26px;background:linear-gradient(145deg, rgba(255,255,255,0.28), rgba(255,255,255,0.08)); border:1px solid rgba(255,255,255,0.35); display:flex;align-items:center;justify-content:center; box-shadow:0 20px 50px -16px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.4);">
+        <svg viewBox="0 0 24 24" width="46" height="46" fill="none"><path d="M6 2h12l1 4H5l1-4z" stroke="#fff" stroke-width="1.4" stroke-linejoin="round"/><rect x="4" y="6" width="16" height="16" rx="4" stroke="#fff" stroke-width="1.4"/><circle cx="12" cy="14" r="4.4" stroke="#fff" stroke-width="1.4"/></svg>
+      </div>
+      <div>
+        <div class="display" style="font-size:36px; font-weight:800; letter-spacing:.2px; text-shadow:0 2px 20px rgba(0,0,0,0.15);">${t('ধোপা বাড়ি','Dhopa Bari')}</div>
+        <div style="font-size:14px; opacity:.92; margin-top:8px; font-weight:500;">${t('কাপড়ের যত্নে আপনার বিশ্বস্ত পার্টনার।','Your trusted partner in caring for your clothes.')}</div>
+      </div>
+    </div>
+    <div style="flex:1"></div>
+    <button class="btn" style="background:#fff;color:#0A3FB0;padding:16px 34px;width:100%; box-shadow:0 16px 40px -14px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.6); font-weight:800;" onclick="goTo('login')">
+      ${t('শুরু করুন','Get started')} ${icon('chevron')}
+    </button>
+    <div style="font-size:12px; opacity:.85; margin-top:18px; cursor:pointer; text-decoration:underline; text-underline-offset:3px;" onclick="goTo('roleSelect')">${t('অ্যাডমিন / রাইডার প্যানেল →','Admin / Rider panel →')}</div>
+    <div style="font-size:10.5px; opacity:.6; margin-top:12px; letter-spacing:.3px;">Powered by Dupa Bari</div>
+  </div>`;
+}
+
+function screenLogin(){
+  return `
+  <div class="screen-body fade-in">
+    <div style="background:linear-gradient(150deg,#0A3FB0,#0EA5A0); border-radius:0 0 46% 46% / 0 0 56px 56px; padding:34px 30px 48px; text-align:center; color:#fff; position:relative; box-shadow:0 12px 30px -14px rgba(10,63,176,0.5);">
+      <button class="btn-ghost" onclick="goBack()" style="position:absolute;left:14px;top:14px;padding:6px;color:#fff;">${icon('back')}</button>
+      <div style="display:flex;align-items:center;justify-content:center;gap:10px;font-size:22px;font-weight:800;letter-spacing:.2px;">
+        ${icon('home')} ${t('ধোপা বাড়ি','Dhopa Bari')}
+      </div>
+    </div>
+    <div class="px" style="padding-top:26px;">
+      <h2 style="text-align:center;font-size:19px;margin:0;">${t('আপনার মোবাইল নম্বর দিন','Enter your mobile number')}</h2>
+      <p style="text-align:center;color:var(--muted);font-size:13px;margin:6px 0 22px;">${t('লগইন বা রেজিস্ট্রেশনের জন্য','For login or registration')}</p>
+
+      <div class="row" style="border:1.5px solid var(--line); border-radius:14px; overflow:hidden;">
+        <div style="display:flex;align-items:center;gap:6px;padding:14px 12px;border-right:1.5px solid var(--line);font-weight:600;">
+          🇧🇩 +৮৮০
+        </div>
+        <input class="input" style="border:none;border-radius:0;" placeholder="১৭XXXXXXXX" maxlength="10"
+          value="${state.phone}" oninput="state.phone=this.value" />
+      </div>
+
+      <button class="btn btn-primary" style="margin-top:22px;" onclick="submitPhone()">
+        ${t('OTP পাঠান','Send OTP')} ${icon('chevron')}
+      </button>
+      <p style="text-align:center;font-size:11.5px;color:var(--muted);margin-top:14px;">
+        ${t('লগইন করে আপনি আমাদের','By logging in you agree to our')} <span style="color:var(--blue);text-decoration:underline;">${t('শর্তাবলী','Terms')}</span> ${t('মেনে নিচ্ছেন','')}
+      </p>
+    </div>
+  </div>`;
+}
+function submitPhone(){
+  state.otp = ['','','',''];
+  goTo('otp');
+}
+
+function screenOtp(){
+  return `
+  <div class="screen-body fade-in px" style="padding-top:16px; text-align:center;">
+    <div style="display:flex; align-items:center; margin-bottom:20px;">
+      <button class="btn-ghost" onclick="goBack()" style="padding:6px;">${icon('back')}</button>
+    </div>
+    <div style="width:120px;height:100px;margin:10px auto 20px;background:var(--blue-soft);border-radius:20px;display:flex;align-items:center;justify-content:center;">
+      <svg viewBox="0 0 24 24" width="46" height="46" fill="none"><rect x="6" y="2" width="12" height="20" rx="3" stroke="#1259E8" stroke-width="1.5"/><path d="M9 6h6M9 18h6" stroke="#0EA5A0" stroke-width="1.8" stroke-linecap="round"/></svg>
+    </div>
+    <h2 style="margin:0 0 6px;font-size:19px;">${t('OTP যাচাই করুন','Verify OTP')}</h2>
+    <p style="color:var(--muted);font-size:13px;margin:0 0 22px;">
+      ${t('এন্টার করুন ৪ সংখ্যার কোডটি যা পাঠানো হয়েছে','Enter the 4-digit code sent to')} ${state.phone? '০১'+state.phone : '০১৭XXXXXXXX'}
+    </p>
+    <div style="display:flex; gap:12px; justify-content:center; margin-bottom:26px;">
+      ${[0,1,2,3].map(i=>`
+        <input class="input" style="width:52px;height:60px;text-align:center;font-size:22px;padding:0;"
+          maxlength="1" value="${state.otp[i]}"
+          oninput="state.otp[${i}]=this.value.replace(/\\D/g,''); if(this.value && ${i}<3){this.nextElementSibling?.focus?.()}; checkOtpBtn();"
+          />
+      `).join('')}
+    </div>
+    <button class="btn btn-primary" id="otpBtn" onclick="submitOtp()">${t('যাচাই করুন','Verify')} ${icon('check')}</button>
+    <p style="font-size:12.5px;color:var(--muted);margin-top:16px;">${t('কোড পাননি?','Did not receive a code?')} <span style="color:var(--blue);font-weight:600;">${t('আবার পাঠান','Resend')} (৪৫s)</span></p>
+  </div>`;
+}
+function checkOtpBtn(){}
+function submitOtp(){
+  goTo('profileSetup');
+}
+
+function screenProfileSetup(){
+  const areas = SERVICE_AREAS;
+  return `
+  <div class="screen-body fade-in px" style="padding-top:16px;">
+    <div class="row" style="margin-bottom:10px;">
+      <button class="btn-ghost" onclick="goBack()" style="padding:6px;">${icon('back')}</button>
+      <span style="font-size:13px;color:var(--blue);font-weight:600;cursor:pointer;" onclick="goTo('home')">${t('পরে দিব','Skip for now')}</span>
+    </div>
+    <div style="height:6px;background:var(--line);border-radius:6px;overflow:hidden;margin-bottom:8px;">
+      <div style="height:100%;width:100%;background:var(--blue);"></div>
+    </div>
+    <p style="text-align:center;font-size:12px;color:var(--muted);margin:0 0 18px;">${t('ধাপ ১ এর ১','Step 1 of 1')}</p>
+
+    <h2 style="text-align:center;margin:0 0 4px;font-size:19px;">${t('আপনার তথ্য দিন','Tell us about you')}</h2>
+    <p style="text-align:center;color:var(--muted);font-size:13px;margin:0 0 22px;">${t('অর্ডার ও ডেলিভারির জন্য এই তথ্য প্রয়োজন','We need this to schedule your orders and deliveries')}</p>
+
+    <div class="field-icon-wrap" style="margin-bottom:14px;">
+      ${icon('user')}
+      <input class="input" placeholder="${t('আপনার নাম','Your name')}" value="${state.profile.name}" oninput="state.profile.name=this.value" />
+    </div>
+
+    <div class="field-icon-wrap" style="margin-bottom:6px;">
+      ${icon('location')}
+      <input class="input" placeholder="${t('এলাকা নির্বাচন করুন','Select your area')}" readonly value="${areaText(state.profile.area)}" />
+    </div>
+    <div class="card" style="margin-bottom:14px;max-height:260px;overflow-y:auto;">
+      ${areas.map((a,i)=>`
+        <div style="padding:11px 4px;cursor:pointer;color:${state.profile.area===a?'var(--blue)':'var(--ink)'};font-weight:${state.profile.area===a?700:400};${i<areas.length-1?'border-bottom:1px solid var(--line);':''}"
+          onclick="state.profile.area='${a}'; render();">${areaText(a)}</div>
+      `).join('')}
+    </div>
+
+    <div class="field-icon-wrap" style="margin-bottom:20px;">
+      <span style="position:absolute;left:14px;top:16px;">${ICONS.home}</span>
+      <textarea class="input" style="padding-left:44px;min-height:70px;resize:none;" placeholder="${t('পূর্ণ ঠিকানা (বাসা নম্বর, রোড, এলাকা)','Full address (house no., road, area)')}"
+        oninput="state.profile.address=this.value">${state.profile.address}</textarea>
+    </div>
+
+    <button class="btn btn-primary" onclick="saveProfile()">${t('সেভ করুন','Save')} ${icon('check')}</button>
+  </div>`;
+}
+function saveProfile(){
+  if(state.profile.name) state.user.name = state.profile.name;
+  goTo('home');
+}
+
+function screenHome(){
+  const ongoing = orders.find(o=>o.tab==='চলমান');
+  const services = [
+    {name:'ওয়াশ', title:t('ওয়াশ','WASH'), desc:t('পরিষ্কার ও সতেজ কাপড়, যত্নের সাথে ধুয়ে দেওয়া।','Clean & fresh clothes, washed with care.'), icon:'shirt', grad:['#1259E8','#3D8BFD'], soft:'#EAF1FF'},
+    {name:'ড্রাই ক্লিন', title:t('ড্রাই ক্লিন','DRY CLEAN'), desc:t('প্রিমিয়াম ড্রাই ক্লিন, সুরক্ষিত ও নির্খুঁত পরিচর্যায়।','Premium dry cleaning, safe & flawless care.'), icon:'lungi', grad:['#0EA5A0','#12B886'], soft:'#E1F7F4'},
+  ];
+  const steps = [
+    {n:'১', nEn:'1', icon:'phone', label:t('সার্ভিস সিলেক্ট করুন','Select service')},
+    {n:'২', nEn:'2', icon:'location', label:t('ঠিকানা দিন','Give address')},
+    {n:'৩', nEn:'3', icon:'truck', label:t('আমরা নিয়ে যাবো','We pick it up')},
+  ];
+  return `
+  <div class="screen-body fade-in" style="padding-bottom:8px;">
+    <div class="row px" style="padding-top:16px; margin-bottom:4px;">
+      <button class="btn-ghost" onclick="goTo('profile')" style="padding:4px;">${icon('menu')}</button>
+      <div style="display:flex;flex-direction:column;align-items:center;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="width:30px;height:30px;border-radius:9px;background:var(--blue-soft);color:var(--blue);display:flex;align-items:center;justify-content:center;">${icon('logoMark')}</div>
+          <div style="font-size:19px;font-weight:800;color:var(--blue);font-family:'Baloo Da 2';">${t('ধোপা বাড়ি','Dhopa Bari')}</div>
+        </div>
+        <div style="font-size:9px;letter-spacing:1.5px;color:var(--muted);font-weight:700;margin-top:1px;">${t('PREMIUM LAUNDRY SERVICE','PREMIUM LAUNDRY SERVICE')}</div>
+      </div>
+      <div style="position:relative;cursor:pointer;" onclick="goTo('orders')">
+        ${icon('bell')}
+        ${state.notifCount? `<span style="position:absolute;top:-6px;right:-8px;background:var(--danger);color:#fff;font-size:10px;border-radius:50%;width:16px;height:16px;display:flex;align-items:center;justify-content:center;">${state.notifCount}</span>`:''}
+      </div>
+    </div>
+
+    <div class="px" style="margin-top:16px;">
+      <div style="position:relative; overflow:hidden; background:linear-gradient(135deg,var(--blue),var(--blue-deep)); border-radius:22px; padding:22px; color:#fff; box-shadow:0 16px 34px -16px rgba(18,89,232,0.5); margin-bottom:20px;">
+        <div style="position:absolute;top:-40px;right:-40px;width:160px;height:160px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,0.14),transparent 70%);"></div>
+        <div style="position:relative;">
+          <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.18);padding:6px 12px;border-radius:999px;font-size:11.5px;font-weight:700;margin-bottom:14px;">
+            ${icon('truck')} ${t('ফ্রি পিকআপ ও ডেলিভারি','Free pickup & delivery')}
+          </div>
+          <div style="font-size:22px;font-weight:800;line-height:1.35;font-family:'Baloo Da 2';max-width:220px;">${t('কাপড়ের যত্নে আপনার বিশ্বস্ত পার্টনার','Your trusted partner in fabric care')}</div>
+          <div style="font-size:12.5px;opacity:.85;margin:10px 0 16px;max-width:230px;line-height:1.5;">${t('সহজে অর্ডার করুন, আমরা নিয়ে যাব পরিষ্কার করে পৌঁছে দেব আপনার দোরগোড়ায়।',"Order easily — we'll pick up, clean, and deliver right to your door.")}</div>
+          <div style="background:#fff; color:var(--blue); display:inline-flex; align-items:center; gap:8px; padding:12px 18px; border-radius:14px; font-size:13.5px; font-weight:800; cursor:pointer; box-shadow:0 8px 18px -8px rgba(0,0,0,0.3);" onclick="startNewOrder()">
+            ${icon('plus')} ${t('এখনই অর্ডার করুন','Order now')} ${icon('chevron')}
+          </div>
+        </div>
+      </div>
+
+      <h2 style="margin:0 0 2px;font-size:17px;">${t('আমাদের সার্ভিস','Our services')}</h2>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:14px;">${t('শুধু ২টি সহজ সার্ভিস, সর্বোচ্চ যত্নের সাথে।','Just 2 easy services, with the utmost care.')}</div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:20px;">
+        ${services.map(s=>`
+          <div style="background:${s.soft};border-radius:18px;padding:16px;cursor:pointer;" onclick="startNewOrder('${s.name}')">
+            <div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,${s.grad[0]},${s.grad[1]});display:flex;align-items:center;justify-content:center;color:#fff;margin-bottom:28px;box-shadow:0 8px 16px -6px ${s.grad[0]}66;">
+              ${icon(s.icon)}
+            </div>
+            <div style="font-weight:800;font-size:13.5px;letter-spacing:.3px;color:${s.grad[0]};margin-bottom:4px;">${s.title}</div>
+            <div style="font-size:11.5px;color:var(--muted);line-height:1.4;margin-bottom:12px;min-height:44px;">${s.desc}</div>
+            <div style="color:${s.grad[0]};font-size:12.5px;font-weight:700;display:flex;align-items:center;gap:4px;">${t('অর্ডার করুন','Order now')} ${icon('chevron')}</div>
+          </div>
+        `).join('')}
+      </div>
+
+      <div style="background:var(--blue-soft);border-radius:20px;padding:20px;margin-bottom:16px;">
+        <div style="font-weight:800;font-size:15.5px;color:var(--blue);font-family:'Baloo Da 2';margin-bottom:14px;">${t('অর্ডার করতে কত সহজ!','How easy it is to order!')}</div>
+        <div style="display:flex;justify-content:space-between;gap:6px;">
+          ${steps.map(s=>`
+            <div style="display:flex;flex-direction:column;align-items:center;gap:6px;flex:1;">
+              <div style="width:46px;height:46px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;color:var(--blue);box-shadow:0 6px 14px -8px rgba(18,89,232,0.4);">${icon(s.icon)}</div>
+              <div style="font-size:11px;font-weight:800;color:var(--blue);">${t(s.n, s.nEn)}</div>
+              <div style="font-size:10.5px;color:var(--ink);text-align:center;font-weight:600;line-height:1.3;">${s.label}</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+
+      <div class="row" style="background:var(--amber-soft);border:1px dashed var(--amber);border-radius:16px;padding:14px 16px;margin-bottom:18px;">
+        <div>
+          <div style="display:inline-block;background:var(--amber);color:#fff;font-size:9px;font-weight:800;letter-spacing:.5px;padding:3px 8px;border-radius:999px;margin-bottom:6px;">${t('সীমিত সময়ের জন্য','LIMITED TIME')}</div>
+          <div style="font-size:13px;font-weight:800;color:var(--ink);">${t('প্রথম অর্ডারে পান ১০% ছাড়!','Get 10% off your first order!')}</div>
+        </div>
+        <div style="text-align:center;flex:none;">
+          <div style="font-size:9px;color:var(--muted);font-weight:700;">${t('কুপন কোড','Coupon code')}</div>
+          <div style="border:1.5px dashed var(--blue);border-radius:8px;padding:4px 10px;font-weight:800;color:var(--blue);font-size:13px;letter-spacing:.5px;">FIRST10</div>
+        </div>
+      </div>
+
+      ${ongoing? `
+      <div class="card" style="cursor:pointer;margin-bottom:8px;" onclick="openTracking('${ongoing.id}')">
+        <div style="font-size:11.5px;color:var(--muted);margin-bottom:4px;">${t('চলমান অর্ডার','Ongoing order')}</div>
+        <div class="row">
+          <div style="font-weight:700;">${ongoing.id} | ${toBn(ongoing.pieces)} ${t('পিস','pcs')}</div>
+          <span style="color:var(--blue);font-size:12.5px;font-weight:600;">${t('বিস্তারিত','Details')} ${ICONS.chevron}</span>
+        </div>
+        <div style="font-size:12.5px;color:var(--blue);margin-top:6px;">${statusText(ongoing.status)}</div>
+        <div style="height:6px;background:var(--line);border-radius:6px;overflow:hidden;margin-top:8px;">
+          <div style="height:100%;width:45%;background:var(--blue);"></div>
+        </div>
+      </div>` : ''}
+    </div>
+  </div>
+  ${tabbar('home')}`;
+}
+function startNewOrder(serviceName){
+  state.orderDraft = {service: serviceName || 'ওয়াশ', category:'পুরুষ', items:{}, speed:'standard'};
+  state.showSelectedItems = false;
+  goTo('newOrder');
+}
+function openTracking(id){
+  state.activeOrderId = id;
+  goTo('tracking');
+}
+
+function screenNewOrder(){
+  const cats = Object.keys(PRICES);
+  const list = PRICES[state.orderDraft.category];
+  const calc = calcOrder();
+  return `
+  <div class="screen-body fade-in" style="position:relative;">
+    <div class="px" style="padding-top:16px;">
+      <div class="row" style="margin-bottom:14px;">
+        <button class="btn-ghost" onclick="goBack()" style="padding:6px;">${icon('back')}</button>
+        <h2 style="margin:0;font-size:18px;">${t('নতুন অর্ডার','New order')}</h2>
+        <div style="width:24px;"></div>
+      </div>
+      <div style="display:inline-flex;align-items:center;gap:8px;background:var(--blue);color:#fff;padding:9px 14px;border-radius:12px;font-size:13.5px;font-weight:600;margin-bottom:14px;">
+        ${serviceText(state.orderDraft.service)} <span style="cursor:pointer;opacity:.85;" onclick="event.stopPropagation();goTo('home')">✕</span>
+      </div>
+      <div style="display:flex; gap:8px; overflow-x:auto; margin-bottom:16px;">
+        ${cats.map(c=>`
+          <button onclick="state.orderDraft.category='${c}'; render();"
+            style="flex:none;border:none;padding:9px 16px;border-radius:20px;font-size:13.5px;font-weight:600;cursor:pointer;
+            background:${state.orderDraft.category===c?'var(--blue)':'#EEF1F6'}; color:${state.orderDraft.category===c?'#fff':'var(--ink)'};">
+            ${categoryText(c)}
+          </button>`).join('')}
+      </div>
+    </div>
+
+    <div class="px" style="display:flex; flex-direction:column; gap:12px; padding-bottom:110px;">
+      ${list.map(item=>{
+        const qty = state.orderDraft.items[item.key]||0;
+        return `
+        <div class="card" style="display:flex;align-items:center;gap:14px;">
+          <div style="width:46px;height:46px;border-radius:12px;background:var(--blue-soft);display:flex;align-items:center;justify-content:center;color:var(--blue);flex:none;">
+            ${icon(item.icon)}
+          </div>
+          <div style="flex:1;">
+            <div style="font-weight:700;font-size:14.5px;">${t(item.label, item.labelEn)}</div>
+            <div style="font-size:12px;color:var(--muted);">${t('৳'+item.price+'/পিস', '৳'+item.price+'/piece')}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <button onclick="changeQty('${item.key}',-1)" style="width:30px;height:30px;border-radius:50%;border:none;background:${qty>0?'#E4E9F2':'#F1F3F7'};color:${qty>0?'var(--ink)':'#B7C0D1'};display:flex;align-items:center;justify-content:center;cursor:pointer;">${icon('minus')}</button>
+            <span style="min-width:16px;text-align:center;font-weight:700;">${qty}</span>
+            <button onclick="changeQty('${item.key}',1)" style="width:30px;height:30px;border-radius:50%;border:none;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;">${icon('plus')}</button>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+
+    <div style="position:sticky;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--line);padding:16px 22px 20px;display:flex;align-items:center;gap:14px;z-index:5;">
+      <div>
+        <div style="font-size:12.5px;color:var(--muted);cursor:${calc.totalPieces>0?'pointer':'default'};${calc.totalPieces>0?'color:var(--blue);font-weight:700;text-decoration:underline;':''}"
+          ${calc.totalPieces>0?`onclick="state.showSelectedItems=true; render();"`:''}>
+          ${calc.totalPieces} ${t('পিস','pcs')} ${calc.totalPieces>0?t('— সব দেখুন','— See all'):''}
+        </div>
+        <div style="font-weight:700;color:var(--blue);font-size:18px;">${money(calc.subtotal)}</div>
+      </div>
+      <button class="btn btn-primary" style="flex:1;" ${calc.totalPieces===0?'disabled':''} onclick="goTo('orderSummary')">
+        ${t('পরবর্তী','Next')} ${icon('chevron')}
+      </button>
+    </div>
+
+    ${state.showSelectedItems? screenSelectedItemsOverlay(calc) : ''}
+  </div>`;
+}
+function getAllSelectedItems(){
+  const all = Object.entries(PRICES).flatMap(([cat, arr]) => arr.map(it=>({...it, category:cat})));
+  return all.filter(it => (state.orderDraft.items[it.key]||0) > 0)
+    .map(it => ({...it, qty: state.orderDraft.items[it.key]}));
+}
+function screenSelectedItemsOverlay(calc){
+  const selected = getAllSelectedItems();
+  return `
+  <div style="position:fixed;inset:0;background:rgba(11,31,58,0.45);z-index:20;display:flex;align-items:flex-end;justify-content:center;" onclick="if(event.target===this){state.showSelectedItems=false; render();}">
+    <div style="width:100%;max-width:460px;background:#fff;border-radius:22px 22px 0 0;box-shadow:var(--shadow-lg);max-height:80vh;display:flex;flex-direction:column;">
+      <div class="row px" style="padding-top:18px;padding-bottom:12px;border-bottom:1px solid var(--line);">
+        <h2 style="margin:0;font-size:16.5px;">${t('নির্বাচিত কাপড়','Selected items')} (${selected.length})</h2>
+        <button class="btn-ghost" onclick="state.showSelectedItems=false; render();" style="padding:6px;">${icon('close')}</button>
+      </div>
+      <div class="px" style="overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding-top:14px;padding-bottom:14px;">
+        ${selected.length===0? `<div style="text-align:center;color:var(--muted);padding:30px 0;font-size:13.5px;">${t('এখনো কিছু নির্বাচন করা হয়নি','Nothing selected yet')}</div>` : ''}
+        ${selected.map(item=>`
+          <div class="card" style="display:flex;align-items:center;gap:12px;">
+            <div style="width:40px;height:40px;border-radius:10px;background:var(--blue-soft);display:flex;align-items:center;justify-content:center;color:var(--blue);flex:none;">
+              ${icon(item.icon)}
+            </div>
+            <div style="flex:1;">
+              <div style="font-weight:700;font-size:13.5px;">${t(item.label, item.labelEn)}</div>
+              <div style="font-size:11.5px;color:var(--muted);">${categoryText(item.category)} • ${t('৳'+item.price+'/পিস', '৳'+item.price+'/piece')}</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <button onclick="changeQty('${item.key}',-1)" style="width:26px;height:26px;border-radius:50%;border:none;background:#E4E9F2;color:var(--ink);display:flex;align-items:center;justify-content:center;cursor:pointer;">${icon('minus')}</button>
+              <span style="min-width:14px;text-align:center;font-weight:700;font-size:13.5px;">${item.qty}</span>
+              <button onclick="changeQty('${item.key}',1)" style="width:26px;height:26px;border-radius:50%;border:none;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;">${icon('plus')}</button>
+            </div>
+            <button onclick="removeSelectedItem('${item.key}')" style="background:none;border:none;color:var(--danger);padding:4px;cursor:pointer;flex:none;margin-left:2px;">${icon('trash')}</button>
+          </div>
+        `).join('')}
+      </div>
+      <div class="px" style="padding-top:14px;padding-bottom:20px;border-top:1px solid var(--line);display:flex;align-items:center;gap:14px;">
+        <div>
+          <div style="font-size:12px;color:var(--muted);">${calc.totalPieces} ${t('পিস','pcs')}</div>
+          <div style="font-weight:700;color:var(--blue);font-size:17px;">${money(calc.subtotal)}</div>
+        </div>
+        <button class="btn btn-primary" style="flex:1;" onclick="state.showSelectedItems=false; render();">
+          ${t('আরও যোগ করুন','Add more')}
+        </button>
+      </div>
+    </div>
+  </div>`;
+}
+function removeSelectedItem(key){
+  state.orderDraft.items[key] = 0;
+  render();
+}
+function changeQty(key, delta){
+  const cur = state.orderDraft.items[key]||0;
+  const next = Math.max(0, cur+delta);
+  state.orderDraft.items[key] = next;
+  render();
+}
+
+function screenOrderSummary(){
+  const calc = calcOrder();
+  return `
+  <div class="screen-body fade-in">
+    <div class="px" style="padding-top:16px;">
+      <div class="row" style="margin-bottom:16px;">
+        <button class="btn-ghost" onclick="goBack()" style="padding:6px;">${icon('back')}</button>
+        <h2 style="margin:0;font-size:18px;">${t('অর্ডার সামারি','Order summary')}</h2>
+        <div style="width:24px;"></div>
+      </div>
+    </div>
+    <div class="px" style="display:flex;flex-direction:column;gap:16px;padding-bottom:24px;">
+      <div class="card">
+        <div class="row" style="margin-bottom:12px;">
+          <div style="display:flex;align-items:center;gap:8px;font-weight:700;">${icon('clipboard')} ${t('অর্ডার বিবরণ','Order details')}</div>
+          <span class="pill" style="background:var(--blue-soft);color:var(--blue-deep);">${serviceText(state.orderDraft.service)}</span>
+        </div>
+        ${calc.items.map(it=>`
+          <div class="row" style="font-size:13.5px;padding:6px 0;border-bottom:1px dashed var(--line);">
+            <span>${t(it.label, it.labelEn)} × ${it.qty}</span><span>${money(it.total)}</span>
+          </div>`).join('')}
+        <div class="row" style="font-size:13.5px;padding-top:10px;">
+          <span>${t('সাবটোটাল:','Subtotal:')}</span><span>${money(calc.subtotal)}</span>
+        </div>
+        <div class="row" style="font-size:13.5px;padding-top:6px;">
+          <span>${t('ডেলিভারি চার্জ:','Delivery charge:')}</span><span style="color:#0A6B5F;font-weight:700;">${t('ফ্রি','Free')}</span>
+        </div>
+        ${calc.expressFee>0?`
+        <div class="row" style="font-size:13.5px;padding-top:6px;">
+          <span>${t('এক্সপ্রেস ডেলিভারি চার্জ:','Express delivery charge:')}</span><span>${money(calc.expressFee)}</span>
+        </div>`:''}
+        <div class="row" style="padding-top:12px;margin-top:6px;border-top:1px solid var(--line);font-weight:700;font-size:17px;">
+          <span>${t('মোট:','Total:')}</span><span style="color:var(--blue);">${money(calc.total)}</span>
+        </div>
+      </div>
+
+      <div>
+        <div style="font-weight:700;display:flex;align-items:center;gap:8px;margin-bottom:10px;">${icon('truck')} ${t('ডেলিভারি সময়','Delivery time')}</div>
+        ${DELIVERY_OPTIONS.map(opt=>`
+          <div class="card" style="display:flex;align-items:center;gap:12px;margin-bottom:10px;cursor:pointer;${state.orderDraft.speed===opt.key?'border-color:var(--blue);':''}"
+            onclick="state.orderDraft.speed='${opt.key}'; render();">
+            <div style="width:38px;height:38px;border-radius:10px;background:var(--blue-soft);color:var(--blue);display:flex;align-items:center;justify-content:center;flex:none;">${icon('truck')}</div>
+            <div style="flex:1;">
+              <div style="font-weight:700;font-size:14px;">${t(opt.label, opt.labelEn)} ${opt.fee>0?`(+${money(opt.fee)})`:t('(ফ্রি)','(Free)')}</div>
+              <div style="font-size:12px;color:var(--muted);margin-top:2px;">${t(opt.desc, opt.descEn)} — ${t('আনুমানিক','approx.')} ${deliveryDateShort(opt.days)}</div>
+            </div>
+            <div style="width:18px;height:18px;border-radius:50%;border:${state.orderDraft.speed===opt.key?'5px solid var(--blue)':'2px solid var(--line)'};flex:none;"></div>
+          </div>
+        `).join('')}
+      </div>
+
+      <div class="card" style="display:flex;flex-direction:column;gap:12px;">
+        <div class="row" style="font-size:13.5px;"><span style="display:flex;align-items:center;gap:8px;color:var(--muted);">${icon('calendar')} ${t('পিকআপ:','Pickup:')}</span><span style="font-weight:600;">${t('২২ মে, সকাল ৯-১১টা','May 22, 9-11 AM')}</span></div>
+        <div class="row" style="font-size:13.5px;"><span style="display:flex;align-items:center;gap:8px;color:var(--muted);">${icon('truck')} ${t('ডেলিভারি:','Delivery:')}</span><span style="font-weight:600;">${deliveryDateLabel(calc.speedOpt.days)}</span></div>
+        <div class="row" style="font-size:13.5px;"><span style="display:flex;align-items:center;gap:8px;color:var(--muted);">${icon('location')} ${t('ঠিকানা:','Address:')}</span><span style="font-weight:600;text-align:right;">${state.profile.address || t('বাসা ১২, রোড ৩, কলাতলী','House 12, Road 3, Kolatoli')}</span></div>
+        <div style="font-size:11.5px;color:#0A6B5F;background:var(--teal-soft);padding:8px 10px;border-radius:10px;">
+          🛵 ${t('একই ডেলিভারিম্যান আপনার কাপড় নিয়ে আসবেন, আবার তিনিই ধোয়া শেষে ফেরত দিয়ে যাবেন।','The same delivery person will pick up your clothes and bring them back once washed.')}
+        </div>
+      </div>
+
+      <div>
+        <div style="font-weight:700;display:flex;align-items:center;gap:8px;margin-bottom:10px;">${icon('card')} ${t('পেমেন্ট পদ্ধতি','Payment method')}</div>
+        <div class="card" style="display:flex;align-items:center;gap:12px;border-color:var(--blue);margin-bottom:10px;cursor:pointer;">
+          ${icon('cash')} <span style="flex:1;font-weight:600;">${t('ক্যাশ অন ডেলিভারি','Cash on delivery')}</span>
+          <div style="width:18px;height:18px;border-radius:50%;border:5px solid var(--blue);"></div>
+        </div>
+        <div class="card" style="display:flex;align-items:center;gap:12px;opacity:.55;">
+          💗 <span style="flex:1;font-weight:600;">bKash / Nagad</span>
+          <span style="font-size:10.5px;background:#EEE;padding:3px 8px;border-radius:8px;">${t('শীঘ্রই আসছে','Coming soon')}</span>
+        </div>
+      </div>
+
+      <button class="btn btn-confirm" onclick="confirmOrder()">${icon('check')} ${t('অর্ডার নিশ্চিত করুন','Confirm order')}</button>
+    </div>
+  </div>`;
+}
+function confirmOrder(){
+  const calc = calcOrder();
+  const newId = '#ORD-'+(1235+orders.length);
+  const newOrder = {
+    id:newId, customerName: state.user.name, customerPhone: state.user.phoneMasked, area: state.profile.area || 'কলাতলী রোড',
+    assignedRider: null,
+    service:state.orderDraft.service, pieces:calc.totalPieces, total:calc.total,
+    date:'২২ মে ২০২৬', status:'অর্ডার গ্রহণ করা হয়েছে', tab:'চলমান',
+    deliveryDays: calc.speedOpt.days,
+    deliveryLabel: deliveryDateLabel(calc.speedOpt.days),
+    timeline:[
+      {label:'অর্ডার গ্রহণ করা হয়েছে', time:'২২ মে, ৯:০৫ AM', current:true},
+      {label:'কাপড় সংগ্রহ করা হয়েছে'},{label:'ধোয়া হচ্ছে'},{label:'প্যাকেজিং'},{label:'ডেলিভারির জন্য প্রস্তুত'},{label:'ডেলিভারি সম্পন্ন'},
+    ]
+  };
+  orders.unshift(newOrder);
+  state.activeOrderId = newId;
+  goTo('orderSuccess');
+}
+
+function screenOrderSuccess(){
+  const ord = orders.find(o=>o.id===state.activeOrderId) || orders[0];
+  return `
+  <div class="screen-body fade-in">
+    <div class="px" style="padding-top:16px;">
+      <button class="btn-ghost" onclick="goTo('home')" style="padding:6px;">${icon('back')}</button>
+    </div>
+    <div class="px" style="padding-top:26px; align-items:center; text-align:center; display:flex; flex-direction:column;">
+    <div style="width:110px;height:110px;border-radius:50%;background:#0EA5A0; display:flex;align-items:center;justify-content:center;margin-bottom:22px; box-shadow:0 0 0 14px #E4FBF7;">
+      <svg viewBox="0 0 24 24" width="52" height="52" fill="none"><path d="M4 12l6 6L20 6" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <h2 style="margin:0 0 6px;font-size:20px;">${t('অর্ডার সফল হয়েছে! 🎉','Order placed successfully! 🎉')}</h2>
+    <div style="font-size:12.5px;color:var(--muted);margin-bottom:4px;">${t('অর্ডার নম্বর','Order number')}</div>
+    <div style="font-weight:700;color:var(--blue);font-size:19px;margin-bottom:22px;">${ord.id}</div>
+
+    <div class="card" style="width:100%;text-align:left;margin-bottom:24px;">
+      <div style="text-align:center;color:var(--muted);font-size:13.5px;padding-bottom:12px;margin-bottom:12px;border-bottom:1px solid var(--line);">
+        ${t('আমাদের ডেলিভারিম্যান শীঘ্রই আপনার কাপড় সংগ্রহ করতে আসবে','Our delivery person will arrive soon to collect your clothes')}
+      </div>
+      <div class="row" style="font-size:13.5px;padding:6px 0;"><span style="display:flex;gap:8px;color:var(--muted);">${icon('calendar')} ${t('পিকআপ:','Pickup:')}</span><span style="font-weight:600;">${t('২২ মে, সকাল ৯-১১টা','May 22, 9-11 AM')}</span></div>
+      <div class="row" style="font-size:13.5px;padding:6px 0;"><span style="display:flex;gap:8px;color:var(--muted);">${icon('truck')} ${t('আনুমানিক ডেলিভারি:','Estimated delivery:')}</span><span style="font-weight:600;">${ord.deliveryLabel || deliveryDateLabel(7)}</span></div>
+      <div class="row" style="font-size:13.5px;padding:6px 0;"><span style="display:flex;gap:8px;color:var(--muted);">${icon('location')}</span><span style="font-weight:600;">${t('কলাতলী, কক্সবাজার','Kolatoli, Cox\u2019s Bazar')}</span></div>
+      <div style="font-size:11.5px;color:#0A6B5F;background:var(--teal-soft);padding:8px 10px;border-radius:10px;margin-top:8px;">
+        🛵 ${t('একই ডেলিভারিম্যান কাপড় নিতে আসবেন, আবার তিনিই ফেরত দিয়ে যাবেন।','The same delivery person will pick up and bring back your clothes.')}
+      </div>
+    </div>
+
+    <button class="btn btn-outline" style="margin-bottom:14px;" onclick="openTracking('${ord.id}')">📦 ${t('অর্ডার ট্র্যাক করুন','Track order')}</button>
+    <span style="color:var(--blue);font-weight:600;font-size:14px;cursor:pointer;display:flex;align-items:center;gap:8px;" onclick="goTo('home')">${icon('home')} ${t('হোমে ফিরুন','Back to home')}</span>
+    </div>
+  </div>`;
+}
+
+/* ================= CHAT (order-based, shared by admin & rider) ================= */
+function getChat(orderId){
+  if(!state.chats[orderId]){
+    const ord = orders.find(o=>o.id===orderId);
+    const rider = ord && ord.assignedRider ? getRider(ord.assignedRider) : null;
+    state.chats[orderId] = rider ? [
+      {from:'rider', name:rider.name+' '+t('(রাইডার)','(Rider)'), text:t('আসসালামু আলাইকুম! আপনার '+orderId+' অর্ডারটি এখন প্রসেসিং-এ আছে। কোনো প্রশ্ন থাকলে এখানে জানাতে পারেন।','Hello! Your order '+orderId+' is now being processed. Feel free to ask any questions here.'), time:'৯:১০ AM'},
+    ] : [
+      {from:'admin', name:t('অ্যাডমিন টিম','Admin Team'), text:t('আসসালামু আলাইকুম! আপনার '+orderId+' অর্ডারটি পাওয়া গেছে, শীঘ্রই একজন রাইডার বরাদ্দ করা হবে।','Hello! We have received your order '+orderId+'. A rider will be assigned shortly.'), time:'৯:১০ AM'},
+    ];
+  }
+  return state.chats[orderId];
+}
+function unreadCount(orderId){
+  // simple demo: unread only if chat not yet opened for this order in this session
+  return state._openedChats && state._openedChats[orderId] ? 0 : (state.chats[orderId] ? 0 : 1);
+}
+function openChat(orderId, role){
+  state.activeOrderId = orderId;
+  state.chatViewerRole = role || 'customer';
+  getChat(orderId); // ensure seeded
+  state._openedChats = state._openedChats || {};
+  state._openedChats[orderId] = true;
+  goTo('chat');
+}
+function chatSenderMeta(role, orderId){
+  if(role==='admin') return {name:t('অ্যাডমিন টিম','Admin Team'), avatar:'A', color:'#7C5CFC'};
+  if(role==='rider'){
+    const ord = orders.find(o=>o.id===orderId);
+    const rider = ord && ord.assignedRider ? getRider(ord.assignedRider) : null;
+    return {name:(rider?rider.name:t('রাইডার','Rider'))+' '+t('(রাইডার)','(Rider)'), avatar: rider?rider.avatar:'র', color:'var(--blue)'};
+  }
+  return {name:state.user.name, avatar:(state.user.name||'র')[0], color:'#0EA5A0'};
+}
+function sendChatMessage(){
+  const input = document.getElementById('chatInput');
+  if(!input) return;
+  const text = input.value.trim();
+  if(!text) return;
+  const orderId = state.activeOrderId;
+  const role = state.chatViewerRole;
+  const now = new Date();
+  const time = now.getHours()%12||12;
+  const timeStr = time+':'+String(now.getMinutes()).padStart(2,'0')+' '+(now.getHours()>=12?'PM':'AM');
+  const meta = chatSenderMeta(role, orderId);
+  getChat(orderId).push({from:role, name:meta.name, text, time:timeStr});
+  input.value='';
+  render();
+  scrollChatToBottom();
+  // only simulate an automatic rider/admin reply when the CUSTOMER is chatting —
+  // when an admin/rider is using the panel, they type real replies themselves.
+  if(role==='customer'){
+    state.chatTyping = true;
+    render();
+    scrollChatToBottom();
+    setTimeout(()=>{
+      state.chatTyping = false;
+      if(state.screen==='chat' && state.activeOrderId===orderId){
+        const ord = orders.find(o=>o.id===orderId);
+        const rider = ord && ord.assignedRider ? getRider(ord.assignedRider) : null;
+        const replies = state.language==='en' ? [
+          'Sure, checking on it right now.',
+          'Your clothes are safe, no need to worry.',
+          'Thanks for letting us know, we are keeping an eye on it.',
+          'Passing this along to the admin team too.',
+        ] : [
+          'জি, দেখছি এখনই।',
+          'আপনার কাপড়গুলো নিরাপদে আছে, চিন্তা করবেন না।',
+          'ধন্যবাদ জানানোর জন্য, আমরা খেয়াল রাখছি।',
+          'অ্যাডমিন টিমকেও বিষয়টি জানিয়ে দিচ্ছি।',
+        ];
+        const reply = replies[Math.floor(Math.random()*replies.length)];
+        if(rider){
+          getChat(orderId).push({from:'rider', name:rider.name+' '+t('(রাইডার)','(Rider)'), text:reply, time:timeStr});
+        } else {
+          getChat(orderId).push({from:'admin', name:t('অ্যাডমিন টিম','Admin Team'), text:reply, time:timeStr});
+        }
+        render();
+        scrollChatToBottom();
+      }
+    }, 1400);
+  }
+}
+function scrollChatToBottom(){
+  setTimeout(()=>{
+    const box = document.getElementById('chatMessages');
+    if(box) box.scrollTop = box.scrollHeight;
+  }, 30);
+}
+function chatInputKey(e){
+  if(e.key==='Enter'){ e.preventDefault(); sendChatMessage(); }
+}
+
+function screenChat(){
+  const orderId = state.activeOrderId;
+  const ord = orders.find(o=>o.id===orderId) || orders[0];
+  const msgs = getChat(orderId);
+  const viewerRole = state.chatViewerRole;
+  const rider = ord.assignedRider ? getRider(ord.assignedRider) : null;
+  let headerTitle, headerSub, headerAvatar;
+  if(viewerRole==='admin'){
+    headerTitle = ord.customerName || t('কাস্টমার','Customer');
+    headerSub = ord.id+' • '+t('রাইডার:','Rider:')+' '+(rider?rider.name:t('বরাদ্দ বাকি','Not assigned yet'));
+    headerAvatar = (ord.customerName||'ক')[0];
+  } else if(viewerRole==='rider'){
+    headerTitle = ord.customerName || t('কাস্টমার','Customer');
+    headerSub = ord.id+' '+t('নিয়ে চ্যাট','chat');
+    headerAvatar = (ord.customerName||'ক')[0];
+  } else {
+    headerTitle = rider ? rider.name : t('অ্যাডমিন টিম','Admin Team');
+    headerSub = ord.id+' '+t('নিয়ে চ্যাট','chat');
+    headerAvatar = rider ? rider.avatar : 'A';
+  }
+  return `
+  <div class="screen-body fade-in" style="height:100vh;">
+    <div class="px" style="padding-top:16px;padding-bottom:12px;border-bottom:1px solid var(--line);">
+      <div class="row">
+        <button class="btn-ghost" onclick="goBack()" style="padding:6px;">${icon('back')}</button>
+        <div style="text-align:center;">
+          <div style="font-weight:700;font-size:15px;">${headerTitle}</div>
+          <div style="font-size:11px;color:var(--muted);">${headerSub}</div>
+        </div>
+        <div style="width:40px;height:40px;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;">${headerAvatar}</div>
+      </div>
+    </div>
+
+    <div style="background:var(--teal-soft);color:#0A6B5F;font-size:11.5px;text-align:center;padding:8px 16px;">
+      ${t('এই চ্যাট থ্রেড কাস্টমার, অ্যাডমিন ও রাইডার — তিনজনই দেখতে ও রিপ্লাই দিতে পারবে','This chat is shared — the customer, admin, and rider can all see and reply here')}
+    </div>
+
+    <div id="chatMessages" class="px" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding-top:16px;padding-bottom:16px;">
+      ${msgs.map(m=>{
+        const mine = m.from===viewerRole;
+        return `
+        <div style="display:flex;flex-direction:column;align-items:${mine?'flex-end':'flex-start'};">
+          ${!mine? `<div style="font-size:10.5px;color:var(--muted);margin-bottom:2px;margin-left:4px;">${m.name}</div>`:''}
+          <div style="max-width:78%;padding:10px 14px;border-radius:${mine?'16px 16px 4px 16px':'16px 16px 16px 4px'};
+            background:${mine?'var(--blue)':'#EEF1F6'}; color:${mine?'#fff':'var(--ink)'}; font-size:14px; line-height:1.5;">
+            ${m.text}
+          </div>
+          <div style="font-size:10px;color:var(--muted);margin-top:3px;${mine?'margin-right:4px;':'margin-left:4px;'}">${m.time}</div>
+        </div>`;
+      }).join('')}
+      ${state.chatTyping? `
+        <div style="display:flex;flex-direction:column;align-items:flex-start;">
+          <div style="font-size:10.5px;color:var(--muted);margin-bottom:2px;margin-left:4px;">${rider?rider.name+' '+t('(রাইডার)','(Rider)'):t('অ্যাডমিন টিম','Admin Team')}</div>
+          <div style="padding:10px 16px;border-radius:16px 16px 16px 4px;background:#EEF1F6;font-size:14px;color:var(--muted);">${t('টাইপ করছে...','typing...')}</div>
+        </div>`:''}
+    </div>
+
+    <div style="display:flex;gap:10px;align-items:center;padding:12px 16px 16px;border-top:1px solid var(--line);background:#fff;">
+      <input id="chatInput" class="input" placeholder="${t('মেসেজ লিখুন...','Type a message...')}" style="flex:1;" onkeydown="chatInputKey(event)" />
+      <button onclick="sendChatMessage()" style="width:44px;height:44px;border-radius:50%;border:none;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none;">
+        ${icon('send')}
+      </button>
+    </div>
+  </div>`;
+}
+
+function screenChatList(){
+  // show ongoing + completed orders as chat threads (skip cancelled)
+  const chatOrders = orders.filter(o=>o.tab!=='বাতিল');
+  return `
+  <div class="screen-body fade-in">
+    <div class="px" style="padding-top:16px;">
+      <div class="row" style="margin-bottom:18px;">
+        <button class="btn-ghost" onclick="goBack()" style="padding:6px;">${icon('back')}</button>
+        <h2 style="margin:0;font-size:19px;">${t('চ্যাট','Chat')}</h2>
+        <div style="width:24px;"></div>
+      </div>
+    </div>
+    <div class="px" style="display:flex;flex-direction:column;gap:2px;padding-bottom:20px;">
+      ${chatOrders.length===0? `<div style="text-align:center;color:var(--muted);padding:40px 0;font-size:13.5px;">${t('এখনো কোনো অর্ডার নেই','No orders yet')}</div>` : ''}
+      ${chatOrders.map(o=>{
+        const thread = state.chats[o.id];
+        const last = thread && thread.length ? thread[thread.length-1] : null;
+        const unread = unreadCount(o.id);
+        const rider = o.assignedRider ? getRider(o.assignedRider) : null;
+        return `
+        <div style="display:flex;align-items:center;gap:14px;padding:14px 8px;border-bottom:1px solid var(--line);">
+          <div onclick="openChat('${o.id}')" style="display:flex;align-items:center;gap:14px;flex:1;min-width:0;cursor:pointer;">
+            <div style="width:46px;height:46px;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;flex:none;">${rider?rider.avatar:'A'}</div>
+            <div style="flex:1;min-width:0;">
+              <div class="row" style="margin-bottom:2px;">
+                <span style="font-weight:700;font-size:14.5px;">${rider?rider.name:t('অ্যাডমিন টিম','Admin Team')}</span>
+                <span style="font-size:11px;color:var(--muted);">${last?last.time:''}</span>
+              </div>
+              <div class="row">
+                <span style="font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:78%;">
+                  ${last? (last.from==='customer'?t('আপনি: ','You: '):'') + last.text : o.id+t(' — কথোপকথন শুরু করুন',' — start a conversation')}
+                </span>
+                ${unread>0? `<span style="background:var(--danger);color:#fff;font-size:10px;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;flex:none;">${unread}</span>`:''}
+              </div>
+              <div style="font-size:11px;color:var(--blue);margin-top:3px;">${o.id}</div>
+            </div>
+          </div>
+          ${o.tab==='সম্পন্ন'? `<button style="background:none;border:none;color:var(--danger);padding:6px;cursor:pointer;flex:none;" onclick="removeCompletedOrder('${o.id}')">${icon('trash')}</button>` : ''}
+        </div>`;
+      }).join('')}
+    </div>
+  </div>
+  ${tabbar('chatList')}`;
+}
+
+function screenTracking(){
+  const ord = orders.find(o=>o.id===state.activeOrderId) || orders[0];
+  const rider = ord.assignedRider ? getRider(ord.assignedRider) : null;
+  return `
+  <div class="screen-body fade-in">
+    <div class="px" style="padding-top:16px;">
+      <div class="row" style="margin-bottom:22px;">
+        <button class="btn-ghost" onclick="goBack()" style="padding:6px;">${icon('back')}</button>
+        <h2 style="margin:0;font-size:18px;">${t('অর্ডার ট্র্যাকিং','Order tracking')}</h2>
+        <span class="pill" style="background:var(--blue-soft);color:var(--blue-deep);">${ord.id}</span>
+      </div>
+
+      <div style="display:flex;flex-direction:column;">
+        ${ord.timeline.map((step,i)=>`
+          <div style="display:flex;gap:16px;">
+            <div style="display:flex;flex-direction:column;align-items:center;">
+              <div style="width:28px;height:28px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;
+                background:${step.done?'#0EA5A0':step.current?'#fff':'#fff'};
+                border:${step.current?'6px solid #E8F0FF':'2px solid '+(step.done?'#0EA5A0':'#E4E9F2')};">
+                ${step.done? icon('check') : step.current? `<div style="width:10px;height:10px;border-radius:50%;background:var(--blue);"></div>`:''}
+              </div>
+              ${i<ord.timeline.length-1? `<div style="width:2px;flex:1;min-height:34px;background:${step.done?'#0EA5A0':'#E4E9F2'};"></div>`:''}
+            </div>
+            <div style="padding-bottom:26px;">
+              <div style="font-weight:${step.current?'700':'600'};color:${step.current?'var(--blue)':step.done?'var(--ink)':'#9AA6BC'};font-size:14.5px;">${statusText(step.label)}</div>
+              ${step.time?`<div style="font-size:12px;color:var(--muted);margin-top:2px;">${step.time}</div>`:''}
+              ${step.note?`<div style="font-size:12px;color:var(--muted);margin-top:2px;">${step.note}</div>`:''}
+            </div>
+          </div>
+        `).join('')}
+      </div>
+
+      ${rider? `
+      <div class="card" style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+        <div style="width:40px;height:40px;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;">${rider.avatar}</div>
+        <div style="flex:1;">
+          <div style="font-weight:700;font-size:14px;">${rider.name}</div>
+          <div style="font-size:11.5px;color:var(--muted);">${t('পিকআপ ও ডেলিভারিম্যান','Pickup & delivery agent')}</div>
+        </div>
+        <div style="width:36px;height:36px;border-radius:50%;background:#0EA5A0;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;" onclick="window.location.href='tel:${rider.phone}'">${icon('call')}</div>
+        <div style="width:36px;height:36px;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;" onclick="openChat('${ord.id}')">
+          ${icon('msg')}
+          ${unreadCount(ord.id)>0?`<span style="position:absolute;top:-4px;right:-4px;background:var(--danger);color:#fff;font-size:9.5px;border-radius:50%;width:16px;height:16px;display:flex;align-items:center;justify-content:center;">${unreadCount(ord.id)}</span>`:''}
+        </div>
+      </div>` : `
+      <div class="card" style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+        <div style="width:40px;height:40px;border-radius:50%;background:#F1EEFD;color:#7C5CFC;display:flex;align-items:center;justify-content:center;font-weight:700;">A</div>
+        <div style="flex:1;">
+          <div style="font-weight:700;font-size:14px;">${t('রাইডার বরাদ্দ করা হচ্ছে','Assigning a rider')}</div>
+          <div style="font-size:11.5px;color:var(--muted);">${t('শীঘ্রই একজন রাইডার অ্যাসাইন করা হবে','A rider will be assigned shortly')}</div>
+        </div>
+        <div style="width:36px;height:36px;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;" onclick="openChat('${ord.id}')">
+          ${icon('msg')}
+          ${unreadCount(ord.id)>0?`<span style="position:absolute;top:-4px;right:-4px;background:var(--danger);color:#fff;font-size:9.5px;border-radius:50%;width:16px;height:16px;display:flex;align-items:center;justify-content:center;">${unreadCount(ord.id)}</span>`:''}
+        </div>
+      </div>`}
+
+      <div style="background:var(--blue-soft);border-radius:12px;padding:14px;display:flex;align-items:center;gap:10px;font-size:13px;color:var(--blue-deep);font-weight:600;margin-bottom:12px;">
+        🕐 ${t('আনুমানিক ডেলিভারি:','Estimated delivery:')} ${ord.deliveryLabel || deliveryDateLabel(7)}
+      </div>
+      ${rider? `
+      <div style="font-size:11.5px;color:#0A6B5F;background:var(--teal-soft);padding:8px 10px;border-radius:10px;margin-bottom:16px;">
+        🛵 ${t(rider.name+' আপনার কাপড় নিয়ে এসেছিলেন, ধোয়া শেষে তিনিই আবার ফেরত দিয়ে যাবেন।', rider.name+' picked up your clothes and will bring them back once washed.')}
+      </div>` : ''}
+
+      ${!rider && ord.tab==='চলমান'? `
+      <button class="btn" style="background:#FDE8E8;color:var(--danger);margin-bottom:24px;" onclick="customerCancelOrder('${ord.id}')">${icon('close')} ${t('অর্ডার বাতিল করুন','Cancel order')}</button>
+      <div style="font-size:11px;color:var(--muted);text-align:center;margin-top:-16px;margin-bottom:24px;">${t('রাইডার বরাদ্দ হওয়ার আগ পর্যন্ত বাতিল করা যাবে','You can cancel until a rider is assigned')}</div>
+      ` : ord.tab==='চলমান'? `
+      <div style="font-size:11px;color:var(--muted);text-align:center;margin-bottom:24px;">${t('রাইডার বরাদ্দ হয়ে গেছে — এখন বাতিল করতে চাইলে চ্যাটে যোগাযোগ করুন','A rider is already assigned — contact us via chat to cancel now')}</div>
+      ` : `<div style="margin-bottom:24px;"></div>`}
+    </div>
+  </div>`;
+}
+
+function screenOrders(){
+  const tabs = ['চলমান','সম্পন্ন','বাতিল'];
+  const list = orders.filter(o=>o.tab===state.ordersTab);
+  return `
+  <div class="screen-body fade-in">
+    <div class="px" style="padding-top:16px;">
+      <div class="row" style="margin-bottom:16px;">
+        <button class="btn-ghost" onclick="goBack()" style="padding:6px;">${icon('back')}</button>
+        <h2 style="margin:0;font-size:19px;">${t('আমার অর্ডার','My orders')}</h2>
+        <div style="width:24px;"></div>
+      </div>
+      <div style="display:flex;border-bottom:1px solid var(--line);margin-bottom:16px;">
+        ${tabs.map(tb=>`
+          <div onclick="state.ordersTab='${tb}'; render();" style="flex:1;text-align:center;padding:10px 0;cursor:pointer;
+            font-weight:600;font-size:14px;color:${state.ordersTab===tb?'var(--blue)':'var(--muted)'};
+            border-bottom:2px solid ${state.ordersTab===tb?'var(--blue)':'transparent'};">${statusText(tb)}</div>
+        `).join('')}
+      </div>
+    </div>
+    <div class="px" style="display:flex;flex-direction:column;gap:14px;padding-bottom:20px;">
+      ${list.length===0? `<div style="text-align:center;color:var(--muted);padding:40px 0;font-size:13.5px;">${t('এখানে কোনো অর্ডার নেই','No orders here')}</div>` : ''}
+      ${list.map(o=>{
+        const sc = statusColor(o.status);
+        return `
+        <div class="card" style="cursor:pointer;" onclick="${o.tab==='চলমান'?`openTracking('${o.id}')`:''}">
+          <div class="row" style="margin-bottom:6px;">
+            <div style="font-weight:700;font-size:15px;">${o.id}</div>
+            <div style="color:var(--blue);font-weight:700;">${money(o.total)}</div>
+          </div>
+          <div style="font-size:13px;color:var(--muted);margin-bottom:10px;">${serviceText(o.service)} | ${toBn(o.pieces)} ${t('পিস','pcs')}</div>
+          <div class="row">
+            <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);">${icon('calendar')} ${o.date}</div>
+            <span class="pill" style="background:${sc.bg};color:${sc.fg};">${statusText(o.status)}</span>
+          </div>
+          ${o.tab==='সম্পন্ন'? `
+          <div style="text-align:right;margin-top:8px;">
+            <button style="background:none;border:none;color:var(--danger);font-size:12px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:5px;padding:4px;" onclick="event.stopPropagation();removeCompletedOrder('${o.id}')">${icon('trash')} ${t('মুছে ফেলুন','Remove')}</button>
+          </div>` : ''}
+          ${o.tab==='চলমান' && !o.assignedRider? `
+          <div style="text-align:right;margin-top:8px;">
+            <button style="background:none;border:none;color:var(--danger);font-size:12px;font-weight:600;cursor:pointer;padding:4px;" onclick="event.stopPropagation();customerCancelOrder('${o.id}')">${t('অর্ডার বাতিল করুন','Cancel order')}</button>
+          </div>` : ''}
+        </div>`;
+      }).join('')}
+    </div>
+  </div>
+  ${tabbar('orders')}`;
+}
+
+function screenProfile(){
+  const items = [
+    {icon:'location', label:'আমার ঠিকানা', labelEn:'My address', value: areaText(state.profile.area || 'কলাতলী')},
+    {icon:'clipboard', label:'অর্ডার হিস্ট্রি', labelEn:'Order history', value:'', action:()=>goTo('orders')},
+    {icon:'star', label:'রেটিং ও রিভিউ', labelEn:'Ratings & reviews', value:''},
+    {icon:'phone', label:'যোগাযোগ / সাহায্য', labelEn:'Contact / Help', value:''},
+    {icon:'info', label:'আমাদের সম্পর্কে', labelEn:'About us', value:''},
+  ];
+  return `
+  <div class="screen-body fade-in">
+    <div style="background:linear-gradient(160deg,#1259E8,#0A3FB0); padding:26px 22px 34px; text-align:center; color:#fff; border-radius:0 0 34px 34px; position:relative;">
+      <button class="btn-ghost" onclick="goBack()" style="position:absolute;left:14px;top:14px;padding:6px;color:#fff;">${icon('back')}</button>
+      <div style="width:88px;height:88px;border-radius:50%;background:rgba(255,255,255,0.15);border:2.5px solid #fff;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;position:relative;">
+        <span style="font-size:34px;font-weight:700;">${(state.user.name||'র')[0]}</span>
+        <div style="position:absolute;bottom:-2px;right:-2px;width:28px;height:28px;border-radius:50%;background:#fff;color:var(--blue);display:flex;align-items:center;justify-content:center;">${icon('edit')}</div>
+      </div>
+      <div style="font-weight:700;font-size:19px;">${state.user.name}</div>
+      <div style="font-size:13px;opacity:.85;margin-top:2px;">${state.user.phoneMasked}</div>
+    </div>
+
+    <div class="px" style="padding-top:20px;display:flex;flex-direction:column;gap:10px;">
+      ${items.map(it=>`
+        <div class="card" style="display:flex;align-items:center;gap:14px;cursor:pointer;" onclick="${it.label==='অর্ডার হিস্ট্রি'?"goTo('orders')":''}">
+          <div style="width:38px;height:38px;border-radius:10px;background:var(--blue-soft);color:var(--blue);display:flex;align-items:center;justify-content:center;flex:none;">${icon(it.icon)}</div>
+          <div style="flex:1;font-weight:600;font-size:14px;">${t(it.label, it.labelEn)}</div>
+          ${it.badge? `<span class="pill" style="background:var(--teal-soft);color:#0A6B5F;">${it.value}</span>` : it.value?`<span style="font-size:13px;color:var(--muted);">${it.value}</span>`:''}
+          ${icon('chevron')}
+        </div>
+      `).join('')}
+      <div class="card" style="display:flex;align-items:center;gap:14px;cursor:pointer;" onclick="toggleLanguage()">
+        <div style="width:38px;height:38px;border-radius:10px;background:var(--blue-soft);color:var(--blue);display:flex;align-items:center;justify-content:center;flex:none;">${icon('globe')}</div>
+        <div style="flex:1;font-weight:600;font-size:14px;">${t('ভাষা পরিবর্তন','Change language')}</div>
+        <span style="font-size:13px;color:var(--muted);">${state.language==='en'?'English':'বাংলা'}</span>
+        ${icon('chevron')}
+      </div>
+      <div class="card" style="display:flex;align-items:center;gap:14px;cursor:pointer;margin-top:8px;" onclick="goTo('roleSelect')">
+        <div style="width:38px;height:38px;border-radius:10px;background:#F1EEFD;color:#7C5CFC;display:flex;align-items:center;justify-content:center;flex:none;">🔧</div>
+        <div style="flex:1;font-weight:600;font-size:14px;">${t('অ্যাডমিন / রাইডার প্যানেল (ডেমো)','Admin / Rider panel (demo)')}</div>
+        ${icon('chevron')}
+      </div>
+      <div class="card" style="display:flex;align-items:center;gap:14px;cursor:pointer;color:var(--danger);margin-top:8px;" onclick="doLogout()">
+        <div style="width:38px;height:38px;border-radius:10px;background:#FDE8E8;display:flex;align-items:center;justify-content:center;flex:none;">${icon('logout')}</div>
+        <div style="flex:1;font-weight:700;font-size:14px;">${t('লগআউট','Log out')}</div>
+      </div>
+    </div>
+  </div>
+  ${tabbar('profile')}`;
+}
+function doLogout(){
+  state.phone=''; state.otp=['','','',''];
+  goTo('login');
+}
+
+/* ================================================================
+   ADMIN PANEL & RIDER PANEL
+   Same shared `orders` array and `state.chats` object as the
+   customer app — actions taken here (status updates, chat replies)
+   are visible instantly inside the customer app too.
+================================================================ */
+
+function screenRoleSelect(){
+  return `
+  <div class="screen-body fade-in px" style="padding-top:16px;">
+    <button class="btn-ghost" onclick="goBack()" style="padding:6px;">${icon('back')}</button>
+    <div style="text-align:center;margin-top:10px;margin-bottom:28px;">
+      <h2 style="margin:0 0 6px;font-size:19px;">${t('কোন প্যানেলে ঢুকবেন?','Which panel would you like to enter?')}</h2>
+      <p style="color:var(--muted);font-size:13px;margin:0;">${t('একই সিস্টেম — কাস্টমার অ্যাপের সাথে অর্ডার ও চ্যাট শেয়ার হবে','Same system — orders and chat are shared with the customer app')}</p>
+    </div>
+
+    <div class="card" style="display:flex;align-items:center;gap:16px;margin-bottom:14px;cursor:pointer;" onclick="goTo('adminHome')">
+      <div style="width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,#7C5CFC,#A78BFA);display:flex;align-items:center;justify-content:center;color:#fff;font-size:24px;flex:none;">🛠️</div>
+      <div style="flex:1;">
+        <div style="font-weight:700;font-size:15.5px;">${t('অ্যাডমিন প্যানেল','Admin panel')}</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px;">${t('সব অর্ডার দেখুন, স্ট্যাটাস আপডেট করুন, কাস্টমারের সাথে চ্যাট করুন','View all orders, update statuses, chat with customers')}</div>
+      </div>
+      ${icon('chevron')}
+    </div>
+
+    <div class="card" style="display:flex;align-items:center;gap:16px;cursor:pointer;" onclick="goTo('riderLogin')">
+      <div style="width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,#1259E8,#3D8BFD);display:flex;align-items:center;justify-content:center;color:#fff;font-size:24px;flex:none;">🛵</div>
+      <div style="flex:1;">
+        <div style="font-weight:700;font-size:15.5px;">${t('রাইডার প্যানেল','Rider panel')}</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px;">${t('আজকের পিকআপ/ডেলিভারি লিস্ট, স্ট্যাটাস আপডেট, কাস্টমার চ্যাট','Today\u2019s pickup/delivery list, status updates, customer chat')}</div>
+      </div>
+      ${icon('chevron')}
+    </div>
+
+    <div style="text-align:center;margin-top:24px;color:var(--muted);font-size:12px;cursor:pointer;text-decoration:underline;" onclick="goTo('splash')">${t('← কাস্টমার অ্যাপে ফিরে যান','← Back to customer app')}</div>
+  </div>`;
+}
+
+function screenRiderLogin(){
+  return `
+  <div class="rider-theme">
+  <div class="screen-body fade-in px" style="padding-top:16px;">
+    <button class="btn-ghost" onclick="goBack()" style="padding:6px;">${icon('back')}</button>
+    <div style="text-align:center;margin-top:10px;margin-bottom:24px;">
+      <div style="width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,var(--blue),var(--blue-deep));display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 14px;">🛵</div>
+      <h2 style="margin:0 0 6px;font-size:19px;">আপনি কে?</h2>
+      <p style="color:var(--muted);font-size:13px;margin:0;">রাইডার হিসেবে লগইন করতে নিজের নাম বাছাই করুন</p>
+    </div>
+    ${RIDERS.map(r=>`
+      <div class="card" style="display:flex;align-items:center;gap:14px;margin-bottom:10px;cursor:pointer;" onclick="state.currentRiderId='${r.id}'; goTo('riderHome');">
+        <div style="width:44px;height:44px;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;flex:none;">${r.avatar}</div>
+        <div style="flex:1;font-weight:700;font-size:14.5px;">${r.name}</div>
+        ${icon('chevron')}
+      </div>
+    `).join('')}
+  </div>
+  </div>`;
+}
+
+function adminTabbar(active){
+  const tabs = [
+    {key:'adminHome', label:'ড্যাশবোর্ড', icon:'home'},
+    {key:'adminOrders', label:'অর্ডার', icon:'clipboard'},
+    {key:'adminChat', label:'চ্যাট', icon:'msg'},
+  ];
+  return `<div class="tabbar">
+    ${tabs.map(t=>`
+      <button class="tab ${active===t.key?'active':''}" onclick="goTo('${t.key}')">
+        ${icon(t.icon)}<span>${t.label}</span>
+      </button>`).join('')}
+  </div>`;
+}
+function riderTabbar(active){
+  const tabs = [
+    {key:'riderHome', label:'আজকের কাজ', icon:'home'},
+    {key:'riderEarnings', label:'আয়', icon:'cash'},
+    {key:'riderChat', label:'চ্যাট', icon:'msg'},
+  ];
+  return `<div class="tabbar">
+    ${tabs.map(t=>`
+      <button class="tab ${active===t.key?'active':''}" onclick="goTo('${t.key}')">
+        ${icon(t.icon)}<span>${t.label}</span>
+      </button>`).join('')}
+  </div>`;
+}
+
+function screenAdminHome(){
+  const total = orders.length;
+  const ongoing = orders.filter(o=>o.tab==='চলমান').length;
+  const done = orders.filter(o=>o.tab==='সম্পন্ন').length;
+  const revenue = orders.filter(o=>o.tab!=='বাতিল').reduce((a,o)=>a+o.total,0);
+  const pending = orders.filter(o=>o.tab==='চলমান' && !o.assignedRider);
+  const recent = orders.slice(0,4);
+  return `
+  <div class="screen-body fade-in">
+    <div class="px" style="padding-top:16px;">
+      <div class="row" style="margin-bottom:4px;">
+        <div>
+          <div style="font-size:19px;font-weight:700;">অ্যাডমিন ড্যাশবোর্ড</div>
+          <div style="font-size:12px;color:var(--muted);">ধোপা বাড়ি — কক্সবাজার সদর</div>
+        </div>
+        <button class="btn-ghost" onclick="goTo('roleSelect')" style="padding:6px;">${icon('logout')}</button>
+      </div>
+
+      ${pending.length>0? `
+      <div style="background:var(--amber-soft);border:1px solid #FBE1AE;border-radius:14px;padding:14px;margin-top:16px;">
+        <div style="display:flex;align-items:center;gap:8px;font-weight:700;font-size:14px;color:#B5760A;margin-bottom:2px;">
+          🔔 নতুন অর্ডার রিকোয়েস্ট (${toBn(pending.length)})
+        </div>
+        <div style="font-size:12px;color:#8A5E0C;margin-bottom:10px;">এই অর্ডারগুলোতে এখনো রাইডার বরাদ্দ করা হয়নি</div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          ${pending.map(o=>`
+            <div style="background:#fff;border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:10px;cursor:pointer;" onclick="openAdminOrder('${o.id}')">
+              <div style="flex:1;">
+                <div style="font-weight:700;font-size:13.5px;">${o.id} • ${o.customerName}</div>
+                <div style="font-size:11.5px;color:var(--muted);">${o.service} • ${o.pieces} পিস • ${o.area||''}</div>
+              </div>
+              <span style="font-size:12px;color:var(--blue);font-weight:700;">রাইডার দিন →</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>` : ''}
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px;margin-bottom:18px;">
+        <div class="card">
+          <div style="font-size:12px;color:var(--muted);">মোট অর্ডার</div>
+          <div style="font-size:22px;font-weight:700;color:var(--blue);margin-top:4px;">${toBn(total)}</div>
+        </div>
+        <div class="card">
+          <div style="font-size:12px;color:var(--muted);">চলমান</div>
+          <div style="font-size:22px;font-weight:700;color:#B5760A;margin-top:4px;">${toBn(ongoing)}</div>
+        </div>
+        <div class="card">
+          <div style="font-size:12px;color:var(--muted);">সম্পন্ন</div>
+          <div style="font-size:22px;font-weight:700;color:#0A6B5F;margin-top:4px;">${toBn(done)}</div>
+        </div>
+        <div class="card">
+          <div style="font-size:12px;color:var(--muted);">মোট আয়</div>
+          <div style="font-size:22px;font-weight:700;color:var(--ink);margin-top:4px;">${money(revenue)}</div>
+        </div>
+      </div>
+
+      <div class="row" style="margin-bottom:10px;">
+        <div style="font-weight:700;font-size:15px;">সাম্প্রতিক অর্ডার</div>
+        <span style="font-size:12.5px;color:var(--blue);font-weight:600;cursor:pointer;" onclick="goTo('adminOrders')">সব দেখুন</span>
+      </div>
+    </div>
+    <div class="px" style="display:flex;flex-direction:column;gap:12px;padding-bottom:20px;">
+      ${recent.map(o=>adminOrderCard(o)).join('')}
+    </div>
+  </div>
+  ${adminTabbar('adminHome')}`;
+}
+
+function adminOrderCard(o){
+  const sc = statusColor(o.status);
+  const rider = o.assignedRider ? getRider(o.assignedRider) : null;
+  return `
+  <div class="card" style="cursor:pointer;${!rider && o.tab==='চলমান'?'border-color:#F5A623;':''}" onclick="openAdminOrder('${o.id}')">
+    <div class="row" style="margin-bottom:6px;">
+      <div style="font-weight:700;font-size:14.5px;">${o.id}</div>
+      <div style="color:var(--blue);font-weight:700;">${money(o.total)}</div>
+    </div>
+    <div style="font-size:12.5px;color:var(--muted);margin-bottom:8px;">${o.customerName||'কাস্টমার'} • ${o.service} • ${o.pieces} পিস</div>
+    <div class="row" style="margin-bottom:${!rider && o.tab==='চলমান'?'8px':'0'};">
+      <span style="font-size:11.5px;color:var(--muted);">${o.area||''}</span>
+      <span class="pill" style="background:${statusColor(o.status).bg};color:${statusColor(o.status).fg};">${o.status}</span>
+    </div>
+    ${!rider && o.tab==='চলমান'? `<div style="font-size:11.5px;color:#B5760A;background:var(--amber-soft);padding:6px 10px;border-radius:8px;font-weight:600;">⚠️ রাইডার বরাদ্দ বাকি</div>` : rider? `<div style="font-size:11px;color:var(--blue);">🛵 ${rider.name}</div>` : ''}
+  </div>`;
+}
+function openAdminOrder(orderId){
+  state.activeOrderId = orderId;
+  state.showRiderPicker = false;
+  goTo('adminOrderDetail');
+}
+
+function screenAdminOrders(){
+  const tabs = ['চলমান','সম্পন্ন','বাতিল'];
+  const list = orders.filter(o=>o.tab===state.adminOrdersTab);
+  return `
+  <div class="screen-body fade-in">
+    <div class="px" style="padding-top:16px;">
+      <div class="row" style="margin-bottom:16px;">
+        <button class="btn-ghost" onclick="goBack()" style="padding:6px;">${icon('back')}</button>
+        <h2 style="margin:0;font-size:18px;">সব অর্ডার</h2>
+        <div style="width:24px;"></div>
+      </div>
+      <div style="display:flex;border-bottom:1px solid var(--line);margin-bottom:16px;">
+        ${tabs.map(t=>`
+          <div onclick="state.adminOrdersTab='${t}'; render();" style="flex:1;text-align:center;padding:10px 0;cursor:pointer;
+            font-weight:600;font-size:14px;color:${state.adminOrdersTab===t?'var(--blue)':'var(--muted)'};
+            border-bottom:2px solid ${state.adminOrdersTab===t?'var(--blue)':'transparent'};">${t}</div>
+        `).join('')}
+      </div>
+    </div>
+    <div class="px" style="display:flex;flex-direction:column;gap:12px;padding-bottom:20px;">
+      ${list.length===0? `<div style="text-align:center;color:var(--muted);padding:40px 0;font-size:13.5px;">এখানে কোনো অর্ডার নেই</div>` : ''}
+      ${list.map(o=>adminOrderCard(o)).join('')}
+    </div>
+  </div>
+  ${adminTabbar('adminOrders')}`;
+}
+
+function screenAdminOrderDetail(){
+  const ord = orders.find(o=>o.id===state.activeOrderId) || orders[0];
+  const nextStep = ord.timeline && ord.timeline.find(s=>s.current);
+  const nextIdx = ord.timeline ? ord.timeline.findIndex(s=>s.current) : -1;
+  const isLastStep = nextIdx === (ord.timeline?ord.timeline.length-1:-1);
+  return `
+  <div class="screen-body fade-in">
+    <div class="px" style="padding-top:16px;">
+      <div class="row" style="margin-bottom:18px;">
+        <button class="btn-ghost" onclick="goBack()" style="padding:6px;">${icon('back')}</button>
+        <h2 style="margin:0;font-size:18px;">${ord.id}</h2>
+        <span class="pill" style="background:${statusColor(ord.status).bg};color:${statusColor(ord.status).fg};">${ord.status}</span>
+      </div>
+
+      <div class="card" style="margin-bottom:14px;">
+        <div style="font-weight:700;font-size:14.5px;margin-bottom:10px;">কাস্টমার তথ্য</div>
+        <div class="row" style="font-size:13px;padding:4px 0;"><span style="color:var(--muted);">নাম:</span><span style="font-weight:600;">${ord.customerName||'—'}</span></div>
+        <div class="row" style="font-size:13px;padding:4px 0;"><span style="color:var(--muted);">ফোন:</span><span style="font-weight:600;">${ord.customerPhone||'—'}</span></div>
+        <div class="row" style="font-size:13px;padding:4px 0;"><span style="color:var(--muted);">এলাকা:</span><span style="font-weight:600;">${ord.area||'—'}</span></div>
+      </div>
+
+      <div class="card" style="margin-bottom:14px;">
+        <div class="row" style="margin-bottom:10px;">
+          <div style="font-weight:700;font-size:14.5px;">রাইডার</div>
+          ${ord.assignedRider? `<span style="font-size:11.5px;color:var(--blue);font-weight:600;cursor:pointer;" onclick="state.showRiderPicker=!state.showRiderPicker; render();">পরিবর্তন করুন</span>` : ''}
+        </div>
+        ${ord.assignedRider && !state.showRiderPicker? `
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="width:36px;height:36px;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;flex:none;">${getRider(ord.assignedRider).avatar}</div>
+            <div style="font-weight:600;font-size:13.5px;">${getRider(ord.assignedRider).name}</div>
+          </div>
+        ` : `
+          <div style="font-size:12px;color:#B5760A;margin-bottom:10px;">${ord.assignedRider?'অন্য রাইডার বেছে নিন:':'⚠️ এখনো কোনো রাইডার বরাদ্দ করা হয়নি'}</div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            ${RIDERS.map(r=>`
+              <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;background:${ord.assignedRider===r.id?'var(--blue-soft)':'#F7F9FC'};cursor:pointer;" onclick="assignRider('${ord.id}','${r.id}'); state.showRiderPicker=false;">
+                <div style="width:32px;height:32px;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12.5px;flex:none;">${r.avatar}</div>
+                <div style="flex:1;font-weight:600;font-size:13.5px;">${r.name}</div>
+                ${ord.assignedRider===r.id? icon('check') : ''}
+              </div>
+            `).join('')}
+          </div>
+        `}
+      </div>
+
+      <div class="card" style="margin-bottom:14px;">
+        <div style="font-weight:700;font-size:14.5px;margin-bottom:10px;">অর্ডার তথ্য</div>
+        <div class="row" style="font-size:13px;padding:4px 0;"><span style="color:var(--muted);">সার্ভিস:</span><span style="font-weight:600;">${ord.service}</span></div>
+        <div class="row" style="font-size:13px;padding:4px 0;"><span style="color:var(--muted);">পিস:</span><span style="font-weight:600;">${toBn(ord.pieces)}</span></div>
+        <div class="row" style="font-size:13px;padding:4px 0;"><span style="color:var(--muted);">মূল্য:</span><span style="font-weight:700;color:var(--blue);">${money(ord.total)}</span></div>
+        <div class="row" style="font-size:13px;padding:4px 0;"><span style="color:var(--muted);">আনুমানিক ডেলিভারি:</span><span style="font-weight:600;">${ord.deliveryLabel||'—'}</span></div>
+      </div>
+
+      ${ord.timeline && ord.timeline.length? `
+      <div class="card" style="margin-bottom:14px;">
+        <div style="font-weight:700;font-size:14.5px;margin-bottom:10px;">স্ট্যাটাস</div>
+        ${ord.timeline.map(s=>`
+          <div style="display:flex;align-items:center;gap:8px;padding:5px 0;font-size:13px;color:${s.done?'var(--ink)':s.current?'var(--blue)':'#B7C0D1'};">
+            ${s.done? '✅' : s.current? '🔵' : '⚪'} ${s.label}
+          </div>`).join('')}
+        ${nextStep? `
+          <button class="btn btn-primary" style="margin-top:12px;" onclick="advanceOrderStatus('${ord.id}')">
+            ${isLastStep? '✅ ডেলিভারি সম্পন্ন হিসেবে চিহ্নিত করুন' : 'পরবর্তী ধাপে নিন →'}
+          </button>` : ''}
+      </div>` : ''}
+
+      <div style="display:flex;gap:10px;margin-bottom:20px;">
+        <button class="btn btn-outline" style="flex:1;" onclick="openChat('${ord.id}','admin')">${icon('msg')} চ্যাট করুন</button>
+        ${ord.tab==='চলমান'? `<button class="btn" style="flex:1;background:#FDE8E8;color:var(--danger);" onclick="cancelOrder('${ord.id}')">বাতিল করুন</button>`:''}
+      </div>
+    </div>
+  </div>
+  ${adminTabbar('adminOrders')}`;
+}
+
+function screenAdminChat(){
+  const chatOrders = orders.filter(o=>o.tab!=='বাতিল');
+  return `
+  <div class="screen-body fade-in">
+    <div class="px" style="padding-top:16px;">
+      <div class="row" style="margin-bottom:18px;">
+        <button class="btn-ghost" onclick="goBack()" style="padding:6px;">${icon('back')}</button>
+        <h2 style="margin:0;font-size:19px;">চ্যাট</h2>
+        <div style="width:24px;"></div>
+      </div>
+    </div>
+    <div class="px" style="display:flex;flex-direction:column;gap:2px;padding-bottom:20px;">
+      ${chatOrders.map(o=>{
+        const thread = state.chats[o.id];
+        const last = thread && thread.length ? thread[thread.length-1] : null;
+        return `
+        <div onclick="openChat('${o.id}','admin')" style="display:flex;align-items:center;gap:14px;padding:14px 8px;border-bottom:1px solid var(--line);cursor:pointer;">
+          <div style="width:46px;height:46px;border-radius:50%;background:#7C5CFC;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;flex:none;">${(o.customerName||'ক')[0]}</div>
+          <div style="flex:1;min-width:0;">
+            <div class="row" style="margin-bottom:2px;">
+              <span style="font-weight:700;font-size:14.5px;">${o.customerName||'কাস্টমার'}</span>
+              <span style="font-size:11px;color:var(--muted);">${last?last.time:''}</span>
+            </div>
+            <div style="font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+              ${last? (last.from==='admin'?'আপনি: ':'') + last.text : o.id+' — কথোপকথন শুরু করুন'}
+            </div>
+            <div style="font-size:11px;color:var(--blue);margin-top:3px;">${o.id}</div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+  </div>
+  ${adminTabbar('adminChat')}`;
+}
+
+/* ---------------- Rider panel ---------------- */
+function screenRiderHome(){
+  const me = getRider(state.currentRiderId) || RIDERS[0];
+  const tasks = orders.filter(o=>o.tab==='চলমান' && o.assignedRider===me.id);
+  const completedToday = orders.filter(o=>o.tab==='সম্পন্ন' && o.assignedRider===me.id).length;
+  const earningsToday = orders.filter(o=>o.tab==='সম্পন্ন' && o.assignedRider===me.id).reduce((a,o)=>a+Math.round(o.total*0.15),0);
+  return `
+  <div class="rider-theme">
+  <div class="screen-body fade-in">
+    <div style="background:linear-gradient(135deg,var(--blue),var(--blue-deep)); padding:18px 20px 22px; color:#fff; border-radius:0 0 24px 24px;">
+      <div class="row" style="margin-bottom:16px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-weight:700;">${me.avatar}</div>
+          <div>
+            <div style="font-weight:700;font-size:15.5px;">${me.name}</div>
+            <div style="font-size:11.5px;opacity:.85;display:flex;align-items:center;gap:5px;">
+              <span style="width:7px;height:7px;border-radius:50%;background:${state.riderOnline?'#3FE07A':'#D8D8D8'};display:inline-block;"></span>
+              ${state.riderOnline?'অনলাইন':'অফলাইন'}
+            </div>
+          </div>
+        </div>
+        <button class="btn-ghost" onclick="state.currentRiderId=null; goTo('roleSelect');" style="padding:6px;color:#fff;">${icon('logout')}</button>
+      </div>
+
+      <div style="background:rgba(255,255,255,0.14); border-radius:14px; padding:12px 14px; display:flex; align-items:center; justify-content:space-between;">
+        <div style="font-weight:700;font-size:14px;">${state.riderOnline? 'আপনি কাজের জন্য প্রস্তুত' : 'আপনি অফলাইনে আছেন'}</div>
+        <div class="toggle-switch" style="background:${state.riderOnline?'#3FE07A':'rgba(255,255,255,0.3)'};" onclick="toggleRiderOnline()">
+          <div class="knob" style="left:${state.riderOnline?'23px':'3px'};"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="px" style="padding-top:16px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px;">
+        <div class="card">
+          <div style="font-size:11.5px;color:var(--muted);">আজকের আয় (আনুমানিক)</div>
+          <div style="font-size:20px;font-weight:700;color:var(--blue);margin-top:4px;">${money(earningsToday)}</div>
+        </div>
+        <div class="card">
+          <div style="font-size:11.5px;color:var(--muted);">আজ সম্পন্ন ডেলিভারি</div>
+          <div style="font-size:20px;font-weight:700;color:#0A6B5F;margin-top:4px;">${toBn(completedToday)}</div>
+        </div>
+      </div>
+
+      <div class="row" style="margin-bottom:10px;">
+        <div style="font-weight:700;font-size:15px;">নতুন কাজ (${toBn(tasks.length)})</div>
+      </div>
+    </div>
+
+    ${!state.riderOnline? `
+    <div class="px" style="padding-bottom:20px;">
+      <div class="card" style="text-align:center;padding:28px 16px;">
+        <div style="font-size:32px;margin-bottom:8px;">🌙</div>
+        <div style="font-weight:700;font-size:14.5px;margin-bottom:4px;">আপনি অফলাইনে আছেন</div>
+        <div style="font-size:12.5px;color:var(--muted);margin-bottom:14px;">নতুন কাজ পেতে অনলাইনে যান</div>
+        <button class="btn btn-primary" style="width:auto;padding:10px 24px;" onclick="toggleRiderOnline()">অনলাইনে যান</button>
+      </div>
+    </div>` : `
+    <div class="px" style="display:flex;flex-direction:column;gap:12px;padding-bottom:20px;">
+      ${tasks.length===0? `<div style="text-align:center;color:var(--muted);padding:40px 0;font-size:13.5px;">আজ কোনো কাজ নেই 🎉</div>` : ''}
+      ${tasks.map(o=>riderJobCard(o)).join('')}
+    </div>`}
+  </div>
+  ${riderTabbar('riderHome')}
+  </div>`;
+}
+function riderJobCard(o){
+  const nextStep = o.timeline && o.timeline.find(s=>s.current);
+  const est = tripEstimate(o.id);
+  return `
+  <div class="card" style="cursor:pointer;" onclick="openRiderOrder('${o.id}')">
+    <div class="row" style="margin-bottom:12px;">
+      <span class="pill" style="background:var(--blue-soft);color:var(--blue-deep);">${o.service}</span>
+      <span style="font-weight:700;color:var(--blue);">${money(o.total)}</span>
+    </div>
+    <div style="display:flex;gap:12px;">
+      <div style="display:flex;flex-direction:column;align-items:center;padding-top:4px;">
+        <div style="width:9px;height:9px;border-radius:50%;background:var(--teal);flex:none;"></div>
+        <div style="width:2px;flex:1;min-height:30px;background:repeating-linear-gradient(180deg,#D8D8D8 0,#D8D8D8 4px,transparent 4px,transparent 8px);"></div>
+        <div style="width:9px;height:9px;border-radius:2px;background:var(--blue);flex:none;"></div>
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;gap:16px;">
+        <div>
+          <div style="font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;">পিকআপ</div>
+          <div style="font-weight:700;font-size:13.5px;">${o.customerName||'কাস্টমার'}</div>
+          <div style="font-size:12px;color:var(--muted);">${o.area||''}</div>
+        </div>
+        <div>
+          <div style="font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;">ডেলিভারি</div>
+          <div style="font-weight:700;font-size:13.5px;">${o.deliveryLabel||'—'}</div>
+        </div>
+      </div>
+    </div>
+    <div class="row" style="margin-top:12px;margin-bottom:12px;padding-top:10px;border-top:1px dashed var(--line);font-size:11.5px;color:var(--muted);">
+      <span>📍 প্রায় ${toBn(est.km)} কিমি</span>
+      <span>⏱️ প্রায় ${toBn(est.min)} মিনিট</span>
+      <span>${o.id}</span>
+    </div>
+    ${nextStep? `<button class="btn btn-primary" style="padding:11px;font-size:13.5px;" onclick="event.stopPropagation();advanceOrderStatus('${o.id}')">${nextStep.label} সম্পন্ন করুন →</button>`:''}
+  </div>`;
+}
+function openRiderOrder(orderId){
+  state.activeOrderId = orderId;
+  goTo('riderOrderDetail');
+}
+function toggleRiderOnline(){
+  state.riderOnline = !state.riderOnline;
+  render();
+}
+
+function screenRiderOrderDetail(){
+  const ord = orders.find(o=>o.id===state.activeOrderId) || orders[0];
+  const nextStep = ord.timeline && ord.timeline.find(s=>s.current);
+  const nextIdx = ord.timeline ? ord.timeline.findIndex(s=>s.current) : -1;
+  const isLastStep = nextIdx === (ord.timeline?ord.timeline.length-1:-1);
+  const est = tripEstimate(ord.id);
+  return `
+  <div class="rider-theme">
+  <div class="screen-body fade-in">
+    <div style="position:relative;height:150px;background:
+        linear-gradient(0deg, rgba(232,236,241,0.2), rgba(232,236,241,0.2)),
+        repeating-linear-gradient(0deg, #E4E9F2 0 1px, transparent 1px 28px),
+        repeating-linear-gradient(90deg, #E4E9F2 0 1px, transparent 1px 28px),
+        #F3F5F9;
+        overflow:hidden;">
+      <button class="btn-ghost" onclick="goBack()" style="position:absolute;top:14px;left:14px;padding:8px;background:#fff;border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,0.15);">${icon('back')}</button>
+      <span class="pill" style="position:absolute;top:16px;right:16px;background:#fff;color:var(--blue-deep);box-shadow:0 2px 8px rgba(0,0,0,0.12);">${ord.status}</span>
+      <div style="position:absolute;left:18%;top:60%;width:14px;height:14px;border-radius:50%;background:var(--teal);border:3px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.2);"></div>
+      <div style="position:absolute;right:20%;top:30%;width:14px;height:14px;border-radius:2px;background:var(--blue);border:3px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.2);"></div>
+      <svg style="position:absolute;left:0;top:0;width:100%;height:100%;" viewBox="0 0 300 150" preserveAspectRatio="none">
+        <path d="M54 90 Q150 40 234 45" stroke="var(--blue)" stroke-width="2.5" fill="none" stroke-dasharray="6 5"/>
+      </svg>
+    </div>
+
+    <div class="px" style="padding-top:16px;">
+      <div class="row" style="margin-bottom:16px;">
+        <h2 style="margin:0;font-size:18px;">${ord.id}</h2>
+        <span style="font-size:12px;color:var(--muted);">📍 ${toBn(est.km)} কিমি • ⏱️ ${toBn(est.min)} মিনিট</span>
+      </div>
+
+      <div class="card" style="margin-bottom:14px;">
+        <div style="display:flex;gap:12px;">
+          <div style="display:flex;flex-direction:column;align-items:center;padding-top:4px;">
+            <div style="width:9px;height:9px;border-radius:50%;background:var(--teal);flex:none;"></div>
+            <div style="width:2px;flex:1;min-height:26px;background:repeating-linear-gradient(180deg,#D8D8D8 0,#D8D8D8 4px,transparent 4px,transparent 8px);"></div>
+            <div style="width:9px;height:9px;border-radius:2px;background:var(--blue);flex:none;"></div>
+          </div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:14px;">
+            <div>
+              <div style="font-size:10.5px;color:var(--muted);text-transform:uppercase;">পিকআপ পয়েন্ট</div>
+              <div style="font-weight:700;font-size:13.5px;">${ord.customerName||'কাস্টমার'}</div>
+              <div style="font-size:12px;color:var(--muted);">${ord.area||'—'}</div>
+            </div>
+            <div>
+              <div style="font-size:10.5px;color:var(--muted);text-transform:uppercase;">ডেলিভারি সময়</div>
+              <div style="font-weight:700;font-size:13.5px;">${ord.deliveryLabel||'—'}</div>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:14px;padding-top:14px;border-top:1px solid var(--line);">
+          <button class="btn btn-outline" style="flex:1;padding:10px;font-size:13px;" onclick="window.location.href='tel:+8801700000000'">${icon('call')} কল করুন</button>
+          <button class="btn btn-outline" style="flex:1;padding:10px;font-size:13px;" onclick="openChat('${ord.id}','rider')">${icon('msg')} চ্যাট</button>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:14px;">
+        <div style="font-weight:700;font-size:14.5px;margin-bottom:10px;">অর্ডার তথ্য</div>
+        <div class="row" style="font-size:13px;padding:4px 0;"><span style="color:var(--muted);">সার্ভিস:</span><span style="font-weight:600;">${ord.service}</span></div>
+        <div class="row" style="font-size:13px;padding:4px 0;"><span style="color:var(--muted);">পিস:</span><span style="font-weight:600;">${toBn(ord.pieces)}</span></div>
+        <div class="row" style="font-size:13px;padding:4px 0;"><span style="color:var(--muted);">অর্ডার মূল্য:</span><span style="font-weight:700;color:var(--blue);">${money(ord.total)}</span></div>
+      </div>
+
+      ${nextStep? `
+        <button class="btn btn-primary" style="padding:15px;" onclick="advanceOrderStatus('${ord.id}')">
+          ${isLastStep? '✅ ডেলিভারি সম্পন্ন হিসেবে চিহ্নিত করুন' : nextStep.label+' সম্পন্ন করুন →'}
+        </button>` : `<div style="text-align:center;color:var(--muted);font-size:13px;padding:10px;">এই অর্ডারের সব ধাপ সম্পন্ন</div>`}
+    </div>
+  </div>
+  ${riderTabbar('riderHome')}
+  </div>`;
+}
+
+function screenRiderEarnings(){
+  const me = getRider(state.currentRiderId) || RIDERS[0];
+  const myCompleted = orders.filter(o=>o.tab==='সম্পন্ন' && o.assignedRider===me.id);
+  const myOngoing = orders.filter(o=>o.tab==='চলমান' && o.assignedRider===me.id);
+  const totalEarn = myCompleted.reduce((a,o)=>a+Math.round(o.total*0.15),0);
+  return `
+  <div class="rider-theme">
+  <div class="screen-body fade-in">
+    <div style="background:linear-gradient(135deg,var(--blue),var(--blue-deep)); padding:20px; color:#fff; border-radius:0 0 24px 24px;">
+      <div style="font-size:12.5px;opacity:.85;margin-bottom:4px;">মোট আয় (এই মাস)</div>
+      <div style="font-size:30px;font-weight:800;">${money(totalEarn)}</div>
+      <div style="display:flex;gap:18px;margin-top:14px;">
+        <div><div style="font-size:18px;font-weight:700;">${toBn(myCompleted.length)}</div><div style="font-size:11px;opacity:.85;">সম্পন্ন ডেলিভারি</div></div>
+        <div><div style="font-size:18px;font-weight:700;">${toBn(myOngoing.length)}</div><div style="font-size:11px;opacity:.85;">চলমান কাজ</div></div>
+      </div>
+    </div>
+    <div class="px" style="padding-top:18px;">
+      <div style="font-weight:700;font-size:15px;margin-bottom:10px;">সাম্প্রতিক ডেলিভারি</div>
+    </div>
+    <div class="px" style="display:flex;flex-direction:column;gap:10px;padding-bottom:20px;">
+      ${myCompleted.length===0? `<div style="text-align:center;color:var(--muted);padding:40px 0;font-size:13.5px;">এখনো কোনো ডেলিভারি সম্পন্ন হয়নি</div>` : ''}
+      ${myCompleted.map(o=>`
+        <div class="card" style="display:flex;align-items:center;gap:12px;">
+          <div style="width:38px;height:38px;border-radius:10px;background:var(--teal-soft);color:#0A6B5F;display:flex;align-items:center;justify-content:center;flex:none;">${icon('check')}</div>
+          <div style="flex:1;">
+            <div style="font-weight:700;font-size:13.5px;">${o.id} • ${o.customerName||''}</div>
+            <div style="font-size:11.5px;color:var(--muted);">${o.date}</div>
+          </div>
+          <div style="font-weight:700;color:var(--blue);">+${money(Math.round(o.total*0.15))}</div>
+        </div>
+      `).join('')}
+    </div>
+  </div>
+  ${riderTabbar('riderEarnings')}
+  </div>`;
+}
+
+function screenRiderChat(){
+  const chatOrders = orders.filter(o=>o.tab==='চলমান' && o.assignedRider===state.currentRiderId);
+  return `
+  <div class="rider-theme">
+  <div class="screen-body fade-in">
+    <div class="px" style="padding-top:16px;">      <div class="row" style="margin-bottom:18px;">
+        <button class="btn-ghost" onclick="goBack()" style="padding:6px;">${icon('back')}</button>
+        <h2 style="margin:0;font-size:19px;">চ্যাট</h2>
+        <div style="width:24px;"></div>
+      </div>
+    </div>
+    <div class="px" style="display:flex;flex-direction:column;gap:2px;padding-bottom:20px;">
+      ${chatOrders.length===0? `<div style="text-align:center;color:var(--muted);padding:40px 0;font-size:13.5px;">কোনো সক্রিয় চ্যাট নেই</div>` : ''}
+      ${chatOrders.map(o=>{
+        const thread = state.chats[o.id];
+        const last = thread && thread.length ? thread[thread.length-1] : null;
+        return `
+        <div onclick="openChat('${o.id}','rider')" style="display:flex;align-items:center;gap:14px;padding:14px 8px;border-bottom:1px solid var(--line);cursor:pointer;">
+          <div style="width:46px;height:46px;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;flex:none;">${(o.customerName||'ক')[0]}</div>
+          <div style="flex:1;min-width:0;">
+            <div class="row" style="margin-bottom:2px;">
+              <span style="font-weight:700;font-size:14.5px;">${o.customerName||'কাস্টমার'}</span>
+              <span style="font-size:11px;color:var(--muted);">${last?last.time:''}</span>
+            </div>
+            <div style="font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+              ${last? (last.from==='rider'?'আপনি: ':'') + last.text : o.id+' — কথোপকথন শুরু করুন'}
+            </div>
+            <div style="font-size:11px;color:var(--blue);margin-top:3px;">${o.id}</div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+  </div>
+  ${riderTabbar('riderChat')}
+  </div>`;
+}
+
+function tabbar(active){
+  const left = [
+    {key:'home', label:'হোম', labelEn:'Home', icon:'home'},
+    {key:'orders', label:'আমার অর্ডার', labelEn:'My orders', icon:'clipboard'},
+  ];
+  const right = [
+    {key:'chatList', label:'চ্যাট', labelEn:'Chat', icon:'msg', badge: state.chatUnread},
+    {key:'profile', label:'প্রোফাইল', labelEn:'Profile', icon:'user'},
+  ];
+  const tabBtn = tb=>`
+    <button class="tab ${active===tb.key?'active':''}" onclick="goTo('${tb.key}')" style="position:relative;">
+      <span style="position:relative;display:inline-flex;">
+        ${icon(tb.icon)}
+        ${tb.badge? `<span style="position:absolute;top:-5px;right:-7px;background:var(--danger);color:#fff;font-size:9px;font-weight:800;border-radius:50%;width:14px;height:14px;display:flex;align-items:center;justify-content:center;">${tb.badge}</span>`:''}
+      </span>
+      <span>${t(tb.label, tb.labelEn)}</span>
+    </button>`;
+  return `<div class="tabbar" style="align-items:flex-start;position:relative;">
+    ${left.map(tabBtn).join('')}
+    <button class="tab" onclick="startNewOrder()" style="flex:0 0 64px;">
+      <span style="width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--blue-deep));display:flex;align-items:center;justify-content:center;color:#fff;margin-top:-28px;box-shadow:0 10px 20px -8px rgba(18,89,232,0.55), 0 0 0 4px #fff;">${icon('plus')}</span>
+      <span style="color:var(--blue);font-weight:700;">${t('নতুন অর্ডার','New order')}</span>
+    </button>
+    ${right.map(tabBtn).join('')}
+  </div>`;
+}
+
+/* ================= RENDER ================= */
+const SCREENS = {
+  splash: screenSplash,
+  login: screenLogin,
+  otp: screenOtp,
+  profileSetup: screenProfileSetup,
+  home: screenHome,
+  newOrder: screenNewOrder,
+  orderSummary: screenOrderSummary,
+  orderSuccess: screenOrderSuccess,
+  tracking: screenTracking,
+  chat: screenChat,
+  chatList: screenChatList,
+  orders: screenOrders,
+  profile: screenProfile,
+  roleSelect: screenRoleSelect,
+  riderLogin: screenRiderLogin,
+  adminHome: screenAdminHome,
+  adminOrders: screenAdminOrders,
+  adminOrderDetail: screenAdminOrderDetail,
+  adminChat: screenAdminChat,
+  riderHome: screenRiderHome,
+  riderEarnings: screenRiderEarnings,
+  riderOrderDetail: screenRiderOrderDetail,
+  riderChat: screenRiderChat,
+};
+function render(){
+  const el = document.getElementById('screen');
+  el.innerHTML = `
+    <div style="flex:1;display:flex;flex-direction:column;">
+      ${SCREENS[state.screen]()}
+    </div>
+  `;
+  window.scrollTo(0,0);
+}
+render();
+</script>
+</body>
+</html>
