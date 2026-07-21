@@ -5,6 +5,7 @@ import '../data/cart.dart';
 import '../data/mock_data.dart';
 import '../data/business_info.dart';
 import '../services/admin_service.dart';
+import '../services/auth_service.dart';
 import '../widgets/laundry_icons.dart';
 import '../widgets/bn_number.dart';
 import '../widgets/app_page_route.dart';
@@ -46,12 +47,26 @@ class _NewOrderScreenState extends State<NewOrderScreen> {
   DeliveryType _deliveryType = DeliveryType.free; // free is the default
   bool _confirming = false;
 
+  // Guest checkout fields — used only when the customer is not logged in
+  // (and this is not a staff order). On placing the order the phone becomes
+  // their auto-created account.
+  final _guestName = TextEditingController();
+  final _guestPhone = TextEditingController();
+  final _guestAddress = TextEditingController();
+  String? _guestError;
+
+  /// A not-logged-in customer ordering for themselves.
+  bool get _isGuest => !AuthService.isLoggedIn && !widget.isStaffOrder;
+
   static const _steps = ['সার্ভিস', 'তথ্য', 'নিশ্চিত করুন'];
 
   @override
   void initState() {
     super.initState();
     _service = widget.initialService;
+    // Pre-fill guest fields if a previous session left contact details.
+    _guestName.text = MockData.userName;
+    _guestPhone.text = MockData.userPhone;
     // Staff ordering on a customer's behalf always starts from an empty
     // cart — otherwise items left over from customer A's (or the staff
     // member's own) session would silently land in customer B's order.
@@ -65,6 +80,9 @@ class _NewOrderScreenState extends State<NewOrderScreen> {
   @override
   void dispose() {
     Cart.revision.removeListener(_onCartChanged);
+    _guestName.dispose();
+    _guestPhone.dispose();
+    _guestAddress.dispose();
     super.dispose();
   }
 
@@ -80,15 +98,44 @@ class _NewOrderScreenState extends State<NewOrderScreen> {
 
   int get _totalPrice => _itemsSubtotal + _expressCharge;
 
-  String get _orderAddress {
+  /// The pickup address as a {line, area} map, resolved for whichever kind
+  /// of order this is (guest / staff-on-behalf / logged-in-with-saved).
+  Map<String, String> get _resolvedAddress {
+    if (_isGuest) {
+      return {'line': _guestAddress.text.trim(), 'area': ''};
+    }
     final forCustomer = widget.forCustomerAddress?.trim() ?? '';
-    if (forCustomer.isNotEmpty) return forCustomer;
-    return MockData.savedAddresses[_addressIndex]['line'] ?? '';
+    if (forCustomer.isNotEmpty) {
+      return {'line': forCustomer, 'area': MockData.userArea};
+    }
+    if (MockData.savedAddresses.isEmpty) return {'line': '', 'area': ''};
+    return MockData.savedAddresses[_addressIndex];
+  }
+
+  String get _orderAddress => _resolvedAddress['line'] ?? '';
+
+  /// Validates the guest name/phone/address before leaving the info step.
+  bool _validateGuest() {
+    final name = _guestName.text.trim();
+    final phone = _guestPhone.text.trim().replaceAll(RegExp(r'\D'), '');
+    final address = _guestAddress.text.trim();
+    String? err;
+    if (name.isEmpty) {
+      err = 'আপনার নাম দিন';
+    } else if (phone.length < 10) {
+      err = 'সঠিক মোবাইল নম্বর দিন';
+    } else if (address.isEmpty) {
+      err = 'পিকআপ ঠিকানা দিন';
+    }
+    setState(() => _guestError = err);
+    return err == null;
   }
 
   Future<void> _next() async {
     if (_confirming) return;
     if (_step < 2) {
+      // A guest must fill in name/phone/address before reaching the summary.
+      if (_step == 1 && _isGuest && !_validateGuest()) return;
       setState(() => _step++);
       return;
     }
@@ -96,19 +143,34 @@ class _NewOrderScreenState extends State<NewOrderScreen> {
     setState(() => _confirming = true);
 
     try {
-      await AdminService.createOrder(
-        customerId: widget.forCustomerId,
-        // 'Wash', 'Dry Clean', or 'Wash + Dry Clean' for a mixed order —
-        // each line in items carries its own service and unit price.
-        service: Cart.serviceLabel,
-        items: Cart.toOrderItems(),
-        pieces: _totalPieces,
-        total: _totalPrice,
-        address: _orderAddress,
-        area: MockData.userArea,
-        paymentMethod: 'Cash on Delivery',
-        note: _deliveryType == DeliveryType.express ? 'Express delivery' : null,
-      );
+      if (_isGuest) {
+        // No login: the phone becomes the customer's auto-created account.
+        await AdminService.guestOrder(
+          name: _guestName.text.trim(),
+          phone: _guestPhone.text.trim(),
+          address: _guestAddress.text.trim(),
+          service: Cart.serviceLabel,
+          items: Cart.toOrderItems(),
+          pieces: _totalPieces,
+          total: _totalPrice,
+          paymentMethod: 'Cash on Delivery',
+          note: _deliveryType == DeliveryType.express ? 'Express delivery' : null,
+        );
+      } else {
+        await AdminService.createOrder(
+          customerId: widget.forCustomerId,
+          // 'Wash', 'Dry Clean', or 'Wash + Dry Clean' for a mixed order —
+          // each line in items carries its own service and unit price.
+          service: Cart.serviceLabel,
+          items: Cart.toOrderItems(),
+          pieces: _totalPieces,
+          total: _totalPrice,
+          address: _orderAddress,
+          area: MockData.userArea,
+          paymentMethod: 'Cash on Delivery',
+          note: _deliveryType == DeliveryType.express ? 'Express delivery' : null,
+        );
+      }
 
       // Order is done — THIS is the one moment the cart resets. Leaving
       // the screen mid-flow never clears it.
@@ -206,6 +268,19 @@ class _NewOrderScreenState extends State<NewOrderScreen> {
           onCategoryChanged: (c) => setState(() => _category = c),
         );
       case 1:
+        // Guests type their name/phone/address here; logged-in customers
+        // pick from their saved address instead.
+        if (_isGuest) {
+          return _GuestInfoStep(
+            key: const ValueKey(1),
+            nameCtrl: _guestName,
+            phoneCtrl: _guestPhone,
+            addressCtrl: _guestAddress,
+            error: _guestError,
+            deliveryType: _deliveryType,
+            onDeliveryTypeChanged: (t) => setState(() => _deliveryType = t),
+          );
+        }
         return _AddressTimeStep(
           key: const ValueKey(1),
           addressIndex: _addressIndex,
@@ -221,7 +296,7 @@ class _NewOrderScreenState extends State<NewOrderScreen> {
           expressCharge: _expressCharge,
           totalPrice: _totalPrice,
           deliveryType: _deliveryType,
-          address: MockData.savedAddresses[_addressIndex],
+          address: _resolvedAddress,
           onEditStep: (s) => setState(() => _step = s),
         );
     }
@@ -1010,6 +1085,98 @@ class _QtyStepperState extends State<_QtyStepper> {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Step 1 for a not-logged-in customer: collect name, phone and pickup
+/// address. On placing the order the phone becomes their auto-created
+/// account — no password to choose.
+class _GuestInfoStep extends StatelessWidget {
+  final TextEditingController nameCtrl;
+  final TextEditingController phoneCtrl;
+  final TextEditingController addressCtrl;
+  final String? error;
+  final DeliveryType deliveryType;
+  final ValueChanged<DeliveryType> onDeliveryTypeChanged;
+
+  const _GuestInfoStep({
+    super.key,
+    required this.nameCtrl,
+    required this.phoneCtrl,
+    required this.addressCtrl,
+    required this.error,
+    required this.deliveryType,
+    required this.onDeliveryTypeChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+      children: [
+        const Text('আপনার তথ্য দিন', style: AppText.h3),
+        const SizedBox(height: 4),
+        const Text(
+          'লগইন ছাড়াই অর্ডার করুন — এই নম্বর দিয়েই আপনার অ্যাকাউন্ট তৈরি হয়ে যাবে।',
+          style: AppText.bodyMuted,
+        ),
+        const SizedBox(height: 14),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(AppRadius.md),
+            border: Border.all(color: AppColors.line),
+          ),
+          child: Column(
+            children: [
+              TextField(
+                controller: nameCtrl,
+                textCapitalization: TextCapitalization.words,
+                decoration: const InputDecoration(hintText: 'আপনার নাম', prefixIcon: Icon(Icons.person_outline_rounded, size: 20)),
+              ),
+              const SizedBox(height: 14),
+              TextField(
+                controller: phoneCtrl,
+                keyboardType: TextInputType.phone,
+                decoration: const InputDecoration(hintText: 'মোবাইল নম্বর (যেমন 01712345678)', prefixIcon: Icon(Icons.phone_outlined, size: 20)),
+              ),
+              const SizedBox(height: 14),
+              TextField(
+                controller: addressCtrl,
+                maxLines: 2,
+                textCapitalization: TextCapitalization.sentences,
+                decoration: const InputDecoration(hintText: 'পিকআপ ঠিকানা (বাসা, রোড, এলাকা)', prefixIcon: Icon(Icons.location_on_outlined, size: 20)),
+              ),
+            ],
+          ),
+        ),
+        if (error != null) ...[
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              const Icon(Icons.error_outline_rounded, size: 16, color: AppColors.danger),
+              const SizedBox(width: 6),
+              Text(error!, style: const TextStyle(fontSize: 12, color: AppColors.danger, fontWeight: FontWeight.w700)),
+            ],
+          ),
+        ],
+        const SizedBox(height: AppSpace.md),
+        const Text('ডেলিভারি অপশন', style: AppText.h3),
+        const SizedBox(height: 10),
+        _DeliveryOptionTile(
+          option: DeliveryOptions.free,
+          selected: deliveryType == DeliveryType.free,
+          onTap: () => onDeliveryTypeChanged(DeliveryType.free),
+        ),
+        const SizedBox(height: 10),
+        _DeliveryOptionTile(
+          option: DeliveryOptions.express,
+          selected: deliveryType == DeliveryType.express,
+          onTap: () => onDeliveryTypeChanged(DeliveryType.express),
+        ),
+      ],
     );
   }
 }

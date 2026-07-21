@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../data/admin_mock_data.dart';
+import 'auth_service.dart';
 
 /// Real Supabase-backed data for the admin panel and rider app, replacing
 /// the in-memory [AdminMockData] lists.
@@ -241,6 +242,61 @@ class AdminService {
         .single();
 
     return AdminOrder.fromRow(row);
+  }
+
+  /// Places an order for a customer who is NOT logged in. Collects their
+  /// name/phone/address, and via the `guest-order` Edge Function creates (or
+  /// reuses) an account for that phone and saves the order — no password the
+  /// customer has to choose. The device is then silently signed in as that
+  /// account, so they immediately have a session and can see their order.
+  static Future<AdminOrder> guestOrder({
+    required String name,
+    required String phone,
+    required String address,
+    String? area,
+    required String service,
+    String? category,
+    required List<Map<String, dynamic>> items,
+    required int pieces,
+    required int total,
+    String paymentMethod = 'Cash on Delivery',
+    String? note,
+  }) async {
+    try {
+      final res = await _db.functions.invoke('guest-order', body: {
+        'name': name,
+        'phone': phone,
+        'address': address,
+        'area': area ?? '',
+        'service': service,
+        'category': category ?? '',
+        'items': items,
+        'pieces': pieces,
+        'total': total,
+        'payment_method': paymentMethod,
+        'note': note ?? '',
+      });
+
+      final data = res.data;
+      if (data is Map && data['order'] != null) {
+        final ph = data['phone'] as String?;
+        final pw = data['password'] as String?;
+        if (ph != null && pw != null) {
+          // Best-effort silent sign-in; the order is already saved even if
+          // this fails, so never let it break the success flow.
+          try {
+            await AuthService.signInWithPassword(phone: ph, password: pw);
+          } catch (_) {}
+        }
+        clearRoleCache();
+        return AdminOrder.fromRow(Map<String, dynamic>.from(data['order']));
+      }
+      throw AdminServiceException(_errorFrom(data) ?? 'অর্ডার করা যায়নি');
+    } on FunctionException catch (e) {
+      throw AdminServiceException(
+        _errorFrom(e.details) ?? 'অর্ডার করা যায়নি (${e.status})',
+      );
+    }
   }
 
   static Future<void> updateOrderStatus(String orderId, String status) async {

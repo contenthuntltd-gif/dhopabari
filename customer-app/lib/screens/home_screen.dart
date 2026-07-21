@@ -67,7 +67,8 @@ class _HomeScreenState extends State<HomeScreen> {
         final rows = await AdminService.orders(limit: 25);
         _orders = rows.map((o) => o.toMockOrder()).toList();
       } else {
-        _orders = MockData.recentOrders;
+        // Guest: no orders to show yet (no demo data).
+        _orders = const [];
       }
     } catch (_) {
       // Home must render even offline — keep whatever we had.
@@ -139,15 +140,21 @@ class _HomeScreenState extends State<HomeScreen> {
                 mode: LaunchMode.externalApplication,
               );
             }),
-            _menuTile(Icons.logout_rounded, AppLanguage.tr('লগআউট'), () async {
-              Navigator.pop(context);
-              await AuthService.logout();
-              if (!mounted) return;
-              Navigator.of(context).pushAndRemoveUntil(
-                AppPageRoute(builder: (_) => const LoginScreen()),
-                (r) => false,
-              );
-            }, danger: true),
+            // Guests see "লগইন" (optional); signed-in users see "লগআউট".
+            if (AuthService.isLoggedIn)
+              _menuTile(Icons.logout_rounded, AppLanguage.tr('লগআউট'), () async {
+                Navigator.pop(context);
+                await AuthService.logout();
+                if (!mounted) return;
+                setState(() {}); // back to guest home
+              }, danger: true)
+            else
+              _menuTile(Icons.login_rounded, AppLanguage.tr('লগইন / অ্যাডমিন'), () {
+                Navigator.pop(context);
+                Navigator.of(context).push(
+                  AppPageRoute(builder: (_) => const LoginScreen()),
+                );
+              }),
           ],
         ),
       ),

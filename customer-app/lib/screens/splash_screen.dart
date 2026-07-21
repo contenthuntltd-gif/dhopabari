@@ -2,8 +2,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../widgets/app_logo.dart';
 import '../widgets/app_page_route.dart';
-import '../services/auth_service.dart';
-import 'login_screen.dart';
 import 'root_shell.dart';
 
 /// First screen shown on app launch. Displays the official brand mark, then
@@ -21,9 +19,11 @@ class _SplashScreenState extends State<SplashScreen> {
     super.initState();
     Timer(const Duration(milliseconds: 1400), () {
       if (!mounted) return;
-      final signedIn = AuthService.isLoggedIn;
+      // Always land on Home. Customers can browse and order as a guest;
+      // logging in is optional (and reachable from the menu). A returning
+      // signed-in user's session is already restored, so their data shows.
       Navigator.of(context).pushReplacement(
-        AppPageRoute(builder: (_) => signedIn ? const RootShell() : const LoginScreen()),
+        AppPageRoute(builder: (_) => const RootShell()),
       );
     });
   }

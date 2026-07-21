@@ -49,7 +49,8 @@ class _OrdersScreenState extends State<OrdersScreen> {
         final rows = await AdminService.orders(limit: 100);
         _orders = rows.map((o) => o.toMockOrder()).toList();
       } else {
-        _orders = MockData.recentOrders;
+        // Guest: no order history yet.
+        _orders = const [];
       }
       if (mounted) setState(() => _loading = false);
     } catch (e) {
