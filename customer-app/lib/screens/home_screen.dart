@@ -1,9 +1,11 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../theme/app_theme.dart';
 import '../data/admin_mock_data.dart';
 import '../data/cart.dart';
+import '../data/catalog.dart';
 import '../data/mock_data.dart';
+import '../widgets/laundry_icons.dart';
 import '../services/admin_service.dart';
 import '../widgets/bn_number.dart';
 import '../widgets/pressable_scale.dart';
@@ -282,56 +284,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _showOffers() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (_) => Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.only(topLeft: Radius.circular(24), topRight: Radius.circular(24)),
-        ),
-        padding: const EdgeInsets.fromLTRB(20, 14, 20, 28),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.line, borderRadius: BorderRadius.circular(2))),
-            ),
-            const SizedBox(height: 16),
-            const Text('চলমান অফার', style: AppText.h1),
-            const SizedBox(height: 14),
-            _offerTile('🎉', 'FIRST10', 'প্রথম অর্ডারে ১০% পর্যন্ত ছাড়', AppColors.amberSoft, AppColors.amber),
-            const SizedBox(height: 10),
-            _offerTile('🚚', 'ফ্রি ডেলিভারি', 'সবসময় ফ্রি পিকআপ ও ডেলিভারি', AppColors.tealSoft, AppColors.teal),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _offerTile(String emoji, String code, String subtitle, Color bg, Color fg) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(AppRadius.md)),
-      child: Row(
-        children: [
-          Text(emoji, style: const TextStyle(fontSize: 22)),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(code, style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w900, color: fg)),
-                Text(subtitle, style: const TextStyle(fontSize: 11, color: AppColors.muted, fontWeight: FontWeight.w600)),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -363,10 +315,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     tooltip: AppLanguage.tr('মেনু'),
                     onTap: _showMenu,
                   ),
-                  const AppLogo(size: 46),
                   Semantics(
                     button: true,
-                    label: AppLanguage.tr('নোটিফিকেশন, ৩ টি নতুন'),
+                    label: AppLanguage.tr('নোটিফিকেশন'),
                     child: PressableScale(
                       onTap: _showNotifications,
                       child: Stack(
@@ -418,97 +369,14 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
               const SizedBox(height: AppSpace.sm),
-              Row(
-                children: [
-                  Text(
-                    AppLanguage.tr('স্বাগতম, '),
-                    style: const TextStyle(
-                      fontSize: 14.5,
-                      color: AppColors.muted,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  Expanded(
-                    child: Text(
-                      MockData.userName.split(' ').first,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 14.5,
-                        color: AppColors.ink,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                  ),
-                  const Text(' 👋', style: TextStyle(fontSize: 15)),
-                ],
-              ),
-              const SizedBox(height: 3),
-              Row(
-                children: [
-                  const Icon(
-                    Icons.location_on_rounded,
-                    color: AppColors.blue,
-                    size: AppIconSize.sm,
-                  ),
-                  const SizedBox(width: 4),
-                  Expanded(
-                    child: Text(
-                      MockData.userArea,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 12.5,
-                        color: AppColors.muted,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppSpace.xs),
-              _LoyaltyStrip(
-                completedOrders: _orders
-                    .where((o) => o.progress >= 1)
-                    .length,
-              ),
+              const FadeSlideIn(child: _HeroBanner()),
               const SizedBox(height: AppSpace.sm),
-              FadeSlideIn(
-                child: _HeroBanner(onOrderNow: widget.onStartNewOrder),
-              ),
-              const SizedBox(height: AppSpace.sm),
-              Text(AppLanguage.tr('সার্ভিস বাছাই করে অর্ডার করুন'), style: AppText.h2),
-              const SizedBox(height: 2),
-              Text(
-                AppLanguage.tr('মাত্র ২ ধাপে আপনার কাপড় আমাদের কাছে পৌঁছে দিন'),
-                style: AppText.bodyMuted,
-              ),
-              const SizedBox(height: AppSpace.xs),
+              // Inline quick-order: pick Wash / Dry Clean, browse the items
+              // for that service and add them straight to the cart. Checkout
+              // (address + confirm) happens on the New Order screen.
               FadeSlideIn(
                 delayMs: 60,
-                child: IntrinsicHeight(
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Expanded(
-                        child: _ServiceCard(
-                          titleBn: AppLanguage.tr('ওয়াশ'),
-                          colors: const [AppColors.blue, AppColors.blueDeep],
-                          icon: Icons.local_laundry_service_rounded,
-                          onTap: () => widget.onStartNewOrderWithService('Wash'),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _ServiceCard(
-                          titleBn: AppLanguage.tr('ড্রাই ক্লিন'),
-                          colors: const [AppColors.teal, Color(0xFF0C8B85)],
-                          icon: Icons.dry_cleaning_rounded,
-                          onTap: () =>
-                              widget.onStartNewOrderWithService('Dry Clean'),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                child: _QuickOrderSection(onCheckout: widget.onStartNewOrder),
               ),
               // The running-order card appears ONLY while an order is
               // actually in progress — no header, no empty placeholder.
@@ -576,26 +444,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
               ],
-              const SizedBox(height: AppSpace.sm),
-              Text(AppLanguage.tr('কুইক অ্যাকশন'), style: AppText.h2),
-              const SizedBox(height: AppSpace.xs),
-              FadeSlideIn(
-                delayMs: 100,
-                child: _QuickActions(
-                  onTrackOrder: () {
-                    final ongoing = _ongoing;
-                    Navigator.push(
-                      context,
-                      AppPageRoute(
-                        builder: (_) => ongoing != null ? TrackingScreen(order: ongoing) : const OrdersScreen(),
-                      ),
-                    );
-                  },
-                  onChatSupport: () => widget.onSwitchTab(3),
-                  onOrderHistory: () => Navigator.push(context, AppPageRoute(builder: (_) => const OrdersScreen())),
-                  onOffers: _showOffers,
-                ),
-              ),
             ],
           ),
         ),
@@ -629,97 +477,236 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-/// Small stat strip under the greeting — total completed orders.
-class _LoyaltyStrip extends StatelessWidget {
-  final int completedOrders;
-  const _LoyaltyStrip({required this.completedOrders});
+/// Inline quick-order for the home page: pick Wash / Dry Clean, browse that
+/// service's items by category, and tap "যোগ" to drop them straight into the
+/// cart. The cart is shared with the New Order screen, so "অর্ডার করুন" just
+/// hands off to that screen for address + confirmation.
+class _QuickOrderSection extends StatefulWidget {
+  final VoidCallback onCheckout;
+  const _QuickOrderSection({required this.onCheckout});
 
   @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        _pill(Icons.local_laundry_service_rounded, '${toBn(completedOrders)} ${AppLanguage.tr('সম্পন্ন অর্ডার')}', AppColors.blue, AppColors.blueSoft),
-      ],
-    );
-  }
-
-  Widget _pill(IconData icon, String label, Color color, Color bg) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(999)),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 12, color: color),
-          const SizedBox(width: 4),
-          Text(label, style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w800, color: color)),
-        ],
-      ),
-    );
-  }
+  State<_QuickOrderSection> createState() => _QuickOrderSectionState();
 }
 
-/// Row of 4 shortcut tiles to the most common next actions — spares the
-/// user a trip through the bottom nav / hamburger menu for the things
-/// they reach for most right after opening the app.
-class _QuickActions extends StatelessWidget {
-  final VoidCallback onTrackOrder;
-  final VoidCallback onChatSupport;
-  final VoidCallback onOrderHistory;
-  final VoidCallback onOffers;
-  const _QuickActions({
-    required this.onTrackOrder,
-    required this.onChatSupport,
-    required this.onOrderHistory,
-    required this.onOffers,
-  });
+class _QuickOrderSectionState extends State<_QuickOrderSection> {
+  String _service = 'Wash';
+  String _category = MockData.categories.first;
+
+  @override
+  void initState() {
+    super.initState();
+    Cart.revision.addListener(_onCart);
+  }
+
+  @override
+  void dispose() {
+    Cart.revision.removeListener(_onCart);
+    super.dispose();
+  }
+
+  void _onCart() {
+    if (mounted) setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    final items = Catalog.forCategory(_category);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(child: _tile(Icons.location_searching_rounded, AppLanguage.tr('ট্র্যাক অর্ডার'), AppColors.blue, onTrackOrder)),
-        const SizedBox(width: 10),
-        Expanded(child: _tile(Icons.support_agent_rounded, AppLanguage.tr('চ্যাট সাপোর্ট'), AppColors.teal, onChatSupport)),
-        const SizedBox(width: 10),
-        Expanded(child: _tile(Icons.history_rounded, AppLanguage.tr('অর্ডার ইতিহাস'), AppColors.blue, onOrderHistory)),
-        const SizedBox(width: 10),
-        Expanded(child: _tile(Icons.local_offer_rounded, AppLanguage.tr('অফার'), AppColors.amber, onOffers)),
-      ],
-    );
-  }
-
-  Widget _tile(IconData icon, String label, Color color, VoidCallback onTap) {
-    return Semantics(
-      button: true,
-      label: label,
-      child: PressableScale(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 6),
+        _serviceTabs(),
+        const SizedBox(height: 12),
+        _categoryChips(),
+        const SizedBox(height: 10),
+        Container(
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(AppRadius.lg),
+            borderRadius: BorderRadius.circular(AppRadius.md),
             border: Border.all(color: AppColors.line),
             boxShadow: AppShadows.soft,
           ),
           child: Column(
+            children: [
+              for (int i = 0; i < items.length; i++) _itemRow(items[i], last: i == items.length - 1),
+            ],
+          ),
+        ),
+        if (!Cart.isEmpty) ...[
+          const SizedBox(height: 12),
+          _checkoutBar(),
+        ],
+      ],
+    );
+  }
+
+  Widget _serviceTabs() {
+    Widget tab(String label, String service, IconData icon) {
+      final active = _service == service;
+      return Expanded(
+        child: GestureDetector(
+          onTap: () => setState(() => _service = service),
+          child: AnimatedContainer(
+            duration: AppMotion.fast,
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            decoration: BoxDecoration(
+              color: active ? AppColors.blue : Colors.white,
+              borderRadius: BorderRadius.circular(AppRadius.md),
+              border: Border.all(color: active ? AppColors.blue : AppColors.line),
+              boxShadow: active ? AppShadows.soft : null,
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(icon, size: 18, color: active ? Colors.white : AppColors.muted),
+                const SizedBox(width: 8),
+                Text(label, style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w800, color: active ? Colors.white : AppColors.ink)),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Row(
+      children: [
+        tab(AppLanguage.tr('ওয়াশ'), 'Wash', Icons.local_laundry_service_rounded),
+        const SizedBox(width: 10),
+        tab(AppLanguage.tr('ড্রাই ক্লিন'), 'Dry Clean', Icons.dry_cleaning_rounded),
+      ],
+    );
+  }
+
+  Widget _categoryChips() {
+    return SizedBox(
+      height: 36,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: MockData.categories.length,
+        separatorBuilder: (_, _) => const SizedBox(width: 8),
+        itemBuilder: (context, i) {
+          final c = MockData.categories[i];
+          final active = c == _category;
+          return GestureDetector(
+            onTap: () => setState(() => _category = c),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: active ? AppColors.blueSoft : Colors.white,
+                border: Border.all(color: active ? AppColors.blue : AppColors.line),
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: Text(MockData.categoriesBn[c] ?? c, style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: active ? AppColors.blue : AppColors.ink)),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _itemRow(PriceItem item, {required bool last}) {
+    final price = _service == 'Wash' ? item.washPrice : item.dryPrice;
+    final qty = Cart.qtyOf(item.id, _service);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: last ? Colors.transparent : AppColors.line)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(color: AppColors.blueSoft.withValues(alpha: 0.45), borderRadius: BorderRadius.circular(11)),
+            alignment: Alignment.center,
+            child: LaundryIcon(item.id, size: 24, color: AppColors.blue),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(item.nameBn, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.ink)),
+                Text('৳$price', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w900, color: AppColors.blue)),
+              ],
+            ),
+          ),
+          if (qty == 0)
+            _addButton(() => Cart.setQty(item.id, _service, 1))
+          else
+            _stepper(qty, () => Cart.setQty(item.id, _service, qty - 1), () => Cart.setQty(item.id, _service, qty + 1)),
+        ],
+      ),
+    );
+  }
+
+  Widget _addButton(VoidCallback onTap) {
+    return Material(
+      color: AppColors.blue,
+      borderRadius: BorderRadius.circular(10),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(10),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Container(
-                width: 38,
-                height: 38,
-                decoration: BoxDecoration(color: color.withValues(alpha: 0.12), shape: BoxShape.circle),
-                child: Icon(icon, color: color, size: 19),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                label,
-                textAlign: TextAlign.center,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 9.5, fontWeight: FontWeight.w800, color: AppColors.ink),
-              ),
+              const Icon(Icons.add_rounded, size: 16, color: Colors.white),
+              const SizedBox(width: 4),
+              Text(AppLanguage.tr('যোগ'), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Colors.white)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _stepper(int qty, VoidCallback onMinus, VoidCallback onPlus) {
+    return Container(
+      decoration: BoxDecoration(color: AppColors.blueSoft, borderRadius: BorderRadius.circular(10)),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _stepBtn(Icons.remove_rounded, onMinus),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 6),
+            child: Text(toBn(qty), style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w900, color: AppColors.blue)),
+          ),
+          _stepBtn(Icons.add_rounded, onPlus),
+        ],
+      ),
+    );
+  }
+
+  Widget _stepBtn(IconData icon, VoidCallback onTap) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(8),
+        onTap: onTap,
+        child: Padding(padding: const EdgeInsets.all(6), child: Icon(icon, size: 18, color: AppColors.blue)),
+      ),
+    );
+  }
+
+  Widget _checkoutBar() {
+    return Material(
+      color: AppColors.blue,
+      borderRadius: BorderRadius.circular(AppRadius.md),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        onTap: widget.onCheckout,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          child: Row(
+            children: [
+              Text('${toBn(Cart.totalPieces)} পিস • ৳${Cart.subtotal}', style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w800, color: Colors.white)),
+              const Spacer(),
+              Text(AppLanguage.tr('অর্ডার করুন'), style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w900, color: Colors.white)),
+              const SizedBox(width: 4),
+              const Icon(Icons.arrow_forward_rounded, size: 18, color: Colors.white),
             ],
           ),
         ),
@@ -731,33 +718,8 @@ class _QuickActions extends StatelessWidget {
 /// Home hero — leads with the brand (logo + tagline) then showcases the
 /// two perks every order already gets: free pickup and free delivery.
 /// Replaces the old "আজই আপনার কাপড় দিন" promo card.
-class _HeroBanner extends StatefulWidget {
-  final VoidCallback onOrderNow;
-  const _HeroBanner({required this.onOrderNow});
-
-  @override
-  State<_HeroBanner> createState() => _HeroBannerState();
-}
-
-class _HeroBannerState extends State<_HeroBanner>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _glow;
-  bool _pressed = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _glow = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1800),
-    )..repeat(reverse: true);
-  }
-
-  @override
-  void dispose() {
-    _glow.dispose();
-    super.dispose();
-  }
+class _HeroBanner extends StatelessWidget {
+  const _HeroBanner();
 
   @override
   Widget build(BuildContext context) {
@@ -856,64 +818,6 @@ class _HeroBannerState extends State<_HeroBanner>
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
-              AnimatedBuilder(
-                animation: _glow,
-                builder: (context, child) {
-                  return Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(AppRadius.md),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.white.withValues(
-                            alpha: 0.25 + _glow.value * 0.2,
-                          ),
-                          blurRadius: 18 + _glow.value * 10,
-                          spreadRadius: _glow.value * 1.5,
-                        ),
-                      ],
-                    ),
-                    child: child,
-                  );
-                },
-                child: GestureDetector(
-                  onTapDown: (_) => setState(() => _pressed = true),
-                  onTapCancel: () => setState(() => _pressed = false),
-                  onTapUp: (_) => setState(() => _pressed = false),
-                  child: AnimatedScale(
-                    scale: _pressed ? 0.97 : 1.0,
-                    duration: AppMotion.fast,
-                    child: Container(
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(colors: [Colors.white, Color(0xFFF2F6FF)], begin: Alignment.topCenter, end: Alignment.bottomCenter),
-                        borderRadius: BorderRadius.circular(AppRadius.md),
-                      ),
-                      child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(AppRadius.md),
-                          onTap: widget.onOrderNow,
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 15),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const Icon(Icons.add_circle_rounded, size: 20, color: AppColors.blue),
-                                const SizedBox(width: 8),
-                                Text(
-                                  AppLanguage.tr('এখনই অর্ডার করুন'),
-                                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w900, color: AppColors.blue),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
             ],
           ),
         ],
@@ -945,108 +849,6 @@ class _HeroBannerState extends State<_HeroBanner>
           ),
         ),
       ],
-    );
-  }
-}
-
-class _ServiceCard extends StatelessWidget {
-  final String titleBn;
-  final List<Color> colors;
-  final IconData icon;
-  final VoidCallback onTap;
-  const _ServiceCard({
-    required this.titleBn,
-    required this.colors,
-    required this.icon,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      button: true,
-      label: '$titleBn সার্ভিস',
-      child: PressableScale(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                colors[0].withValues(alpha: 0.08),
-                colors[0].withValues(alpha: 0.02),
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            border: Border.all(color: colors[0].withValues(alpha: 0.18)),
-            borderRadius: BorderRadius.circular(AppRadius.lg),
-            boxShadow: AppShadows.soft,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 46,
-                height: 46,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: colors,
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(14),
-                  boxShadow: [
-                    BoxShadow(
-                      color: colors[0].withValues(alpha: 0.35),
-                      blurRadius: 10,
-                      offset: const Offset(0, 5),
-                    ),
-                  ],
-                ),
-                child: Icon(icon, color: Colors.white, size: 23),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                titleBn,
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w900,
-                  color: colors[0],
-                ),
-              ),
-              const SizedBox(height: 14),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 9),
-                decoration: BoxDecoration(
-                  color: colors[0],
-                  borderRadius: BorderRadius.circular(AppRadius.sm),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      AppLanguage.tr('অর্ডার করুন'),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    const Icon(
-                      Icons.arrow_forward_rounded,
-                      color: Colors.white,
-                      size: 13,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }

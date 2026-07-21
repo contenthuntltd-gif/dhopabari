@@ -16,6 +16,11 @@ class PhoneFrame extends StatelessWidget {
   static const double frameWidth = 412;
   static const double verticalMargin = 24;
 
+  /// At or below this viewport width we treat it as a real phone and fill
+  /// the whole screen — no mock frame, no rounded corners, no margins. Wider
+  /// viewports (tablet / desktop) get the centered phone mock-up.
+  static const double phoneBreakpoint = 500;
+
   /// When true, the web phone frame is bypassed and [child] fills the
   /// window. Toggled by the admin shell (see AdminRootShell) on mount/unmount.
   static final ValueNotifier<bool> fullScreen = ValueNotifier(false);
@@ -28,7 +33,14 @@ class PhoneFrame extends StatelessWidget {
 
     return ValueListenableBuilder<bool>(
       valueListenable: fullScreen,
-      builder: (context, isFull, _) => isFull ? child : _framed(),
+      builder: (context, isFull, _) {
+        // Admin panel → always full screen. A phone-sized browser → full
+        // screen too, so mobile users get a native, edge-to-edge app.
+        if (isFull) return child;
+        final width = MediaQuery.sizeOf(context).width;
+        if (width <= phoneBreakpoint) return child;
+        return _framed();
+      },
     );
   }
 
