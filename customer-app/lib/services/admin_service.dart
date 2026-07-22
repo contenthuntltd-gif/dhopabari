@@ -1,7 +1,9 @@
 import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../data/admin_mock_data.dart';
 import 'auth_service.dart';
+import 'supabase_config.dart';
 
 /// Real Supabase-backed data for the admin panel and rider app, replacing
 /// the in-memory [AdminMockData] lists.
@@ -263,36 +265,61 @@ class AdminService {
     String paymentMethod = 'Cash on Delivery',
     String? note,
   }) async {
-    // 1. Call the Edge Function (network / server errors only).
-    final FunctionResponse res;
+    // 1. Call the public guest-order Edge Function with a plain POST, using
+    //    the publishable key directly.
+    //
+    //    We deliberately do NOT use supabase.functions.invoke here. On the
+    //    web that client forwards whatever Authorization token it currently
+    //    holds — after a previous silent guest sign-in that can be a stale
+    //    session JWT the gateway rejects, and every failure (auth, CORS,
+    //    decode) collapses into one opaque error that read as "no internet".
+    //    A direct POST with the publishable key is what actually works — it
+    //    is exactly the request the function is verified against.
+    final uri = Uri.parse('${SupabaseConfig.url}/functions/v1/guest-order');
+    final payload = jsonEncode({
+      'name': name,
+      'phone': phone,
+      'address': address,
+      'area': area ?? '',
+      'service': service,
+      'category': category ?? '',
+      'items': items,
+      'pieces': pieces,
+      'total': total,
+      'payment_method': paymentMethod,
+      'note': note ?? '',
+    });
+
+    final http.Response res;
     try {
-      res = await _db.functions.invoke('guest-order', body: {
-        'name': name,
-        'phone': phone,
-        'address': address,
-        'area': area ?? '',
-        'service': service,
-        'category': category ?? '',
-        'items': items,
-        'pieces': pieces,
-        'total': total,
-        'payment_method': paymentMethod,
-        'note': note ?? '',
-      });
-    } on FunctionException catch (e) {
-      throw AdminServiceException(_errorFrom(e.details) ?? 'অর্ডার পাঠানো যায়নি (কোড ${e.status}) — আবার চেষ্টা করুন');
+      res = await http
+          .post(
+            uri,
+            headers: {
+              'Content-Type': 'application/json',
+              'apikey': SupabaseConfig.anonKey,
+              'Authorization': 'Bearer ${SupabaseConfig.anonKey}',
+            },
+            body: payload,
+          )
+          .timeout(const Duration(seconds: 30));
     } catch (_) {
       throw AdminServiceException('সার্ভারে সংযোগ করা যায়নি — ইন্টারনেট দেখে আবার চেষ্টা করুন');
     }
 
-    // 2. Normalise the body (it may arrive already-decoded as a Map, or as a
-    //    JSON string depending on the client version).
-    dynamic data = res.data;
-    if (data is String && data.isNotEmpty) {
-      try {
-        data = jsonDecode(data);
-      } catch (_) {}
+    // 2. Decode the JSON body ({order,...} on success, {error} otherwise).
+    dynamic data;
+    try {
+      data = jsonDecode(utf8.decode(res.bodyBytes));
+    } catch (_) {
+      data = null;
     }
+
+    if (res.statusCode < 200 || res.statusCode >= 300) {
+      throw AdminServiceException(
+          _errorFrom(data) ?? 'অর্ডার পাঠানো যায়নি (কোড ${res.statusCode}) — আবার চেষ্টা করুন');
+    }
+
     final order = data is Map ? data['order'] : null;
     if (order == null) {
       throw AdminServiceException(_errorFrom(data) ?? 'অর্ডার করা যায়নি — আবার চেষ্টা করুন');
