@@ -292,10 +292,15 @@ class AdminService {
         return AdminOrder.fromRow(Map<String, dynamic>.from(data['order']));
       }
       throw AdminServiceException(_errorFrom(data) ?? 'অর্ডার করা যায়নি');
+    } on AdminServiceException {
+      rethrow;
     } on FunctionException catch (e) {
       throw AdminServiceException(
-        _errorFrom(e.details) ?? 'অর্ডার করা যায়নি (${e.status})',
+        _errorFrom(e.details) ?? 'অর্ডার পাঠানো যায়নি (কোড ${e.status}) — আবার চেষ্টা করুন',
       );
+    } catch (e) {
+      // Any other failure (network / parsing) — keep the order button usable.
+      throw AdminServiceException('অর্ডার পাঠানো যায়নি — একটু পর আবার চেষ্টা করুন');
     }
   }
 

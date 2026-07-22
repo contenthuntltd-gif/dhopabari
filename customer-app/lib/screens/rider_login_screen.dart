@@ -1,6 +1,8 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' show AuthException;
 import '../theme/app_theme.dart';
+import '../services/auth_service.dart';
+import '../services/admin_service.dart';
 import '../widgets/app_button.dart';
 import '../widgets/fade_slide_in.dart';
 import '../widgets/app_page_route.dart';
@@ -32,15 +34,44 @@ class _RiderLoginScreenState extends State<RiderLoginScreen> {
     return _phoneError == null && _passwordError == null;
   }
 
-  void _handleLogin() {
+  Future<void> _handleLogin() async {
     if (_loading) return;
     FocusScope.of(context).unfocus();
     if (!_validate()) return;
     setState(() => _loading = true);
-    Timer(const Duration(milliseconds: 700), () {
+    try {
+      await AuthService.signInWithPassword(phone: _phone.text.trim(), password: _password.text);
+      AdminService.clearRoleCache();
+      final role = await AdminService.currentRole();
       if (!mounted) return;
-      Navigator.of(context).pushAndRemoveUntil(AppPageRoute(builder: (_) => const RiderDashboardScreen()), (r) => false);
-    });
+      // Only riders (and admins) may enter the rider dashboard.
+      if (role != 'rider' && role != 'admin') {
+        await AuthService.logout();
+        AdminService.clearRoleCache();
+        if (!mounted) return;
+        setState(() {
+          _loading = false;
+          _passwordError = 'এই অ্যাকাউন্ট রাইডার নয়';
+        });
+        return;
+      }
+      Navigator.of(context).pushAndRemoveUntil(
+        AppPageRoute(builder: (_) => const RiderDashboardScreen()),
+        (r) => false,
+      );
+    } on AuthException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _loading = false;
+        _passwordError = RegExp(r'invalid.*credential', caseSensitive: false).hasMatch(e.message) ? 'নম্বর বা পাসওয়ার্ড ভুল' : e.message;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _loading = false;
+        _passwordError = 'লগইন করা যায়নি — ইন্টারনেট সংযোগ দেখুন';
+      });
+    }
   }
 
   @override

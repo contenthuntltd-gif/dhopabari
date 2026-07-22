@@ -33,6 +33,17 @@ class AuthService {
     return '+880$digits';
   }
 
+  /// Timestamp of the last password sign-in / sign-up. Every such call is
+  /// followed by the caller navigating itself (admin panel, rider dashboard,
+  /// guest order success, login screen). The global auth listener uses this
+  /// to know NOT to also yank the navigator to the customer home — otherwise
+  /// a silent guest sign-in would tear down the order screen mid-checkout.
+  static DateTime? _lastProgrammaticSignIn;
+  static void _markProgrammatic() => _lastProgrammaticSignIn = DateTime.now();
+  static bool get recentlyProgrammatic =>
+      _lastProgrammaticSignIn != null &&
+      DateTime.now().difference(_lastProgrammaticSignIn!) < const Duration(seconds: 10);
+
   /// Whether there is an active session right now (e.g. after a Google
   /// redirect returns, or a previously saved session). Safe to call even if
   /// Supabase wasn't initialized (unconfigured) — returns false.
@@ -134,6 +145,7 @@ class AuthService {
     String? localAddress,
     String? whatsappNumber,
   }) async {
+    _markProgrammatic();
     final normalized = normalizePhone(phone);
     final email = _phoneToEmail(normalized);
     final data = <String, dynamic>{
@@ -156,6 +168,7 @@ class AuthService {
     required String phone,
     required String password,
   }) async {
+    _markProgrammatic();
     final email = _phoneToEmail(normalizePhone(phone));
     await _supabase.auth.signInWithPassword(
       email: email,
