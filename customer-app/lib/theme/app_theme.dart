@@ -90,6 +90,9 @@ ThemeData buildAppTheme() {
     useMaterial3: true,
     scaffoldBackgroundColor: AppColors.card,
     splashFactory: InkRipple.splashFactory,
+    // Brand Bangla typeface everywhere — every Text in the app inherits
+    // this family, so no Bangla word ever falls back to the system font.
+    fontFamily: 'KohinoorBangla',
     colorScheme: ColorScheme.fromSeed(
       seedColor: AppColors.blue,
       primary: AppColors.blue,
@@ -102,6 +105,7 @@ ThemeData buildAppTheme() {
     textTheme: base.textTheme.apply(
       bodyColor: AppColors.ink,
       displayColor: AppColors.ink,
+      fontFamily: 'KohinoorBangla',
     ),
     textSelectionTheme: const TextSelectionThemeData(
       cursorColor: AppColors.blue,

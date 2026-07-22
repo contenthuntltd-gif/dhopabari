@@ -87,6 +87,15 @@ flutter:
   #   - images/a_dot_ham.jpeg
   assets:
     - assets/branding/dhopa_bari_logo.png
+    - assets/fonts/KohinoorBangla-Bold.otf
+
+  # Brand Bangla typeface — applied app-wide via ThemeData.fontFamily and
+  # embedded into receipt PDFs (with a Noto Bengali fallback there, since
+  # the PDF engine can't parse CFF-outline OTFs).
+  fonts:
+    - family: KohinoorBangla
+      fonts:
+        - asset: assets/fonts/KohinoorBangla-Bold.otf
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

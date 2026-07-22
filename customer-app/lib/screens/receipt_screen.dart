@@ -1,7 +1,11 @@
+﻿import 'dart:typed_data';
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import '../theme/app_theme.dart';
 import '../data/receipt_data.dart';
 import '../widgets/receipt_view.dart';
+import '../widgets/receipt_pos_view.dart';
 import '../widgets/app_button.dart';
 import '../services/receipt_pdf_service.dart';
 
@@ -34,6 +38,9 @@ class _ReceiptScreenState extends State<ReceiptScreen> {
   bool _busy = false;
   late bool _confirmed = widget.pickupConfirmed;
 
+  // Wraps the off-screen 72mm POS receipt so we can capture it to an image.
+  final GlobalKey _posKey = GlobalKey();
+
   Future<void> _runAction(Future<void> Function() action) async {
     if (_busy) return;
     setState(() => _busy = true);
@@ -45,6 +52,29 @@ class _ReceiptScreenState extends State<ReceiptScreen> {
     } finally {
       if (mounted) setState(() => _busy = false);
     }
+  }
+
+  /// Captures the off-screen POS receipt widget to PNG bytes (+ pixel size).
+  /// Flutter shapes the Bangla into the image, so the PDF never garbles it.
+  Future<({Uint8List png, int w, int h})?> _capturePos() async {
+    final boundary = _posKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
+    if (boundary == null) return null;
+    final image = await boundary.toImage(pixelRatio: 3.0);
+    final data = await image.toByteData(format: ui.ImageByteFormat.png);
+    if (data == null) return null;
+    return (png: data.buffer.asUint8List(), w: image.width, h: image.height);
+  }
+
+  Future<void> _print() async {
+    final cap = await _capturePos();
+    if (cap == null) return;
+    await ReceiptPdfService.printPos(cap.png, cap.w, cap.h, widget.receipt.receiptNumber);
+  }
+
+  Future<void> _share() async {
+    final cap = await _capturePos();
+    if (cap == null) return;
+    await ReceiptPdfService.sharePos(cap.png, cap.w, cap.h, widget.receipt.receiptNumber);
   }
 
   Future<void> _emailReceipt() async {
@@ -83,12 +113,26 @@ class _ReceiptScreenState extends State<ReceiptScreen> {
       backgroundColor: AppColors.paper,
       appBar: AppBar(title: Text(widget.receipt.type == ReceiptType.pickup ? 'পিকআপ রিসিট' : 'ডেলিভারি রিসিট')),
       body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.all(AppSpace.sm),
+        child: Stack(
           children: [
-            ReceiptView(receipt: widget.receipt),
-            const SizedBox(height: AppSpace.sm),
-            _actionBar(),
+            ListView(
+              padding: const EdgeInsets.all(AppSpace.sm),
+              children: [
+                ReceiptView(receipt: widget.receipt),
+                const SizedBox(height: AppSpace.sm),
+                _actionBar(),
+              ],
+            ),
+            // Off-screen 72mm receipt (painted but shifted out of view) that
+            // the print/share actions capture to a Bangla-perfect image.
+            Positioned(
+              left: -3000,
+              top: 0,
+              child: RepaintBoundary(
+                key: _posKey,
+                child: ReceiptPosView(receipt: widget.receipt),
+              ),
+            ),
           ],
         ),
       ),
@@ -102,7 +146,7 @@ class _ReceiptScreenState extends State<ReceiptScreen> {
           children: [
             Expanded(
               child: OutlinedButton.icon(
-                onPressed: _busy ? null : () => _runAction(() => ReceiptPdfService.print(widget.receipt)),
+                onPressed: _busy ? null : () => _runAction(_print),
                 icon: const Icon(Icons.download_rounded, size: 18),
                 label: const Text('ডাউনলোড'),
               ),
@@ -110,7 +154,7 @@ class _ReceiptScreenState extends State<ReceiptScreen> {
             const SizedBox(width: 10),
             Expanded(
               child: ElevatedButton.icon(
-                onPressed: _busy ? null : () => _runAction(() => ReceiptPdfService.shareOrDownload(widget.receipt)),
+                onPressed: _busy ? null : () => _runAction(_share),
                 icon: const Icon(Icons.share_rounded, size: 18),
                 label: const Text('শেয়ার করুন'),
               ),
@@ -125,7 +169,7 @@ class _ReceiptScreenState extends State<ReceiptScreen> {
               children: [
                 Expanded(
                   child: OutlinedButton.icon(
-                    onPressed: _busy ? null : () => _runAction(() => ReceiptPdfService.shareOrDownload(widget.receipt)),
+                    onPressed: _busy ? null : () => _runAction(_share),
                     icon: const Icon(Icons.share_rounded, size: 18),
                     label: const Text('শেয়ার করুন'),
                   ),
@@ -159,7 +203,7 @@ class _ReceiptScreenState extends State<ReceiptScreen> {
               children: [
                 Expanded(
                   child: OutlinedButton.icon(
-                    onPressed: _busy ? null : () => _runAction(() => ReceiptPdfService.print(widget.receipt)),
+                    onPressed: _busy ? null : () => _runAction(_print),
                     icon: const Icon(Icons.print_rounded, size: 18),
                     label: const Text('প্রিন্ট'),
                   ),
@@ -167,7 +211,7 @@ class _ReceiptScreenState extends State<ReceiptScreen> {
                 const SizedBox(width: 10),
                 Expanded(
                   child: OutlinedButton.icon(
-                    onPressed: _busy ? null : () => _runAction(() => ReceiptPdfService.print(widget.receipt)),
+                    onPressed: _busy ? null : () => _runAction(_print),
                     icon: const Icon(Icons.download_rounded, size: 18),
                     label: const Text('ডাউনলোড'),
                   ),
@@ -179,7 +223,7 @@ class _ReceiptScreenState extends State<ReceiptScreen> {
               children: [
                 Expanded(
                   child: OutlinedButton.icon(
-                    onPressed: _busy ? null : () => _runAction(() => ReceiptPdfService.shareOrDownload(widget.receipt)),
+                    onPressed: _busy ? null : () => _runAction(_share),
                     icon: const Icon(Icons.share_rounded, size: 18),
                     label: const Text('শেয়ার'),
                   ),
@@ -232,3 +276,4 @@ class _ReceiptScreenState extends State<ReceiptScreen> {
     );
   }
 }
+

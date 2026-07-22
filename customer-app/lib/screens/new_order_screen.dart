@@ -22,12 +22,18 @@ class NewOrderScreen extends StatefulWidget {
   final String? forCustomerName;
   final String? forCustomerAddress;
 
+  /// True when the customer already picked their items on the home page:
+  /// the flow then has only two steps — "তথ্য" and "নিশ্চিত করুন" — and the
+  /// items step is skipped entirely.
+  final bool quickCheckout;
+
   const NewOrderScreen({
     super.key,
     this.initialService = 'Wash',
     this.forCustomerId,
     this.forCustomerName,
     this.forCustomerAddress,
+    this.quickCheckout = false,
   });
 
   bool get isStaffOrder => forCustomerId != null;
@@ -58,12 +64,21 @@ class _NewOrderScreenState extends State<NewOrderScreen> {
   /// A not-logged-in customer ordering for themselves.
   bool get _isGuest => !AuthService.isLoggedIn && !widget.isStaffOrder;
 
-  static const _steps = ['সার্ভিস', 'তথ্য', 'নিশ্চিত করুন'];
+  /// Quick checkout (items already picked on home) shows just two steps;
+  /// the full flow keeps the items step for staff/other entry points.
+  List<String> get _stepLabels =>
+      widget.quickCheckout ? const ['তথ্য', 'নিশ্চিত করুন'] : const ['সার্ভিস', 'তথ্য', 'নিশ্চিত করুন'];
+
+  /// Header index for the current internal step (internal steps are always
+  /// 0=items, 1=info, 2=summary; quick mode starts at 1 and shows 2 labels).
+  int get _displayStep => widget.quickCheckout ? _step - 1 : _step;
 
   @override
   void initState() {
     super.initState();
     _service = widget.initialService;
+    if (widget.quickCheckout) _step = 1; // items already in the cart
+
     // Pre-fill guest fields if a previous session left contact details.
     _guestName.text = MockData.userName;
     _guestPhone.text = MockData.userPhone;
@@ -202,8 +217,12 @@ class _NewOrderScreenState extends State<NewOrderScreen> {
     }
   }
 
+  /// The first visible step of this flow (quick mode never goes back to
+  /// the items step — that lives on the home page).
+  int get _firstStep => widget.quickCheckout ? 1 : 0;
+
   void _back() {
-    if (_step > 0) {
+    if (_step > _firstStep) {
       setState(() => _step--);
     } else {
       Navigator.pop(context);
@@ -213,7 +232,7 @@ class _NewOrderScreenState extends State<NewOrderScreen> {
   @override
   Widget build(BuildContext context) {
     return PopScope(
-      canPop: _step == 0,
+      canPop: _step == _firstStep,
       onPopInvokedWithResult: (didPop, _) {
         if (!didPop) _back();
       },
@@ -222,7 +241,7 @@ class _NewOrderScreenState extends State<NewOrderScreen> {
         body: SafeArea(
           child: Column(
             children: [
-              _Header(step: _step, steps: _steps, onBack: _back),
+              _Header(step: _displayStep, steps: _stepLabels, onBack: _back),
               Expanded(
                 child: AnimatedSwitcher(
                   duration: AppMotion.base,

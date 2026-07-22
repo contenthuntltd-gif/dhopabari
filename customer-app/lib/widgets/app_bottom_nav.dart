@@ -26,7 +26,8 @@ class AppBottomNav extends StatelessWidget {
           border: const Border(top: BorderSide(color: AppColors.line, width: 1)),
           boxShadow: [BoxShadow(color: AppColors.ink.withValues(alpha: 0.08), blurRadius: 20, offset: const Offset(0, -8))],
         ),
-        padding: const EdgeInsets.only(top: 8, bottom: 14),
+        // A little extra top padding sits the icons + labels lower in the bar.
+        padding: const EdgeInsets.only(top: 16, bottom: 12),
         child: SafeArea(
           top: false,
           child: Row(

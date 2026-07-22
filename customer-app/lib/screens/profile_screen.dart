@@ -11,6 +11,7 @@ import '../services/language.dart';
 import '../data/business_info.dart';
 import 'login_screen.dart';
 import 'orders_screen.dart';
+import 'root_shell.dart';
 
 class ProfileScreen extends StatefulWidget {
   final void Function(int tabIndex)? onSwitchTab;
@@ -64,7 +65,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (confirmed == true && mounted) {
       await AuthService.logout();
       if (!mounted) return;
-      Navigator.of(context).pushAndRemoveUntil(AppPageRoute(builder: (_) => const LoginScreen()), (r) => false);
+      // Back to a fresh guest shell (browsing + guest ordering keep working).
+      Navigator.of(context).pushAndRemoveUntil(AppPageRoute(builder: (_) => const RootShell()), (r) => false);
     }
   }
 
@@ -106,7 +108,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (confirmed == true && mounted) {
       await AuthService.logout();
       if (!mounted) return;
-      Navigator.of(context).pushAndRemoveUntil(AppPageRoute(builder: (_) => const LoginScreen()), (r) => false);
+      // Back to a fresh guest shell (browsing + guest ordering keep working).
+      Navigator.of(context).pushAndRemoveUntil(AppPageRoute(builder: (_) => const RootShell()), (r) => false);
     }
   }
 
@@ -191,6 +194,42 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Guests (no login) get a simple sign-in prompt here — since the home
+    // screen no longer has a menu, Profile is the door to login (and from
+    // the login screen's ⋮ menu, to the admin/rider panels).
+    if (!AuthService.isLoggedIn) {
+      return SafeArea(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(28),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const AppLogo(size: 96),
+                const SizedBox(height: 18),
+                Text(AppLanguage.tr('আপনি এখনো লগইন করেননি'), style: AppText.h2, textAlign: TextAlign.center),
+                const SizedBox(height: 6),
+                Text(
+                  AppLanguage.tr('লগইন ছাড়াও অর্ডার করা যায় — তবে লগইন করলে আপনার সব অর্ডার এক জায়গায় দেখতে পাবেন।'),
+                  style: AppText.bodyMuted,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () => Navigator.push(context, AppPageRoute(builder: (_) => const LoginScreen())).then((_) => setState(() {})),
+                    icon: const Icon(Icons.login_rounded, size: 18),
+                    label: Text(AppLanguage.tr('লগইন করুন'), style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     return ValueListenableBuilder<bool>(
       valueListenable: AppLanguage.isEnglish,
       builder: (context, _, _) => SafeArea(

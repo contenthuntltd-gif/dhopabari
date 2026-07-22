@@ -16,16 +16,17 @@ class RootShell extends StatefulWidget {
 class _RootShellState extends State<RootShell> {
   int _index = 0;
 
-  void _goToNewOrder({String service = 'Wash'}) {
-    Navigator.push(context, AppPageRoute(builder: (_) => NewOrderScreen(initialService: service)));
+  void _goToNewOrder({String service = 'Wash', bool quick = false}) {
+    Navigator.push(context, AppPageRoute(builder: (_) => NewOrderScreen(initialService: service, quickCheckout: quick)));
   }
 
   @override
   Widget build(BuildContext context) {
     final tabs = [
       HomeScreen(
-        onStartNewOrder: _goToNewOrder,
-        onStartNewOrderWithService: (s) => _goToNewOrder(service: s),
+        // The home checkout bar means "I've picked my items" → jump straight
+        // to the 2-step তথ্য / নিশ্চিত করুন flow.
+        onStartNewOrder: () => _goToNewOrder(quick: true),
         onSwitchTab: (i) => setState(() => _index = i),
       ),
       const OrdersScreen(),
