@@ -13,6 +13,7 @@ import 'riders_screen.dart';
 import 'catalog_screen.dart';
 import 'withdrawals_screen.dart';
 import 'memo_center_screen.dart';
+import 'support_settings_screen.dart';
 import '../login_screen.dart';
 import '../../data/business_info.dart';
 
@@ -40,6 +41,7 @@ const _toolNav = <_NavItem>[
   _NavItem(Icons.sell_outlined, Icons.sell_rounded, 'মূল্য তালিকা'),
   _NavItem(Icons.account_balance_wallet_outlined, Icons.account_balance_wallet_rounded, 'উত্তোলন'),
   _NavItem(Icons.description_outlined, Icons.description_rounded, 'মেমো সেন্টার'),
+  _NavItem(Icons.support_agent_outlined, Icons.support_agent_rounded, 'সাপোর্ট সেটিংস'),
 ];
 
 /// The admin panel shell. On a wide window (desktop) it renders a fixed
@@ -93,7 +95,8 @@ class _AdminRootShellState extends State<AdminRootShell> {
     final page = switch (toolIndex) {
       0 => const CatalogScreen(),
       1 => const WithdrawalsScreen(),
-      _ => const MemoCenterScreen(),
+      2 => const MemoCenterScreen(),
+      _ => const SupportSettingsScreen(),
     };
     Navigator.push(context, AppPageRoute(builder: (_) => page));
   }

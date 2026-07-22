@@ -3,17 +3,15 @@ import '../theme/app_theme.dart';
 import '../services/language.dart';
 
 class AppBottomNav extends StatelessWidget {
-  final int currentIndex; // 0 home, 1 orders, 2 (new order fab), 3 chat, 4 profile
+  final int currentIndex; // 0 home, 1 orders, 2 (new order fab), 3 যোগাযোগ, 4 profile
   final ValueChanged<int> onTap;
   final VoidCallback onNewOrder;
-  final int chatUnread;
 
   const AppBottomNav({
     super.key,
     required this.currentIndex,
     required this.onTap,
     required this.onNewOrder,
-    this.chatUnread = 0,
   });
 
   @override
@@ -36,7 +34,7 @@ class AppBottomNav extends StatelessWidget {
               _tab(icon: Icons.home_rounded, label: AppLanguage.tr('হোম'), index: 0),
               _tab(icon: Icons.list_alt_rounded, label: AppLanguage.tr('আমার অর্ডার'), index: 1),
               _newOrderTab(),
-              _tab(icon: Icons.chat_bubble_rounded, label: AppLanguage.tr('চ্যাট'), index: 3, badge: chatUnread),
+              _tab(icon: Icons.support_agent_rounded, label: AppLanguage.tr('যোগাযোগ'), index: 3),
               _tab(icon: Icons.person_rounded, label: AppLanguage.tr('প্রোফাইল'), index: 4),
             ],
           ),

@@ -46,7 +46,6 @@ class _RootShellState extends State<RootShell> {
         // "নতুন অর্ডার" = go to Home, which IS the item picker; the pinned
         // "অর্ডার করুন" bar there leads to the 2-step তথ্য / নিশ্চিত flow.
         onNewOrder: () => setState(() => _index = 0),
-        chatUnread: 1,
       ),
     );
   }

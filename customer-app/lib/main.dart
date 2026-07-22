@@ -10,6 +10,7 @@ import 'screens/admin_login_screen.dart';
 import 'screens/rider_login_screen.dart';
 import 'widgets/phone_frame.dart';
 import 'widgets/app_page_route.dart';
+import 'data/app_settings.dart';
 import 'data/cart.dart';
 import 'data/catalog.dart';
 import 'services/auth_service.dart';
@@ -35,10 +36,12 @@ void main() async {
         ),
       );
       await AuthService.restoreSession();
-      // Live price list — no await: the bundled official list renders
-      // instantly and swaps to the DB copy when it arrives.
+      // Live price list + admin-set support numbers — no await: they render
+      // from defaults instantly and swap to the DB copy when it arrives.
       // ignore: unawaited_futures
       Catalog.refresh();
+      // ignore: unawaited_futures
+      AppSettings.load();
     } catch (e) {
       debugPrint('Supabase init/session restore failed: $e');
     }
