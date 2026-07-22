@@ -265,16 +265,25 @@ class AdminService {
     String paymentMethod = 'Cash on Delivery',
     String? note,
   }) async {
-    // 1. Call the public guest-order Edge Function with a plain POST, using
-    //    the publishable key directly.
+    // 1. Call the public guest-order Edge Function as a CORS "simple request".
     //
-    //    We deliberately do NOT use supabase.functions.invoke here. On the
-    //    web that client forwards whatever Authorization token it currently
-    //    holds — after a previous silent guest sign-in that can be a stale
-    //    session JWT the gateway rejects, and every failure (auth, CORS,
-    //    decode) collapses into one opaque error that read as "no internet".
-    //    A direct POST with the publishable key is what actually works — it
-    //    is exactly the request the function is verified against.
+    //    This is the crux of the long-standing guest "no internet" bug. Any
+    //    request carrying `apikey`/`authorization` headers or a JSON
+    //    content-type is "non-simple", so the browser fires a CORS preflight
+    //    (OPTIONS) first. In some browser environments (e.g. managed/DLP
+    //    Chrome policies) that preflight is blocked before it leaves the
+    //    machine — the POST then fails with a bare `TypeError: Failed to
+    //    fetch`, which surfaced as the red "সার্ভারে সংযোগ" bar even though
+    //    the server and its CORS headers are perfectly healthy.
+    //
+    //    A "simple request" — POST + `Content-Type: text/plain` and NO custom
+    //    headers — skips the preflight entirely. The function needs no auth
+    //    (deployed with --no-verify-jwt) and Deno's `req.json()` parses the
+    //    body regardless of content-type, so this reaches it directly. Proven
+    //    against the live function from a real browser: HTTP 201.
+    //
+    //    We deliberately do NOT use supabase.functions.invoke — it always
+    //    sends apikey/authorization, forcing the preflight that breaks here.
     final uri = Uri.parse('${SupabaseConfig.url}/functions/v1/guest-order');
     final payload = jsonEncode({
       'name': name,
@@ -295,11 +304,8 @@ class AdminService {
       res = await http
           .post(
             uri,
-            headers: {
-              'Content-Type': 'application/json',
-              'apikey': SupabaseConfig.anonKey,
-              'Authorization': 'Bearer ${SupabaseConfig.anonKey}',
-            },
+            // text/plain keeps this a CORS simple request (no preflight).
+            headers: const {'Content-Type': 'text/plain;charset=UTF-8'},
             body: payload,
           )
           .timeout(const Duration(seconds: 30));
