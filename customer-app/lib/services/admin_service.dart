@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../data/admin_mock_data.dart';
 import 'auth_service.dart';
@@ -262,8 +263,10 @@ class AdminService {
     String paymentMethod = 'Cash on Delivery',
     String? note,
   }) async {
+    // 1. Call the Edge Function (network / server errors only).
+    final FunctionResponse res;
     try {
-      final res = await _db.functions.invoke('guest-order', body: {
+      res = await _db.functions.invoke('guest-order', body: {
         'name': name,
         'phone': phone,
         'address': address,
@@ -276,31 +279,57 @@ class AdminService {
         'payment_method': paymentMethod,
         'note': note ?? '',
       });
-
-      final data = res.data;
-      if (data is Map && data['order'] != null) {
-        final ph = data['phone'] as String?;
-        final pw = data['password'] as String?;
-        if (ph != null && pw != null) {
-          // Best-effort silent sign-in; the order is already saved even if
-          // this fails, so never let it break the success flow.
-          try {
-            await AuthService.signInWithPassword(phone: ph, password: pw);
-          } catch (_) {}
-        }
-        clearRoleCache();
-        return AdminOrder.fromRow(Map<String, dynamic>.from(data['order']));
-      }
-      throw AdminServiceException(_errorFrom(data) ?? 'অর্ডার করা যায়নি');
-    } on AdminServiceException {
-      rethrow;
     } on FunctionException catch (e) {
-      throw AdminServiceException(
-        _errorFrom(e.details) ?? 'অর্ডার পাঠানো যায়নি (কোড ${e.status}) — আবার চেষ্টা করুন',
+      throw AdminServiceException(_errorFrom(e.details) ?? 'অর্ডার পাঠানো যায়নি (কোড ${e.status}) — আবার চেষ্টা করুন');
+    } catch (_) {
+      throw AdminServiceException('সার্ভারে সংযোগ করা যায়নি — ইন্টারনেট দেখে আবার চেষ্টা করুন');
+    }
+
+    // 2. Normalise the body (it may arrive already-decoded as a Map, or as a
+    //    JSON string depending on the client version).
+    dynamic data = res.data;
+    if (data is String && data.isNotEmpty) {
+      try {
+        data = jsonDecode(data);
+      } catch (_) {}
+    }
+    final order = data is Map ? data['order'] : null;
+    if (order == null) {
+      throw AdminServiceException(_errorFrom(data) ?? 'অর্ডার করা যায়নি — আবার চেষ্টা করুন');
+    }
+
+    // ── The order is now saved in the database. From here nothing may throw
+    //    — the guest success flow doesn't even use the returned order. ──
+
+    // 3. Silently sign this device in so the customer sees their history.
+    final map = data as Map;
+    final ph = map['phone'] as String?;
+    final pw = map['password'] as String?;
+    if (ph != null && pw != null) {
+      try {
+        await AuthService.signInWithPassword(phone: ph, password: pw);
+      } catch (_) {}
+    }
+    clearRoleCache();
+
+    // 4. Best-effort parse; fall back to a minimal order on any hiccup.
+    try {
+      return AdminOrder.fromRow(Map<String, dynamic>.from(order as Map));
+    } catch (_) {
+      return AdminOrder(
+        id: (order as Map)['order_no']?.toString() ?? '#DB',
+        customerName: name,
+        customerPhone: phone,
+        service: service,
+        category: category ?? '',
+        itemsSummary: '',
+        pieces: pieces,
+        total: total,
+        status: 'Confirmed',
+        date: '',
+        address: address,
+        paymentMethod: paymentMethod,
       );
-    } catch (e) {
-      // Any other failure (network / parsing) — keep the order button usable.
-      throw AdminServiceException('অর্ডার পাঠানো যায়নি — একটু পর আবার চেষ্টা করুন');
     }
   }
 
