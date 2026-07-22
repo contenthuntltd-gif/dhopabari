@@ -11,7 +11,7 @@ import 'orders_screen.dart';
 import 'customers_screen.dart';
 import 'riders_screen.dart';
 import 'catalog_screen.dart';
-import 'withdrawals_screen.dart';
+import 'settlement_screen.dart';
 import 'memo_center_screen.dart';
 import 'support_settings_screen.dart';
 import '../login_screen.dart';
@@ -39,7 +39,7 @@ const _primaryNav = <_NavItem>[
 /// back button, so they are pushed rather than embedded).
 const _toolNav = <_NavItem>[
   _NavItem(Icons.sell_outlined, Icons.sell_rounded, 'মূল্য তালিকা'),
-  _NavItem(Icons.account_balance_wallet_outlined, Icons.account_balance_wallet_rounded, 'উত্তোলন'),
+  _NavItem(Icons.account_balance_wallet_outlined, Icons.account_balance_wallet_rounded, 'ক্যাশ হিসাব'),
   _NavItem(Icons.description_outlined, Icons.description_rounded, 'মেমো সেন্টার'),
   _NavItem(Icons.support_agent_outlined, Icons.support_agent_rounded, 'সাপোর্ট সেটিংস'),
 ];
@@ -94,7 +94,7 @@ class _AdminRootShellState extends State<AdminRootShell> {
   void _openTool(int toolIndex) {
     final page = switch (toolIndex) {
       0 => const CatalogScreen(),
-      1 => const WithdrawalsScreen(),
+      1 => const SettlementScreen(),
       2 => const MemoCenterScreen(),
       _ => const SupportSettingsScreen(),
     };

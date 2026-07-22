@@ -341,6 +341,34 @@ class AdminService {
     await _db.from('orders').update({'rider_id': riderId}).eq('id', orderId);
   }
 
+  // ----- Cash settlement (হিসাব) -----
+
+  /// Delivered Cash-on-Delivery orders whose cash the rider has not yet
+  /// handed in. These are what the accounts screen groups by rider.
+  static Future<List<AdminOrder>> unsettledCodOrders() async {
+    final rows = await _db
+        .from('orders')
+        .select('*, customer:customer_id(name, phone), rider:rider_id(name, phone)')
+        .eq('status', 'Delivered')
+        .eq('cash_settled', false)
+        .order('created_at', ascending: false)
+        .limit(500);
+    final all = (rows as List).map((r) => AdminOrder.fromRow(r)).toList();
+    // Keep only cash orders (online-paid orders hold no cash to hand over).
+    return all.where((o) {
+      final p = o.paymentMethod.toLowerCase();
+      return p.contains('cash') || p.contains('cod') || o.paymentMethod.contains('নগদ');
+    }).toList();
+  }
+
+  /// Marks one order's cash as received at the office.
+  static Future<void> settleOrder(String orderUuid) async {
+    await _db.from('orders').update({
+      'cash_settled': true,
+      'settled_at': DateTime.now().toUtc().toIso8601String(),
+    }).eq('id', orderUuid);
+  }
+
   // ----- Dashboard -----
 
   /// Loads every order's timestamp/total/status plus the customer & rider

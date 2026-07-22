@@ -8,7 +8,7 @@ import '../../widgets/state_views.dart';
 import '../../widgets/app_page_route.dart';
 import 'rider_detail_screen.dart';
 import 'rider_form_screen.dart';
-import 'withdrawals_screen.dart';
+import 'settlement_screen.dart';
 
 class RidersScreen extends StatefulWidget {
   const RidersScreen({super.key});
@@ -62,7 +62,6 @@ class _RidersScreenState extends State<RidersScreen> {
   @override
   Widget build(BuildContext context) {
     final riders = _filtered;
-    final pendingWithdrawals = AdminMockData.withdrawals.where((w) => w.status == 'Pending').length;
 
     return Scaffold(
       floatingActionButton: FloatingActionButton.extended(
@@ -79,7 +78,7 @@ class _RidersScreenState extends State<RidersScreen> {
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
             child: PressableScale(
-              onTap: () => Navigator.push(context, AppPageRoute(builder: (_) => const WithdrawalsScreen())).then((_) => setState(() {})),
+              onTap: () => Navigator.push(context, AppPageRoute(builder: (_) => const SettlementScreen())).then((_) => setState(() {})),
               child: Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(color: AppColors.amberSoft, borderRadius: BorderRadius.circular(AppRadius.md), border: Border.all(color: AppColors.amber.withValues(alpha: 0.35))),
@@ -87,10 +86,10 @@ class _RidersScreenState extends State<RidersScreen> {
                   children: [
                     const Icon(Icons.account_balance_wallet_rounded, color: AppColors.amber),
                     const SizedBox(width: 10),
-                    Expanded(
+                    const Expanded(
                       child: Text(
-                        pendingWithdrawals > 0 ? '$pendingWithdrawals টি উত্তোলন অনুরোধ অপেক্ষমাণ' : 'কোনো অপেক্ষমাণ উত্তোলন অনুরোধ নেই',
-                        style: const TextStyle(fontSize: 12.5, color: AppColors.ink, fontWeight: FontWeight.w800),
+                        'রাইডারদের ক্যাশ হিসাব বুঝে নিন',
+                        style: TextStyle(fontSize: 12.5, color: AppColors.ink, fontWeight: FontWeight.w800),
                       ),
                     ),
                     const Icon(Icons.chevron_right_rounded, color: AppColors.amber),
