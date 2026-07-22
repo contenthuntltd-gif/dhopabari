@@ -430,29 +430,30 @@ class _QuickOrderSectionState extends State<_QuickOrderSection> {
     final price = _service == 'Wash' ? item.washPrice : item.dryPrice;
     final qty = Cart.qtyOf(item.id, _service);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
         border: Border(bottom: BorderSide(color: last ? Colors.transparent : AppColors.line)),
       ),
       child: Row(
         children: [
           Container(
-            width: 38,
-            height: 38,
-            decoration: BoxDecoration(color: AppColors.blueSoft.withValues(alpha: 0.45), borderRadius: BorderRadius.circular(11)),
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(color: AppColors.blueSoft.withValues(alpha: 0.45), borderRadius: BorderRadius.circular(9)),
             alignment: Alignment.center,
-            child: LaundryIcon(item.id, size: 24, color: AppColors.blue),
+            child: LaundryIcon(item.id, size: 20, color: AppColors.blue),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: 9),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Row(
               children: [
-                Text(item.nameBn, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.ink)),
-                Text('৳$price', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w900, color: AppColors.blue)),
+                Flexible(child: Text(item.nameBn, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.ink))),
+                const SizedBox(width: 6),
+                Text('৳$price', style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w900, color: AppColors.blue)),
               ],
             ),
           ),
+          const SizedBox(width: 8),
           if (qty == 0)
             _addButton(() => Cart.setQty(item.id, _service, 1))
           else
@@ -465,18 +466,18 @@ class _QuickOrderSectionState extends State<_QuickOrderSection> {
   Widget _addButton(VoidCallback onTap) {
     return Material(
       color: AppColors.blue,
-      borderRadius: BorderRadius.circular(10),
+      borderRadius: BorderRadius.circular(9),
       child: InkWell(
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(9),
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.add_rounded, size: 16, color: Colors.white),
-              const SizedBox(width: 4),
-              Text(AppLanguage.tr('যোগ'), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Colors.white)),
+              const Icon(Icons.add_rounded, size: 14, color: Colors.white),
+              const SizedBox(width: 3),
+              Text(AppLanguage.tr('যোগ'), style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: Colors.white)),
             ],
           ),
         ),
@@ -486,14 +487,14 @@ class _QuickOrderSectionState extends State<_QuickOrderSection> {
 
   Widget _stepper(int qty, VoidCallback onMinus, VoidCallback onPlus) {
     return Container(
-      decoration: BoxDecoration(color: AppColors.blueSoft, borderRadius: BorderRadius.circular(10)),
+      decoration: BoxDecoration(color: AppColors.blueSoft, borderRadius: BorderRadius.circular(9)),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           _stepBtn(Icons.remove_rounded, onMinus),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 6),
-            child: Text(toBn(qty), style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w900, color: AppColors.blue)),
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: Text(toBn(qty), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w900, color: AppColors.blue)),
           ),
           _stepBtn(Icons.add_rounded, onPlus),
         ],
@@ -505,9 +506,9 @@ class _QuickOrderSectionState extends State<_QuickOrderSection> {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(7),
         onTap: onTap,
-        child: Padding(padding: const EdgeInsets.all(6), child: Icon(icon, size: 18, color: AppColors.blue)),
+        child: Padding(padding: const EdgeInsets.all(5), child: Icon(icon, size: 16, color: AppColors.blue)),
       ),
     );
   }

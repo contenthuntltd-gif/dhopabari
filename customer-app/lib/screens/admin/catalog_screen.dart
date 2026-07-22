@@ -217,6 +217,22 @@ class _PriceListTab extends StatefulWidget {
 class _PriceListTabState extends State<_PriceListTab> {
   bool _saving = false;
 
+  /// Pins an item to the top of its category (persists via Catalog.moveToTop).
+  Future<void> _moveToTop(PriceItem item) async {
+    if (_saving) return;
+    setState(() => _saving = true);
+    try {
+      await Catalog.moveToTop(item.id);
+      if (!mounted) return;
+      setState(() => _saving = false);
+      widget.onSnack('${item.nameBn} উপরে তোলা হয়েছে');
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _saving = false);
+      widget.onSnack(AdminService.messageFor(e));
+    }
+  }
+
   Future<void> _editPrice(PriceItem item) async {
     final washCtrl = TextEditingController(text: '${item.washPrice}');
     final dryCtrl = TextEditingController(text: '${item.dryPrice}');
@@ -318,9 +334,15 @@ class _PriceListTabState extends State<_PriceListTab> {
                             ),
                           ),
                           // English numerals — official price list typography
-                          SizedBox(width: 46, child: Text('৳${item.washPrice}', textAlign: TextAlign.right, style: const TextStyle(fontSize: 13, color: AppColors.blue, fontWeight: FontWeight.w900))),
-                          SizedBox(width: 56, child: Text('৳${item.dryPrice}', textAlign: TextAlign.right, style: const TextStyle(fontSize: 13, color: AppColors.teal, fontWeight: FontWeight.w900))),
-                          const SizedBox(width: 6),
+                          SizedBox(width: 44, child: Text('৳${item.washPrice}', textAlign: TextAlign.right, style: const TextStyle(fontSize: 12.5, color: AppColors.blue, fontWeight: FontWeight.w900))),
+                          SizedBox(width: 52, child: Text('৳${item.dryPrice}', textAlign: TextAlign.right, style: const TextStyle(fontSize: 12.5, color: AppColors.teal, fontWeight: FontWeight.w900))),
+                          // Pin this item to the top of its category.
+                          IconButton(
+                            tooltip: 'উপরে তুলুন',
+                            visualDensity: VisualDensity.compact,
+                            icon: const Icon(Icons.vertical_align_top_rounded, size: 18, color: AppColors.blue),
+                            onPressed: _saving ? null : () => _moveToTop(item),
+                          ),
                           const Icon(Icons.edit_rounded, size: 14, color: AppColors.muted),
                         ],
                       ),
