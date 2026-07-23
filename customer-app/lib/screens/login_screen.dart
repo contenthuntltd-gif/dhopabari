@@ -4,17 +4,17 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../theme/app_theme.dart';
 import '../widgets/fade_slide_in.dart';
 import '../widgets/app_page_route.dart';
-import '../widgets/google_icon.dart';
 import '../widgets/app_logo.dart';
 import '../widgets/support_fab.dart';
 import '../services/language.dart';
 import '../services/auth_service.dart';
-import '../services/google_auth_service.dart';
 import 'register_screen.dart';
-import 'admin_login_screen.dart';
-import 'rider_login_screen.dart';
 import 'root_shell.dart';
 
+/// Customer login — phone number only (no password). The shop chose the
+/// passwordless model: entering a number and tapping Login signs the device
+/// in to that account (the `phone-login` Edge Function finds/creates it).
+/// Admin and rider sign in from their own URLs (/admin, /rider).
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -25,13 +25,9 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStateMixin {
   final _phoneController = TextEditingController();
   final _phoneFocus = FocusNode();
-  final _passwordController = TextEditingController();
-  final _passwordFocus = FocusNode();
   bool _loading = false;
   bool _success = false;
-  bool _passwordVisible = false;
   String? _phoneError;
-  String? _passwordError;
   late final AnimationController _bubbleController;
 
   bool get _phoneValid => _phoneController.text.trim().replaceAll(RegExp(r'\D'), '').length >= 10;
@@ -48,32 +44,26 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     _bubbleController.dispose();
     _phoneController.dispose();
     _phoneFocus.dispose();
-    _passwordController.dispose();
-    _passwordFocus.dispose();
     super.dispose();
   }
 
   bool _validate() {
     setState(() {
       _phoneError = _phoneValid ? null : AppLanguage.tr('সঠিক মোবাইল নম্বর দিন (১০-১১ ডিজিট)');
-      _passwordError = _passwordController.text.trim().length < 6
-          ? AppLanguage.tr('পাসওয়ার্ড অন্তত ৬ অক্ষরের হতে হবে')
-          : null;
     });
-    return _phoneError == null && _passwordError == null;
+    return _phoneError == null;
   }
 
-  /// Signs in with phone number + password.
+  /// Signs in with phone number only (passwordless).
   Future<void> _handleLogin() async {
     if (_loading) return;
     FocusScope.of(context).unfocus();
     if (!_validate()) return;
 
     final phone = _phoneController.text.trim();
-    final password = _passwordController.text.trim();
     setState(() => _loading = true);
     try {
-      await AuthService.signInWithPassword(phone: phone, password: password);
+      await AuthService.loginWithPhone(phone: phone);
       await _onLoginSucceeded();
     } on AuthException catch (e) {
       if (!mounted) return;
@@ -83,33 +73,6 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
       if (!mounted) return;
       setState(() => _loading = false);
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLanguage.tr('লগইন ব্যর্থ হয়েছে। আবার চেষ্টা করুন।'))));
-    }
-  }
-
-  Future<void> _handleGoogleLogin() async {
-    if (_loading) return;
-    setState(() => _loading = true);
-    try {
-      final result = await AuthService.signInWithGoogle();
-      if (result == null) {
-        // user cancelled the Google account picker
-        if (!mounted) return;
-        setState(() => _loading = false);
-        return;
-      }
-      await _onLoginSucceeded();
-    } on GoogleAuthNotConfigured catch (e) {
-      if (!mounted) return;
-      setState(() => _loading = false);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
-    } on AuthException catch (e) {
-      if (!mounted) return;
-      setState(() => _loading = false);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
-    } catch (_) {
-      if (!mounted) return;
-      setState(() => _loading = false);
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Google লগইন ব্যর্থ হয়েছে। আবার চেষ্টা করুন।')));
     }
   }
 
@@ -128,23 +91,6 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     });
   }
 
-  void _openAccountTypeSheet() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (_) => _AccountTypeSheet(
-        onAdmin: () {
-          Navigator.pop(context);
-          Navigator.push(context, AppPageRoute(builder: (_) => const AdminLoginScreen()));
-        },
-        onRider: () {
-          Navigator.pop(context);
-          Navigator.push(context, AppPageRoute(builder: (_) => const RiderLoginScreen()));
-        },
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -155,7 +101,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
             child: SingleChildScrollView(
               child: Column(
                 children: [
-                  _Hero(bubbleController: _bubbleController, onMenu: _openAccountTypeSheet),
+                  _Hero(bubbleController: _bubbleController),
                   Padding(
                     padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
                     child: Column(
@@ -177,8 +123,8 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                                 const SizedBox(height: 6),
                                 Text(
                                   isEnglish
-                                      ? 'Log in to enjoy our premium laundry service.'
-                                      : 'লগইন করে আমাদের প্রিমিয়াম লন্ড্রি সেবা উপভোগ করুন।',
+                                      ? 'Enter your phone number to continue.'
+                                      : 'চালিয়ে যেতে আপনার মোবাইল নম্বর দিন।',
                                   textAlign: TextAlign.center,
                                   style: AppText.bodyMuted,
                                 ),
@@ -198,8 +144,8 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                                   controller: _phoneController,
                                   focusNode: _phoneFocus,
                                   keyboardType: TextInputType.phone,
-                                  textInputAction: TextInputAction.next,
-                                  onSubmitted: (_) => FocusScope.of(context).requestFocus(_passwordFocus),
+                                  textInputAction: TextInputAction.done,
+                                  onSubmitted: (_) => _handleLogin(),
                                   onChanged: (_) {
                                     if (_phoneError != null) setState(() => _phoneError = null);
                                   },
@@ -232,31 +178,6 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                                   ),
                                 ),
                               ),
-                              const SizedBox(height: 14),
-                              // ─── Password field ───
-                              TextField(
-                                controller: _passwordController,
-                                focusNode: _passwordFocus,
-                                obscureText: !_passwordVisible,
-                                textInputAction: TextInputAction.done,
-                                onSubmitted: (_) => _handleLogin(),
-                                onChanged: (_) {
-                                  if (_passwordError != null) setState(() => _passwordError = null);
-                                },
-                                decoration: InputDecoration(
-                                  hintText: AppLanguage.tr('পাসওয়ার্ড দিন'),
-                                  prefixIcon: const Icon(Icons.lock_outline_rounded, size: 20, color: AppColors.muted),
-                                  errorText: _passwordError,
-                                  suffixIcon: IconButton(
-                                    icon: Icon(
-                                      _passwordVisible ? Icons.visibility_off_rounded : Icons.visibility_rounded,
-                                      size: 20,
-                                      color: AppColors.muted,
-                                    ),
-                                    onPressed: () => setState(() => _passwordVisible = !_passwordVisible),
-                                  ),
-                                ),
-                              ),
                               const SizedBox(height: 18),
                               ValueListenableBuilder<bool>(
                                 valueListenable: AppLanguage.isEnglish,
@@ -277,9 +198,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                           const Expanded(child: Divider(color: AppColors.line)),
                         ]),
                         const SizedBox(height: 16),
-                        _GoogleButton(onPressed: _handleGoogleLogin),
-                        const SizedBox(height: 16),
-                        // ─── Sign up with phone (prominent) ───
+                        // ─── Sign up with phone (collects name + address) ───
                         SizedBox(
                           width: double.infinity,
                           height: 56,
@@ -305,11 +224,11 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.sm)),
                               ),
                               onPressed: () => Navigator.push(context, AppPageRoute(builder: (_) => const RegisterScreen())),
-                              icon: const Icon(Icons.phone_android_rounded, size: 20),
+                              icon: const Icon(Icons.person_add_alt_1_rounded, size: 20),
                               label: ValueListenableBuilder<bool>(
                                 valueListenable: AppLanguage.isEnglish,
                                 builder: (context, isEnglish, _) => Text(
-                                  isEnglish ? 'Sign up with Phone' : 'ফোন নম্বর দিয়ে সাইন আপ',
+                                  isEnglish ? 'New here? Sign up' : 'নতুন? সাইন আপ করুন',
                                   style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 15),
                                 ),
                               ),
@@ -368,8 +287,7 @@ class _WaveEmojiState extends State<_WaveEmoji> with SingleTickerProviderStateMi
 }
 
 /// Full-bleed brief "logged in" confirmation shown between the loading
-/// state resolving and the actual navigation, so success feels like a
-/// deliberate moment rather than an instant screen swap.
+/// state resolving and the actual navigation.
 class _SuccessOverlay extends StatelessWidget {
   const _SuccessOverlay();
 
@@ -406,9 +324,8 @@ class _SuccessOverlay extends StatelessWidget {
   }
 }
 
-/// The primary login CTA keeps its bespoke blue gradient (brand moment).
-/// While loading, it morphs into a compact circle around the spinner
-/// (a common premium-app pattern) instead of just swapping its label.
+/// The primary login CTA — bespoke blue gradient that morphs into a compact
+/// spinner circle while loading.
 class _GradientButton extends StatefulWidget {
   final bool loading;
   final bool success;
@@ -476,45 +393,9 @@ class _GradientButtonState extends State<_GradientButton> {
   }
 }
 
-class _GoogleButton extends StatelessWidget {
-  final VoidCallback onPressed;
-  const _GoogleButton({required this.onPressed});
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      height: 56,
-      child: OutlinedButton(
-        style: OutlinedButton.styleFrom(
-          side: const BorderSide(color: AppColors.line, width: 1.2),
-          foregroundColor: AppColors.ink,
-          backgroundColor: Colors.white,
-        ),
-        onPressed: onPressed,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const GoogleIcon(size: 19),
-            const SizedBox(width: 10),
-            ValueListenableBuilder<bool>(
-              valueListenable: AppLanguage.isEnglish,
-              builder: (context, isEnglish, _) => Text(
-                isEnglish ? 'Continue with Google' : 'Google দিয়ে চালিয়ে যান',
-                style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14.5),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 class _Hero extends StatelessWidget {
   final AnimationController bubbleController;
-  final VoidCallback onMenu;
-  const _Hero({required this.bubbleController, required this.onMenu});
+  const _Hero({required this.bubbleController});
 
   @override
   Widget build(BuildContext context) {
@@ -535,11 +416,6 @@ class _Hero extends StatelessWidget {
           child: Stack(
             children: [
               ..._bubbles(),
-              Positioned(
-                top: 20,
-                left: 20,
-                child: _TouchTarget(child: _RoundIconButton(icon: Icons.more_vert_rounded, tooltip: 'লগইন অপশন দেখুন', onTap: onMenu)),
-              ),
               Positioned(
                 top: 20,
                 right: 20,
@@ -605,44 +481,6 @@ class _Hero extends StatelessWidget {
   }
 }
 
-/// Expands the tappable region to a 44x44 minimum touch target without
-/// changing the visible size of the child (accessibility best practice).
-class _TouchTarget extends StatelessWidget {
-  final Widget child;
-  const _TouchTarget({required this.child});
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(width: 44, height: 44, child: Center(child: child));
-  }
-}
-
-class _RoundIconButton extends StatelessWidget {
-  final IconData icon;
-  final String tooltip;
-  final VoidCallback onTap;
-  const _RoundIconButton({required this.icon, required this.tooltip, required this.onTap});
-  @override
-  Widget build(BuildContext context) {
-    return Tooltip(
-      message: tooltip,
-      child: Material(
-        color: Colors.white,
-        shape: const CircleBorder(),
-        elevation: 0,
-        shadowColor: Colors.transparent,
-        child: Container(
-          decoration: BoxDecoration(shape: BoxShape.circle, boxShadow: [BoxShadow(color: AppColors.blueDeep.withValues(alpha: 0.14), blurRadius: 8, offset: const Offset(0, 3))]),
-          child: InkWell(
-            customBorder: const CircleBorder(),
-            onTap: onTap,
-            child: Padding(padding: const EdgeInsets.all(7), child: Icon(icon, color: AppColors.blue, size: 20)),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 class _LangPill extends StatelessWidget {
   const _LangPill();
   @override
@@ -673,98 +511,6 @@ class _LangPill extends StatelessWidget {
                 ),
               ),
             ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _AccountTypeSheet extends StatelessWidget {
-  final VoidCallback onAdmin;
-  final VoidCallback onRider;
-  const _AccountTypeSheet({required this.onAdmin, required this.onRider});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.only(topLeft: Radius.circular(24), topRight: Radius.circular(24))),
-      padding: EdgeInsets.fromLTRB(22, 12, 22, MediaQuery.of(context).padding.bottom + 20),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.line, borderRadius: BorderRadius.circular(2))),
-          const SizedBox(height: 16),
-          const Text('লগইন করুন', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w900, color: AppColors.ink)),
-          const SizedBox(height: 4),
-          const Text('আপনার অ্যাকাউন্ট টাইপ নির্বাচন করুন', style: TextStyle(fontSize: 13, color: AppColors.muted, fontWeight: FontWeight.w600)),
-          const SizedBox(height: 18),
-          _sheetOption(
-            bg: AppColors.amberSoft,
-            iconBg: AppColors.amber,
-            emoji: '👤',
-            title: 'Customer',
-            titleColor: const Color(0xFFB5760A),
-            subtitle: 'আপনি এখন এখানেই আছেন',
-            onTap: () => Navigator.pop(context),
-            trailing: const Icon(Icons.check_circle_rounded, color: AppColors.amber, size: 22),
-          ),
-          const SizedBox(height: 12),
-          _sheetOption(bg: AppColors.tealSoft, iconBg: AppColors.teal, emoji: '🏍️', title: 'Rider', titleColor: AppColors.teal, subtitle: 'রাইডার অ্যাপে লগইন করুন', onTap: onRider),
-          const SizedBox(height: 12),
-          _sheetOption(bg: AppColors.blueSoft, iconBg: AppColors.blue, emoji: '🛠️', title: 'Admin', titleColor: AppColors.blue, subtitle: 'অ্যাডমিন প্যানেলে লগইন করুন', onTap: onAdmin),
-          const SizedBox(height: 14),
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton(
-              style: OutlinedButton.styleFrom(side: const BorderSide(color: AppColors.line), foregroundColor: AppColors.ink),
-              onPressed: () => Navigator.pop(context),
-              child: const Text('বাতিল করুন'),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _sheetOption({
-    required Color bg,
-    required Color iconBg,
-    required String emoji,
-    required String title,
-    required Color titleColor,
-    required String subtitle,
-    required VoidCallback onTap,
-    Widget? trailing,
-  }) {
-    return Material(
-      color: bg,
-      borderRadius: BorderRadius.circular(16),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(14),
-          child: Row(
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(color: iconBg, borderRadius: BorderRadius.circular(14)),
-                child: Center(child: Text(emoji, style: const TextStyle(fontSize: 20))),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(title, style: TextStyle(fontSize: 15.5, fontWeight: FontWeight.w900, color: titleColor)),
-                    Text(subtitle, style: const TextStyle(fontSize: 11.5, color: AppColors.muted, fontWeight: FontWeight.w600)),
-                  ],
-                ),
-              ),
-              trailing ?? Icon(Icons.chevron_right_rounded, color: titleColor, size: 26),
-            ],
           ),
         ),
       ),

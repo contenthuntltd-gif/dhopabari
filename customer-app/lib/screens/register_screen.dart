@@ -18,25 +18,18 @@ class RegisterScreen extends StatefulWidget {
 class _RegisterScreenState extends State<RegisterScreen> {
   final _name = TextEditingController();
   final _phone = TextEditingController();
-  final _password = TextEditingController();
-  final _confirmPassword = TextEditingController();
   final _localAddress = TextEditingController();
   final _whatsapp = TextEditingController();
   final _areaDisplay = TextEditingController();
 
   final _nameFocus = FocusNode();
   final _phoneFocus = FocusNode();
-  final _passwordFocus = FocusNode();
-  final _confirmPasswordFocus = FocusNode();
   final _localAddressFocus = FocusNode();
   final _whatsappFocus = FocusNode();
 
   bool _loading = false;
-  bool _passwordVisible = false;
   String? _nameError;
   String? _phoneError;
-  String? _passwordError;
-  String? _confirmPasswordError;
   String? _areaError;
   String? _localAddressError;
   String? _whatsappError;
@@ -48,15 +41,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
     setState(() {
       _nameError = _name.text.trim().isEmpty ? AppLanguage.tr('পূর্ণ নাম দিন') : null;
       _phoneError = digits.length < 10 ? AppLanguage.tr('সঠিক মোবাইল নম্বর দিন (১০-১১ ডিজিট)') : null;
-      _passwordError = _password.text.trim().length < 6 ? AppLanguage.tr('পাসওয়ার্ড অন্তত ৬ অক্ষরের হতে হবে') : null;
-      _confirmPasswordError = _confirmPassword.text.trim() != _password.text.trim()
-          ? AppLanguage.tr('পাসওয়ার্ড মিলছে না')
-          : null;
       _areaError = _selectedArea == null ? AppLanguage.tr('এলাকা নির্বাচন করুন') : null;
       _localAddressError = _localAddress.text.trim().isEmpty ? AppLanguage.tr('বাসা/বিল্ডিং/রোড এর ঠিকানা দিন') : null;
       _whatsappError = whatsappDigits.isNotEmpty && whatsappDigits.length < 10 ? AppLanguage.tr('সঠিক হোয়াটসঅ্যাপ নাম্বার দিন') : null;
     });
-    return _nameError == null && _phoneError == null && _passwordError == null && _confirmPasswordError == null && _areaError == null && _localAddressError == null && _whatsappError == null;
+    return _nameError == null && _phoneError == null && _areaError == null && _localAddressError == null && _whatsappError == null;
   }
 
   Future<void> _submit() async {
@@ -66,20 +55,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     final phone = _phone.text.trim();
     final name = _name.text.trim();
-    final password = _password.text.trim();
     final area = _selectedArea!;
     final localAddress = _localAddress.text.trim();
     final whatsapp = _whatsapp.text.trim().isEmpty ? null : _whatsapp.text.trim();
 
     setState(() => _loading = true);
     try {
-      await AuthService.signUpWithPassword(
+      // Passwordless: create (or reuse) the account for this phone and sign in.
+      await AuthService.loginWithPhone(
         phone: phone,
-        password: password,
         name: name,
         area: area,
         localAddress: localAddress,
-        whatsappNumber: whatsapp,
+        whatsapp: whatsapp,
       );
       if (!mounted) return;
       Navigator.of(context).pushAndRemoveUntil(
@@ -119,15 +107,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
   void dispose() {
     _name.dispose();
     _phone.dispose();
-    _password.dispose();
-    _confirmPassword.dispose();
     _localAddress.dispose();
     _whatsapp.dispose();
     _areaDisplay.dispose();
     _nameFocus.dispose();
     _phoneFocus.dispose();
-    _passwordFocus.dispose();
-    _confirmPasswordFocus.dispose();
     _localAddressFocus.dispose();
     _whatsappFocus.dispose();
     super.dispose();
@@ -204,7 +188,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         focusNode: _phoneFocus,
                         keyboardType: TextInputType.phone,
                         textInputAction: TextInputAction.next,
-                        onSubmitted: (_) => FocusScope.of(context).requestFocus(_passwordFocus),
+                        onSubmitted: (_) => _pickArea(),
                         onChanged: (_) {
                           if (_phoneError != null) setState(() => _phoneError = null);
                         },
@@ -212,48 +196,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           hintText: AppLanguage.tr('মোবাইল নাম্বার দিন'),
                           prefixIcon: const Icon(Icons.phone_android_rounded, size: 20, color: AppColors.muted),
                           errorText: _phoneError,
-                        ),
-                      ),
-                      const SizedBox(height: 14),
-                      // ─── Password ───
-                      TextField(
-                        controller: _password,
-                        focusNode: _passwordFocus,
-                        obscureText: !_passwordVisible,
-                        textInputAction: TextInputAction.next,
-                        onSubmitted: (_) => FocusScope.of(context).requestFocus(_confirmPasswordFocus),
-                        onChanged: (_) {
-                          if (_passwordError != null) setState(() => _passwordError = null);
-                        },
-                        decoration: InputDecoration(
-                          hintText: AppLanguage.tr('পাসওয়ার্ড দিন'),
-                          prefixIcon: const Icon(Icons.lock_outline_rounded, size: 20, color: AppColors.muted),
-                          errorText: _passwordError,
-                          suffixIcon: IconButton(
-                            icon: Icon(
-                              _passwordVisible ? Icons.visibility_off_rounded : Icons.visibility_rounded,
-                              size: 20,
-                              color: AppColors.muted,
-                            ),
-                            onPressed: () => setState(() => _passwordVisible = !_passwordVisible),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 14),
-                      // ─── Confirm Password ───
-                      TextField(
-                        controller: _confirmPassword,
-                        focusNode: _confirmPasswordFocus,
-                        obscureText: !_passwordVisible,
-                        textInputAction: TextInputAction.next,
-                        onSubmitted: (_) => _pickArea(),
-                        onChanged: (_) {
-                          if (_confirmPasswordError != null) setState(() => _confirmPasswordError = null);
-                        },
-                        decoration: InputDecoration(
-                          hintText: AppLanguage.tr('পাসওয়ার্ড আবার দিন'),
-                          prefixIcon: const Icon(Icons.lock_outline_rounded, size: 20, color: AppColors.muted),
-                          errorText: _confirmPasswordError,
                         ),
                       ),
                       const SizedBox(height: AppSpace.sm),

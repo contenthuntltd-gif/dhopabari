@@ -11,7 +11,6 @@ import '../services/language.dart';
 import '../data/business_info.dart';
 import 'login_screen.dart';
 import 'orders_screen.dart';
-import 'root_shell.dart';
 
 class ProfileScreen extends StatefulWidget {
   final void Function(int tabIndex)? onSwitchTab;
@@ -63,10 +62,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
     if (confirmed == true && mounted) {
+      // The signedOut auth listener (main.dart) navigates to a fresh guest
+      // shell. Doing it here too would race that and blank the navigator.
       await AuthService.logout();
-      if (!mounted) return;
-      // Back to a fresh guest shell (browsing + guest ordering keep working).
-      Navigator.of(context).pushAndRemoveUntil(AppPageRoute(builder: (_) => const RootShell()), (r) => false);
     }
   }
 
@@ -106,10 +104,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
     if (confirmed == true && mounted) {
+      // The signedOut auth listener (main.dart) routes back to the guest shell.
       await AuthService.logout();
-      if (!mounted) return;
-      // Back to a fresh guest shell (browsing + guest ordering keep working).
-      Navigator.of(context).pushAndRemoveUntil(AppPageRoute(builder: (_) => const RootShell()), (r) => false);
     }
   }
 

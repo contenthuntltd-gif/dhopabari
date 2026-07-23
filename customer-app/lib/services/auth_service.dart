@@ -1,5 +1,8 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'google_auth_service.dart';
+import 'supabase_config.dart';
 import '../data/mock_data.dart';
 
 /// The result of a completed sign-in (Google or verified phone OTP).
@@ -175,6 +178,67 @@ class AuthService {
       password: password,
     );
     return _loadProfile();
+  }
+
+  // ----- Passwordless phone login (shop's chosen model) -----
+
+  /// Logs a customer in with ONLY their phone number — no password. The
+  /// public `phone-login` Edge Function finds (or creates) the account for
+  /// this number, sets a fresh password server-side and returns it; we then
+  /// establish the session with it. Optional [name]/[area]/[localAddress]/
+  /// [whatsapp] (from the sign-up screen) seed a first-time account.
+  ///
+  /// Called as a CORS "simple request" (text/plain, no custom headers) so no
+  /// preflight fires — see [AdminService.guestOrder] for the why.
+  static Future<AuthResult> loginWithPhone({
+    required String phone,
+    String? name,
+    String? area,
+    String? localAddress,
+    String? whatsapp,
+  }) async {
+    final uri = Uri.parse('${SupabaseConfig.url}/functions/v1/phone-login');
+    final payload = jsonEncode({
+      'phone': phone,
+      if (name != null) 'name': name,
+      if (area != null) 'area': area,
+      if (localAddress != null) 'local_address': localAddress,
+      if (whatsapp != null) 'whatsapp_number': whatsapp,
+    });
+
+    final http.Response res;
+    try {
+      res = await http
+          .post(
+            uri,
+            headers: const {'Content-Type': 'text/plain;charset=UTF-8'},
+            body: payload,
+          )
+          .timeout(const Duration(seconds: 30));
+    } catch (_) {
+      throw const AuthException('সার্ভারে সংযোগ করা যায়নি — ইন্টারনেট দেখে আবার চেষ্টা করুন');
+    }
+
+    dynamic data;
+    try {
+      data = jsonDecode(utf8.decode(res.bodyBytes));
+    } catch (_) {
+      data = null;
+    }
+
+    if (res.statusCode < 200 || res.statusCode >= 300) {
+      final msg = (data is Map && data['error'] is String)
+          ? data['error'] as String
+          : 'লগইন করা যায়নি — আবার চেষ্টা করুন';
+      throw AuthException(msg);
+    }
+
+    final ph = data is Map ? data['phone'] as String? : null;
+    final pw = data is Map ? data['password'] as String? : null;
+    if (ph == null || pw == null) {
+      throw const AuthException('লগইন করা যায়নি — আবার চেষ্টা করুন');
+    }
+    return signInWithPassword(phone: ph, password: pw);
   }
 
   // ----- Profile -----

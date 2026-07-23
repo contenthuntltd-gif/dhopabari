@@ -5,7 +5,6 @@ import 'package:flutter/rendering.dart';
 import '../theme/app_theme.dart';
 import '../data/receipt_data.dart';
 import '../widgets/receipt_view.dart';
-import '../widgets/receipt_pos_view.dart';
 import '../widgets/app_button.dart';
 import '../services/receipt_pdf_service.dart';
 
@@ -59,10 +58,10 @@ class _ReceiptScreenState extends State<ReceiptScreen> {
   Future<({Uint8List png, int w, int h})?> _capturePos() async {
     final boundary = _posKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
     if (boundary == null) return null;
-    // High pixelRatio → a crisp, high-resolution receipt image (≈1500px wide
-    // from the 300px logical width) so the printed/downloaded invoice is sharp
+    // High pixelRatio → a crisp, high-resolution invoice image (≈1200px wide
+    // from the 400px logical card) so the printed/downloaded invoice is sharp
     // rather than soft/pixelated.
-    final image = await boundary.toImage(pixelRatio: 5.0);
+    final image = await boundary.toImage(pixelRatio: 3.0);
     final data = await image.toByteData(format: ui.ImageByteFormat.png);
     if (data == null) return null;
     return (png: data.buffer.asUint8List(), w: image.width, h: image.height);
@@ -126,14 +125,21 @@ class _ReceiptScreenState extends State<ReceiptScreen> {
                 _actionBar(),
               ],
             ),
-            // Off-screen 72mm receipt (painted but shifted out of view) that
-            // the print/share actions capture to a Bangla-perfect image.
+            // Off-screen copy of the full receipt CARD (painted but shifted
+            // out of view) that the print/share actions capture to a
+            // Bangla-perfect, high-resolution image — the downloaded invoice
+            // looks exactly like the on-screen card.
             Positioned(
               left: -3000,
               top: 0,
               child: RepaintBoundary(
                 key: _posKey,
-                child: ReceiptPosView(receipt: widget.receipt),
+                child: Container(
+                  width: 400,
+                  color: Colors.white,
+                  padding: const EdgeInsets.all(12),
+                  child: ReceiptView(receipt: widget.receipt),
+                ),
               ),
             ),
           ],
