@@ -9,6 +9,7 @@ import '../widgets/support_fab.dart';
 import '../services/language.dart';
 import '../services/auth_service.dart';
 import 'register_screen.dart';
+import 'rider_login_screen.dart';
 import 'root_shell.dart';
 
 /// Customer login — phone number only (no password). The shop chose the
@@ -101,7 +102,10 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
             child: SingleChildScrollView(
               child: Column(
                 children: [
-                  _Hero(bubbleController: _bubbleController),
+                  _Hero(
+                    bubbleController: _bubbleController,
+                    onRider: () => Navigator.push(context, AppPageRoute(builder: (_) => const RiderLoginScreen())),
+                  ),
                   Padding(
                     padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
                     child: Column(
@@ -395,7 +399,8 @@ class _GradientButtonState extends State<_GradientButton> {
 
 class _Hero extends StatelessWidget {
   final AnimationController bubbleController;
-  const _Hero({required this.bubbleController});
+  final VoidCallback onRider;
+  const _Hero({required this.bubbleController, required this.onRider});
 
   @override
   Widget build(BuildContext context) {
@@ -416,6 +421,18 @@ class _Hero extends StatelessWidget {
           child: Stack(
             children: [
               ..._bubbles(),
+              // Rider-only access (admins sign in via the /admin URL).
+              Positioned(
+                top: 20,
+                left: 20,
+                child: _TouchTarget(
+                  child: _RoundIconButton(
+                    icon: Icons.two_wheeler_rounded,
+                    tooltip: 'রাইডার লগইন',
+                    onTap: onRider,
+                  ),
+                ),
+              ),
               Positioned(
                 top: 20,
                 right: 20,
@@ -474,6 +491,44 @@ class _Hero extends StatelessWidget {
             shape: BoxShape.circle,
             color: Colors.white.withValues(alpha: 0.18),
             border: Border.all(color: Colors.white.withValues(alpha: 0.35)),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Expands the tappable region to a 44x44 minimum touch target without
+/// changing the visible size of the child (accessibility best practice).
+class _TouchTarget extends StatelessWidget {
+  final Widget child;
+  const _TouchTarget({required this.child});
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(width: 44, height: 44, child: Center(child: child));
+  }
+}
+
+class _RoundIconButton extends StatelessWidget {
+  final IconData icon;
+  final String tooltip;
+  final VoidCallback onTap;
+  const _RoundIconButton({required this.icon, required this.tooltip, required this.onTap});
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: tooltip,
+      child: Material(
+        color: Colors.white,
+        shape: const CircleBorder(),
+        elevation: 0,
+        shadowColor: Colors.transparent,
+        child: Container(
+          decoration: BoxDecoration(shape: BoxShape.circle, boxShadow: [BoxShadow(color: AppColors.blueDeep.withValues(alpha: 0.14), blurRadius: 8, offset: const Offset(0, 3))]),
+          child: InkWell(
+            customBorder: const CircleBorder(),
+            onTap: onTap,
+            child: Padding(padding: const EdgeInsets.all(7), child: Icon(icon, color: AppColors.blue, size: 20)),
           ),
         ),
       ),
