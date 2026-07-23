@@ -111,19 +111,7 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Material(
-                  color: Colors.white.withValues(alpha: 0.08),
-                  shape: const CircleBorder(),
-                  child: InkWell(
-                    customBorder: const CircleBorder(),
-                    onTap: () => Navigator.pop(context),
-                    child: const Padding(padding: EdgeInsets.all(8), child: Icon(Icons.arrow_back_rounded, color: Colors.white, size: 20)),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 12),
               FadeSlideIn(
                 child: Column(
                   children: [

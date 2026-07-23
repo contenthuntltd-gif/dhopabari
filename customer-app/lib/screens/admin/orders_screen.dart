@@ -29,6 +29,41 @@ class _OrdersScreenState extends State<OrdersScreen> {
   bool _loading = true;
   Object? _error;
 
+  // Multi-select for bulk delete → recycle bin.
+  bool _selectMode = false;
+  final Set<String> _selected = {};
+
+  Future<void> _deleteSelected() async {
+    if (_selected.isEmpty) return;
+    final count = _selected.length;
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.lg)),
+        title: const Text('অর্ডার ডিলিট করবেন?'),
+        content: Text('$count টি অর্ডার রিসাইকেল বিনে যাবে। সেখান থেকে আবার ফিরিয়ে আনা যাবে।', style: const TextStyle(fontSize: 13.5, height: 1.5)),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('বাতিল')),
+          ElevatedButton(style: ElevatedButton.styleFrom(backgroundColor: AppColors.danger), onPressed: () => Navigator.pop(context, true), child: const Text('ডিলিট')),
+        ],
+      ),
+    );
+    if (confirm != true) return;
+    try {
+      await AdminService.trashOrders(_selected.toList());
+      if (!mounted) return;
+      setState(() {
+        _selectMode = false;
+        _selected.clear();
+      });
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$count টি অর্ডার রিসাইকেল বিনে সরানো হয়েছে'), backgroundColor: AppColors.ink));
+      _load();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AdminService.messageFor(e))));
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -102,7 +137,24 @@ class _OrdersScreenState extends State<OrdersScreen> {
                   ),
                 ),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 8),
+              // Toggle multi-select mode (bulk delete → recycle bin).
+              SizedBox(
+                height: 48,
+                child: OutlinedButton(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: _selectMode ? AppColors.danger : AppColors.ink,
+                    side: BorderSide(color: _selectMode ? AppColors.danger : AppColors.line),
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                  ),
+                  onPressed: () => setState(() {
+                    _selectMode = !_selectMode;
+                    _selected.clear();
+                  }),
+                  child: Icon(_selectMode ? Icons.close_rounded : Icons.checklist_rounded, size: 20),
+                ),
+              ),
+              const SizedBox(width: 8),
               // Admin places an order: pick the customer, then their order form.
               SizedBox(
                 height: 48,
@@ -171,20 +223,46 @@ class _OrdersScreenState extends State<OrdersScreen> {
                   separatorBuilder: (_, _) => const SizedBox(height: 10),
                   itemBuilder: (context, i) {
                     final order = orders[i];
+                    final selected = _selected.contains(order.uuid);
                     return FadeSlideIn(
                       delayMs: i * 40,
                       child: PressableScale(
-                        onTap: () => Navigator.push(context, AppPageRoute(builder: (_) => OrderDetailScreen(order: order))).then((_) => _load()),
+                        onTap: () {
+                          if (_selectMode) {
+                            setState(() {
+                              if (selected) {
+                                _selected.remove(order.uuid);
+                              } else {
+                                _selected.add(order.uuid);
+                              }
+                            });
+                          } else {
+                            Navigator.push(context, AppPageRoute(builder: (_) => OrderDetailScreen(order: order))).then((_) => _load());
+                          }
+                        },
                         child: Container(
                           padding: const EdgeInsets.all(14),
-                          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(AppRadius.md), border: Border.all(color: AppColors.line), boxShadow: AppShadows.soft),
+                          decoration: BoxDecoration(
+                            color: selected ? AppColors.blueSoft.withValues(alpha: 0.5) : Colors.white,
+                            borderRadius: BorderRadius.circular(AppRadius.md),
+                            border: Border.all(color: selected ? AppColors.blue : AppColors.line, width: selected ? 1.5 : 1),
+                            boxShadow: AppShadows.soft,
+                          ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Text(order.id, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w900, color: AppColors.ink)),
+                                  Row(
+                                    children: [
+                                      if (_selectMode) ...[
+                                        Icon(selected ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded, size: 20, color: selected ? AppColors.blue : AppColors.muted),
+                                        const SizedBox(width: 8),
+                                      ],
+                                      Text(order.id, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w900, color: AppColors.ink)),
+                                    ],
+                                  ),
                                   StatusBadge(status: order.status, label: AdminMockData.orderStatusesBn[order.status]),
                                 ],
                               ),
@@ -217,6 +295,40 @@ class _OrdersScreenState extends State<OrdersScreen> {
                   ),
                 ),
         ),
+        // Bulk-action bar (select mode).
+        if (_selectMode)
+          Material(
+            elevation: 8,
+            child: Container(
+              padding: EdgeInsets.fromLTRB(16, 10, 16, 10 + MediaQuery.of(context).padding.bottom),
+              color: Colors.white,
+              child: Row(
+                children: [
+                  TextButton(
+                    onPressed: () => setState(() {
+                      if (_selected.length == orders.length) {
+                        _selected.clear();
+                      } else {
+                        _selected
+                          ..clear()
+                          ..addAll(orders.map((o) => o.uuid));
+                      }
+                    }),
+                    child: Text(_selected.length == orders.length && orders.isNotEmpty ? 'সব বাদ' : 'সব নির্বাচন'),
+                  ),
+                  const Spacer(),
+                  Text('${toBn(_selected.length)} টি নির্বাচিত', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: AppColors.ink)),
+                  const SizedBox(width: 12),
+                  ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(backgroundColor: AppColors.danger),
+                    onPressed: _selected.isEmpty ? null : _deleteSelected,
+                    icon: const Icon(Icons.delete_outline_rounded, size: 18),
+                    label: const Text('ডিলিট'),
+                  ),
+                ],
+              ),
+            ),
+          ),
       ],
     );
   }

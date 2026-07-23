@@ -12,6 +12,7 @@ import 'customers_screen.dart';
 import 'riders_screen.dart';
 import 'catalog_screen.dart';
 import 'settlement_screen.dart';
+import 'recycle_bin_screen.dart';
 import 'support_settings_screen.dart';
 import '../login_screen.dart';
 import '../../data/business_info.dart';
@@ -39,6 +40,7 @@ const _primaryNav = <_NavItem>[
 const _toolNav = <_NavItem>[
   _NavItem(Icons.sell_outlined, Icons.sell_rounded, 'মূল্য তালিকা'),
   _NavItem(Icons.account_balance_wallet_outlined, Icons.account_balance_wallet_rounded, 'ক্যাশ হিসাব'),
+  _NavItem(Icons.delete_outline_rounded, Icons.delete_rounded, 'রিসাইকেল বিন'),
   _NavItem(Icons.support_agent_outlined, Icons.support_agent_rounded, 'সাপোর্ট সেটিংস'),
 ];
 
@@ -95,6 +97,7 @@ class _AdminRootShellState extends State<AdminRootShell> {
     return switch (toolIndex) {
       0 => const CatalogScreen(),
       1 => const SettlementScreen(),
+      2 => const RecycleBinScreen(),
       _ => const SupportSettingsScreen(),
     };
   }

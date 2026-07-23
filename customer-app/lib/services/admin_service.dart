@@ -213,6 +213,7 @@ class AdminService {
     String? riderId,
     String? status,
     int limit = 200,
+    bool trashed = false,
   }) async {
     var query = _db.from('orders').select(
       '*, customer:customer_id(name, phone), rider:rider_id(name, phone)',
@@ -221,9 +222,11 @@ class AdminService {
     if (customerId != null) query = query.eq('customer_id', customerId);
     if (riderId != null) query = query.eq('rider_id', riderId);
     if (status != null) query = query.eq('status', status);
+    // Soft-deleted orders live in the recycle bin, not the normal lists.
+    query = trashed ? query.not('deleted_at', 'is', null) : query.isFilter('deleted_at', null);
 
     try {
-      final rows = await query.order('created_at', ascending: false).limit(limit);
+      final rows = await query.order(trashed ? 'deleted_at' : 'created_at', ascending: false).limit(limit);
       return (rows as List).map((r) => AdminOrder.fromRow(r)).toList();
     } on PostgrestException catch (e) {
       // 42P01: the orders table hasn't been created yet (migration 0002
@@ -232,6 +235,30 @@ class AdminService {
       if (e.code == '42P01') return const [];
       rethrow;
     }
+  }
+
+  // ----- Recycle bin (soft delete) -----
+
+  /// Moves orders to the recycle bin (soft delete) — they leave every normal
+  /// list but can be restored. Accepts one or many order UUIDs.
+  static Future<void> trashOrders(List<String> uuids) async {
+    if (uuids.isEmpty) return;
+    await _db
+        .from('orders')
+        .update({'deleted_at': DateTime.now().toUtc().toIso8601String()})
+        .inFilter('id', uuids);
+  }
+
+  /// Brings trashed orders back (clears deleted_at).
+  static Future<void> restoreOrders(List<String> uuids) async {
+    if (uuids.isEmpty) return;
+    await _db.from('orders').update({'deleted_at': null}).inFilter('id', uuids);
+  }
+
+  /// Permanently deletes orders from the database — cannot be undone.
+  static Future<void> deleteOrdersForever(List<String> uuids) async {
+    if (uuids.isEmpty) return;
+    await _db.from('orders').delete().inFilter('id', uuids);
   }
 
   /// Places an order. Omit [customerId] for a customer ordering for
