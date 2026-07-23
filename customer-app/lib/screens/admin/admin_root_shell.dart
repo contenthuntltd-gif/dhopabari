@@ -12,7 +12,6 @@ import 'customers_screen.dart';
 import 'riders_screen.dart';
 import 'catalog_screen.dart';
 import 'settlement_screen.dart';
-import 'memo_center_screen.dart';
 import 'support_settings_screen.dart';
 import '../login_screen.dart';
 import '../../data/business_info.dart';
@@ -40,7 +39,6 @@ const _primaryNav = <_NavItem>[
 const _toolNav = <_NavItem>[
   _NavItem(Icons.sell_outlined, Icons.sell_rounded, 'মূল্য তালিকা'),
   _NavItem(Icons.account_balance_wallet_outlined, Icons.account_balance_wallet_rounded, 'ক্যাশ হিসাব'),
-  _NavItem(Icons.description_outlined, Icons.description_rounded, 'মেমো সেন্টার'),
   _NavItem(Icons.support_agent_outlined, Icons.support_agent_rounded, 'সাপোর্ট সেটিংস'),
 ];
 
@@ -90,18 +88,26 @@ class _AdminRootShellState extends State<AdminRootShell> {
     }
   }
 
-  /// Opens a secondary tool as a full page.
-  void _openTool(int toolIndex) {
-    final page = switch (toolIndex) {
+  /// The embedded tool screen for a tool index (0-based within [_toolNav]).
+  /// Tools bring their own app bar, so on desktop they render straight into
+  /// the content area beside the sidebar — no full-page takeover.
+  Widget _toolScreenFor(int toolIndex) {
+    return switch (toolIndex) {
       0 => const CatalogScreen(),
       1 => const SettlementScreen(),
-      2 => const MemoCenterScreen(),
       _ => const SupportSettingsScreen(),
     };
-    Navigator.push(context, AppPageRoute(builder: (_) => page));
   }
 
-  String get _title => _primaryNav[_index].label;
+  /// Mobile only: opens a tool as a full page (bottom-nav layout has no room
+  /// to embed it).
+  void _openTool(int toolIndex) {
+    Navigator.push(context, AppPageRoute(builder: (_) => _toolScreenFor(toolIndex)));
+  }
+
+  String get _title => _index < _primaryNav.length
+      ? _primaryNav[_index].label
+      : _toolNav[_index - _primaryNav.length].label;
 
   Future<void> _logout() async {
     await AuthService.logout();
@@ -127,6 +133,7 @@ class _AdminRootShellState extends State<AdminRootShell> {
   // ── Desktop: sidebar + top bar + content ──────────────────
 
   Widget _buildDesktop(BuildContext context) {
+    final isTool = _index >= _primaryNav.length;
     return Scaffold(
       backgroundColor: AppColors.paper,
       body: Row(
@@ -135,22 +142,26 @@ class _AdminRootShellState extends State<AdminRootShell> {
           _Sidebar(
             selectedIndex: _index,
             onSelect: (i) => setState(() => _index = i),
-            onOpenTool: _openTool,
             onLogout: _logout,
           ),
           Expanded(
-            child: Column(
-              children: [
-                _TopBar(title: _title),
-                Expanded(
-                  // Screens keep their own state across tab switches.
-                  child: IndexedStack(
-                    index: _index,
-                    children: List.generate(_primaryNav.length, _screenFor),
+            // A tool renders on its own (it carries its own app bar); the
+            // everyday screens sit under the shell's top bar. Either way the
+            // sidebar stays put — tools no longer take over the whole screen.
+            child: isTool
+                ? _toolScreenFor(_index - _primaryNav.length)
+                : Column(
+                    children: [
+                      _TopBar(title: _title),
+                      Expanded(
+                        // Screens keep their own state across tab switches.
+                        child: IndexedStack(
+                          index: _index,
+                          children: List.generate(_primaryNav.length, _screenFor),
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              ],
-            ),
           ),
         ],
       ),
@@ -200,9 +211,8 @@ class _AdminRootShellState extends State<AdminRootShell> {
 class _Sidebar extends StatelessWidget {
   final int selectedIndex;
   final ValueChanged<int> onSelect;
-  final ValueChanged<int> onOpenTool;
   final VoidCallback onLogout;
-  const _Sidebar({required this.selectedIndex, required this.onSelect, required this.onOpenTool, required this.onLogout});
+  const _Sidebar({required this.selectedIndex, required this.onSelect, required this.onLogout});
 
   static const _navy = Color(0xFF0B1F3A);
   static const _navyLight = Color(0xFF13294D);
@@ -244,7 +254,12 @@ class _Sidebar extends StatelessWidget {
                 const SizedBox(height: 14),
                 _label('টুলস'),
                 for (int i = 0; i < _toolNav.length; i++)
-                  _navTile(i, _toolNav[i], active: false, onTap: () => onOpenTool(i)),
+                  _navTile(
+                    _primaryNav.length + i,
+                    _toolNav[i],
+                    active: (_primaryNav.length + i) == selectedIndex,
+                    onTap: () => onSelect(_primaryNav.length + i),
+                  ),
               ],
             ),
           ),

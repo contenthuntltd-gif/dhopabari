@@ -233,6 +233,75 @@ class _PriceListTabState extends State<_PriceListTab> {
     }
   }
 
+  /// Adds a brand-new catalog item (name, category, wash + dry price).
+  Future<void> _addItem() async {
+    final nameCtrl = TextEditingController();
+    final nameBnCtrl = TextEditingController();
+    final washCtrl = TextEditingController();
+    final dryCtrl = TextEditingController();
+    String category = MockData.categories.first;
+
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setLocal) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.lg)),
+          title: const Text('নতুন আইটেম', style: AppText.h2),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                DropdownButtonFormField<String>(
+                  initialValue: category,
+                  decoration: const InputDecoration(labelText: 'ক্যাটাগরি', prefixIcon: Icon(Icons.category_outlined, size: 20)),
+                  items: [
+                    for (final c in MockData.categories)
+                      DropdownMenuItem(value: c, child: Text(MockData.categoriesBn[c] ?? c)),
+                  ],
+                  onChanged: (v) => setLocal(() => category = v ?? category),
+                ),
+                const SizedBox(height: 10),
+                TextField(controller: nameBnCtrl, decoration: const InputDecoration(hintText: 'নাম (বাংলা) — যেমন শার্ট', prefixIcon: Icon(Icons.label_outline_rounded, size: 20))),
+                const SizedBox(height: 10),
+                TextField(controller: nameCtrl, decoration: const InputDecoration(hintText: 'নাম (English) — e.g. Shirt', prefixIcon: Icon(Icons.label_outline_rounded, size: 20))),
+                const SizedBox(height: 10),
+                TextField(controller: washCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(hintText: 'ওয়াশ মূল্য (৳)', prefixIcon: Icon(Icons.local_laundry_service_outlined, size: 20))),
+                const SizedBox(height: 10),
+                TextField(controller: dryCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(hintText: 'ড্রাই ক্লিন মূল্য (৳)', prefixIcon: Icon(Icons.dry_cleaning_outlined, size: 20))),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('বাতিল')),
+            ElevatedButton(onPressed: () => Navigator.pop(context, true), child: const Text('যোগ করুন')),
+          ],
+        ),
+      ),
+    );
+    if (result != true || _saving) return;
+
+    final nameBn = nameBnCtrl.text.trim();
+    final name = nameCtrl.text.trim().isEmpty ? nameBn : nameCtrl.text.trim();
+    if (nameBn.isEmpty) {
+      widget.onSnack('আইটেমের নাম দিন');
+      return;
+    }
+    final wash = int.tryParse(washCtrl.text) ?? 0;
+    final dry = int.tryParse(dryCtrl.text) ?? wash;
+
+    setState(() => _saving = true);
+    try {
+      await Catalog.addItem(category: category, name: name, nameBn: nameBn, washPrice: wash, dryPrice: dry);
+      if (!mounted) return;
+      setState(() => _saving = false);
+      widget.onSnack('$nameBn যোগ হয়েছে — সব জায়গায় দেখা যাবে');
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _saving = false);
+      widget.onSnack(AdminService.messageFor(e));
+    }
+  }
+
   Future<void> _editPrice(PriceItem item) async {
     final washCtrl = TextEditingController(text: '${item.washPrice}');
     final dryCtrl = TextEditingController(text: '${item.dryPrice}');
@@ -283,6 +352,17 @@ class _PriceListTabState extends State<_PriceListTab> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
       children: [
+        // Add a brand-new item to the catalog.
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.blue, padding: const EdgeInsets.symmetric(vertical: 12)),
+            onPressed: _saving ? null : _addItem,
+            icon: const Icon(Icons.add_circle_outline_rounded, size: 18),
+            label: const Text('নতুন আইটেম যোগ করুন', style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w800)),
+          ),
+        ),
+        const SizedBox(height: 12),
         // column headers, price-list style
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),

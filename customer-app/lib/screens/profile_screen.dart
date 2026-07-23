@@ -193,7 +193,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     // Guests (no login) get a simple sign-in prompt here — since the home
     // screen no longer has a menu, Profile is the door to login (and from
     // the login screen's ⋮ menu, to the admin/rider panels).
-    if (!AuthService.isLoggedIn) {
+    // Staff (admin/rider) signed into the customer app are NOT customers —
+    // show them the guest prompt instead of leaking their identity/orders.
+    if (!AuthService.isCustomer) {
       return SafeArea(
         child: Center(
           child: Padding(

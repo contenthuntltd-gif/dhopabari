@@ -45,11 +45,12 @@ class _OrdersScreenState extends State<OrdersScreen> {
       _error = null;
     });
     try {
-      if (AuthService.isLoggedIn) {
+      if (AuthService.isCustomer) {
         final rows = await AdminService.orders(limit: 100);
         _orders = rows.map((o) => o.toMockOrder()).toList();
       } else {
-        // Guest: no order history yet.
+        // Guest, or a staff session (which would otherwise see EVERY order via
+        // staff RLS) — no customer order history to show here.
         _orders = const [];
       }
       if (mounted) setState(() => _loading = false);

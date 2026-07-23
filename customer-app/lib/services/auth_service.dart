@@ -58,6 +58,17 @@ class AuthService {
     }
   }
 
+  /// The signed-in user's role ('customer' | 'rider' | 'admin'), loaded with
+  /// the profile. Null when signed out or not yet loaded.
+  static String? currentRole;
+
+  /// True only for an actual CUSTOMER session. A staff member (admin/rider)
+  /// who is signed in must NOT be treated as a customer in the customer app —
+  /// otherwise the customer Profile shows their staff identity and the "My
+  /// Orders" tab (staff RLS) lists every order in the system.
+  static bool get isCustomer =>
+      isLoggedIn && currentRole != 'admin' && currentRole != 'rider';
+
   /// True if a session was restored (Supabase does this from disk on init).
   /// Loads the user's profile into [MockData] for the UI.
   static Future<bool> restoreSession() async {
@@ -78,6 +89,7 @@ class AuthService {
     await _supabase.auth.signOut();
     // Wipe the previous user's identity + addresses so nothing carries into
     // the next login.
+    currentRole = null;
     MockData.resetUser();
   }
 
@@ -277,6 +289,10 @@ class AuthService {
     final localAddress = (profile?['local_address'] as String?) ??
         (meta['local_address'] as String?) ??
         '';
+
+    // Remember the role so the customer app can avoid treating staff as a
+    // customer (see [isCustomer]).
+    currentRole = profile?['role'] as String?;
 
     // Load THIS user's identity, replacing whatever was there before.
     MockData.userName = name;

@@ -9,6 +9,7 @@ import '../../widgets/fade_slide_in.dart';
 import '../../widgets/state_views.dart';
 import '../../widgets/app_page_route.dart';
 import 'order_detail_screen.dart';
+import 'customers_screen.dart';
 
 class OrdersScreen extends StatefulWidget {
   final String initialFilter;
@@ -80,22 +81,44 @@ class _OrdersScreenState extends State<OrdersScreen> {
       children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-          child: TextField(
-            controller: _searchController,
-            onChanged: (v) => setState(() => _search = v),
-            decoration: InputDecoration(
-              hintText: 'অর্ডার নম্বর, নাম বা ফোন খুঁজুন',
-              prefixIcon: const Icon(Icons.search_rounded, size: 20, color: AppColors.muted),
-              suffixIcon: _search.isEmpty
-                  ? null
-                  : IconButton(
-                      icon: const Icon(Icons.close_rounded, size: 18),
-                      onPressed: () {
-                        _searchController.clear();
-                        setState(() => _search = '');
-                      },
-                    ),
-            ),
+          child: Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _searchController,
+                  onChanged: (v) => setState(() => _search = v),
+                  decoration: InputDecoration(
+                    hintText: 'অর্ডার নম্বর, নাম বা ফোন খুঁজুন',
+                    prefixIcon: const Icon(Icons.search_rounded, size: 20, color: AppColors.muted),
+                    suffixIcon: _search.isEmpty
+                        ? null
+                        : IconButton(
+                            icon: const Icon(Icons.close_rounded, size: 18),
+                            onPressed: () {
+                              _searchController.clear();
+                              setState(() => _search = '');
+                            },
+                          ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              // Admin places an order: pick the customer, then their order form.
+              SizedBox(
+                height: 48,
+                child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(backgroundColor: AppColors.blue, padding: const EdgeInsets.symmetric(horizontal: 14)),
+                  onPressed: () async {
+                    // Pick the customer to order for; their detail screen has
+                    // the "নতুন অর্ডার" form (creates the order under them).
+                    await Navigator.push(context, AppPageRoute(builder: (_) => const CustomersScreen()));
+                    if (mounted) _load();
+                  },
+                  icon: const Icon(Icons.add_rounded, size: 18),
+                  label: const Text('নতুন অর্ডার', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800)),
+                ),
+              ),
+            ],
           ),
         ),
         SizedBox(

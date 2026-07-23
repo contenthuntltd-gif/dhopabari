@@ -97,6 +97,41 @@ class Catalog {
     }
   }
 
+  /// Adds a brand-new item to the catalog (admin "New Item"). Persists to
+  /// `catalog_items`, dropping it at the end of its category, then reloads so
+  /// it appears everywhere (order screen, receipts, totals). Returns the new
+  /// item's id.
+  static Future<String> addItem({
+    required String category,
+    required String name,
+    required String nameBn,
+    required int washPrice,
+    required int dryPrice,
+  }) async {
+    final id = 'item_${DateTime.now().millisecondsSinceEpoch}';
+    final db = Supabase.instance.client;
+    // Place it just after the current last item in its category.
+    final rows = await db
+        .from('catalog_items')
+        .select('sort_order')
+        .eq('category', category)
+        .order('sort_order', ascending: false)
+        .limit(1);
+    final max = (rows as List).isNotEmpty ? ((rows.first['sort_order'] as num?)?.toInt() ?? 0) : 0;
+    await db.from('catalog_items').insert({
+      'id': id,
+      'category': category,
+      'name': name,
+      'name_bn': nameBn,
+      'wash_price': washPrice,
+      'dry_price': dryPrice,
+      'sort_order': max + 1,
+      'enabled': true,
+    });
+    await refresh();
+    return id;
+  }
+
   /// Moves an item to the top of ITS category (an admin "pin to top"). Reads
   /// the category's current lowest sort_order, drops this item just below it,
   /// then reloads so every screen reflects the new order.
