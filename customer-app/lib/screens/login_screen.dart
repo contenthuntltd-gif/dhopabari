@@ -77,6 +77,20 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     }
   }
 
+  /// The ⋮ menu — rider access only (admins sign in via the /admin URL).
+  void _openRiderSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _RiderSheet(
+        onRider: () {
+          Navigator.pop(context);
+          Navigator.push(context, AppPageRoute(builder: (_) => const RiderLoginScreen()));
+        },
+      ),
+    );
+  }
+
   Future<void> _onLoginSucceeded() async {
     if (!mounted) return;
     setState(() {
@@ -104,7 +118,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                 children: [
                   _Hero(
                     bubbleController: _bubbleController,
-                    onRider: () => Navigator.push(context, AppPageRoute(builder: (_) => const RiderLoginScreen())),
+                    onMenu: _openRiderSheet,
                   ),
                   Padding(
                     padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
@@ -399,8 +413,8 @@ class _GradientButtonState extends State<_GradientButton> {
 
 class _Hero extends StatelessWidget {
   final AnimationController bubbleController;
-  final VoidCallback onRider;
-  const _Hero({required this.bubbleController, required this.onRider});
+  final VoidCallback onMenu;
+  const _Hero({required this.bubbleController, required this.onMenu});
 
   @override
   Widget build(BuildContext context) {
@@ -421,15 +435,15 @@ class _Hero extends StatelessWidget {
           child: Stack(
             children: [
               ..._bubbles(),
-              // Rider-only access (admins sign in via the /admin URL).
+              // ⋮ menu — rider-only access (admins sign in via the /admin URL).
               Positioned(
                 top: 20,
                 left: 20,
                 child: _TouchTarget(
                   child: _RoundIconButton(
-                    icon: Icons.two_wheeler_rounded,
+                    icon: Icons.more_vert_rounded,
                     tooltip: 'রাইডার লগইন',
-                    onTap: onRider,
+                    onTap: onMenu,
                   ),
                 ),
               ),
@@ -493,6 +507,70 @@ class _Hero extends StatelessWidget {
             border: Border.all(color: Colors.white.withValues(alpha: 0.35)),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// The ⋮ menu sheet — rider access only.
+class _RiderSheet extends StatelessWidget {
+  final VoidCallback onRider;
+  const _RiderSheet({required this.onRider});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.only(topLeft: Radius.circular(24), topRight: Radius.circular(24))),
+      padding: EdgeInsets.fromLTRB(22, 12, 22, MediaQuery.of(context).padding.bottom + 20),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.line, borderRadius: BorderRadius.circular(2))),
+          const SizedBox(height: 16),
+          const Text('লগইন করুন', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w900, color: AppColors.ink)),
+          const SizedBox(height: 18),
+          Material(
+            color: AppColors.tealSoft,
+            borderRadius: BorderRadius.circular(16),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(16),
+              onTap: onRider,
+              child: Padding(
+                padding: const EdgeInsets.all(14),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(color: AppColors.teal, borderRadius: BorderRadius.circular(14)),
+                      child: const Center(child: Text('🏍️', style: TextStyle(fontSize: 20))),
+                    ),
+                    const SizedBox(width: 14),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Rider', style: TextStyle(fontSize: 15.5, fontWeight: FontWeight.w900, color: AppColors.teal)),
+                          Text('রাইডার অ্যাপে লগইন করুন', style: TextStyle(fontSize: 11.5, color: AppColors.muted, fontWeight: FontWeight.w600)),
+                        ],
+                      ),
+                    ),
+                    const Icon(Icons.chevron_right_rounded, color: AppColors.teal, size: 26),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 14),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton(
+              style: OutlinedButton.styleFrom(side: const BorderSide(color: AppColors.line), foregroundColor: AppColors.ink),
+              onPressed: () => Navigator.pop(context),
+              child: const Text('বাতিল করুন'),
+            ),
+          ),
+        ],
       ),
     );
   }
