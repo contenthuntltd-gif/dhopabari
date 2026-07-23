@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
 import '../../data/admin_mock_data.dart';
@@ -39,6 +40,14 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
   bool get _isRider => widget.role == 'rider';
   String get _noun => _isRider ? 'রাইডার' : 'কাস্টমার';
 
+  /// A throwaway password for passwordless customer accounts — they log in by
+  /// phone number only, so this is never shown or used.
+  String _randomPassword() {
+    const chars = 'abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    final r = Random.secure();
+    return List.generate(16, (_) => chars[r.nextInt(chars.length)]).join();
+  }
+
   Future<void> _submit() async {
     if (_loading) return;
     FocusScope.of(context).unfocus();
@@ -50,7 +59,10 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
       setState(() => _error = 'নাম ও ফোন নম্বর আবশ্যক');
       return;
     }
-    if (!_isEdit && _password.text.length < 6) {
+    // Riders log in with a password, so one is required. Customers are
+    // passwordless (phone-only login) — we quietly generate a random one they
+    // never see or need.
+    if (!_isEdit && _isRider && _password.text.length < 6) {
       setState(() => _error = 'পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে');
       return;
     }
@@ -73,7 +85,9 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
         await AdminService.createUser(
           name: name,
           phone: phone,
-          password: _password.text,
+          // Customer = passwordless (random pw they never use); rider logs in
+          // with the password entered here.
+          password: _isRider ? _password.text : _randomPassword(),
           role: widget.role,
           area: _area.text.trim(),
           localAddress: _address.text.trim(),
@@ -150,7 +164,9 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
                     helperText: _isEdit ? 'নম্বর পরিবর্তন করা যাবে না' : null,
                   ),
                 ),
-                if (!_isEdit) ...[
+                // Password only for riders (they log in with it). Customers
+                // are passwordless — they log in with just their phone number.
+                if (!_isEdit && _isRider) ...[
                   const SizedBox(height: 14),
                   TextField(
                     controller: _password,
@@ -158,7 +174,7 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
                     decoration: InputDecoration(
                       hintText: 'পাসওয়ার্ড (কমপক্ষে ৬ অক্ষর)',
                       prefixIcon: const Icon(Icons.lock_outline_rounded, size: 20),
-                      helperText: 'এই পাসওয়ার্ড দিয়েই $_noun নিজে লগইন করবেন',
+                      helperText: 'এই পাসওয়ার্ড দিয়েই $_noun লগইন করবেন',
                       suffixIcon: IconButton(
                         icon: Icon(
                           _showPassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
@@ -167,6 +183,20 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
                         ),
                         onPressed: () => setState(() => _showPassword = !_showPassword),
                       ),
+                    ),
+                  ),
+                ],
+                if (!_isEdit && !_isRider) ...[
+                  const SizedBox(height: 10),
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(color: AppColors.blueSoft.withValues(alpha: 0.4), borderRadius: BorderRadius.circular(AppRadius.sm)),
+                    child: Row(
+                      children: const [
+                        Icon(Icons.info_outline_rounded, size: 16, color: AppColors.blue),
+                        SizedBox(width: 8),
+                        Expanded(child: Text('কাস্টমার শুধু মোবাইল নম্বর দিয়েই লগইন করবে — পাসওয়ার্ড লাগবে না।', style: TextStyle(fontSize: 11.5, color: AppColors.ink, fontWeight: FontWeight.w600))),
+                      ],
                     ),
                   ),
                 ],

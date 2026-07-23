@@ -32,6 +32,7 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
   AdminCustomer? _me;
   List<AdminOrder> _riderOrders = const [];
   bool _loading = true;
+  bool _canSeeCustomers = false; // admin-controlled
   Object? _error;
 
   @override
@@ -47,10 +48,12 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
       final orders = me == null
           ? <AdminOrder>[]
           : await AdminService.orders(riderId: me.id);
+      final canSee = await AdminService.currentCanSeeCustomers();
       if (!mounted) return;
       setState(() {
         _me = me;
         _riderOrders = orders;
+        _canSeeCustomers = canSee;
         _loading = false;
       });
     } catch (e) {
@@ -162,12 +165,16 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
     final assigned = _assigned;
     return Scaffold(
       backgroundColor: AppColors.paper,
-      floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: AppColors.blue,
-        onPressed: _openCustomers,
-        icon: const Icon(Icons.people_alt_rounded),
-        label: const Text('কাস্টমার ও অর্ডার'),
-      ),
+      // The customer list is only available if an admin has granted this rider
+      // access (see rider detail → "সব কাস্টমার দেখতে পারবে").
+      floatingActionButton: _canSeeCustomers
+          ? FloatingActionButton.extended(
+              backgroundColor: AppColors.blue,
+              onPressed: _openCustomers,
+              icon: const Icon(Icons.people_alt_rounded),
+              label: const Text('কাস্টমার ও অর্ডার'),
+            )
+          : null,
       body: SafeArea(
         child: RefreshIndicator(
           color: AppColors.teal,

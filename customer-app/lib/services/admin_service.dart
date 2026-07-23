@@ -261,6 +261,27 @@ class AdminService {
     await _db.from('orders').delete().inFilter('id', uuids);
   }
 
+  // ----- Rider customer-list access (admin-controlled) -----
+
+  /// Whether [riderId] is allowed to browse the full customer list.
+  static Future<bool> riderCanSeeCustomers(String riderId) async {
+    final row = await _db.from('profiles').select('can_see_customers').eq('id', riderId).maybeSingle();
+    return (row?['can_see_customers'] as bool?) ?? false;
+  }
+
+  /// Admin grants/revokes a rider's access to browse all customers.
+  static Future<void> setRiderCustomerAccess(String riderId, bool allow) async {
+    await _db.from('profiles').update({'can_see_customers': allow}).eq('id', riderId);
+  }
+
+  /// For the signed-in rider: may they browse all customers right now?
+  static Future<bool> currentCanSeeCustomers() async {
+    final id = _uid;
+    if (id == null) return false;
+    final row = await _db.from('profiles').select('can_see_customers').eq('id', id).maybeSingle();
+    return (row?['can_see_customers'] as bool?) ?? false;
+  }
+
   /// Places an order. Omit [customerId] for a customer ordering for
   /// themselves; pass it when staff order on someone's behalf — either way
   /// `placed_by` records who actually entered it, so the order lands in that

@@ -16,6 +16,45 @@ class RiderDetailScreen extends StatefulWidget {
 }
 
 class _RiderDetailScreenState extends State<RiderDetailScreen> {
+  bool? _canSeeCustomers; // null until loaded
+  bool _savingAccess = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAccess();
+  }
+
+  Future<void> _loadAccess() async {
+    try {
+      final allow = await AdminService.riderCanSeeCustomers(widget.rider.id);
+      if (mounted) setState(() => _canSeeCustomers = allow);
+    } catch (_) {
+      if (mounted) setState(() => _canSeeCustomers = false);
+    }
+  }
+
+  Future<void> _setAccess(bool allow) async {
+    if (_savingAccess) return;
+    setState(() {
+      _canSeeCustomers = allow;
+      _savingAccess = true;
+    });
+    try {
+      await AdminService.setRiderCustomerAccess(widget.rider.id, allow);
+      if (!mounted) return;
+      setState(() => _savingAccess = false);
+      _snack(allow ? 'রাইডার এখন সব কাস্টমার দেখতে পারবে' : 'রাইডারের কাস্টমার অ্যাক্সেস বন্ধ করা হয়েছে');
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _canSeeCustomers = !allow;
+        _savingAccess = false;
+      });
+      _snack(AdminService.messageFor(e));
+    }
+  }
+
   void _snack(String msg) => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
 
   void _toggleActive() {
@@ -170,6 +209,37 @@ class _RiderDetailScreenState extends State<RiderDetailScreen> {
                       ],
                     ),
                   ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          // Admin control: whether this rider may browse the full customer list.
+          FadeSlideIn(
+            delayMs: 120,
+            child: Container(
+              padding: const EdgeInsets.fromLTRB(16, 6, 8, 6),
+              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(AppRadius.md), border: Border.all(color: AppColors.line), boxShadow: AppShadows.soft),
+              child: Row(
+                children: [
+                  const Icon(Icons.groups_outlined, color: AppColors.blue, size: 22),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('সব কাস্টমার দেখতে পারবে', style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w800, color: AppColors.ink)),
+                        Text('চালু থাকলে রাইডার কাস্টমার তালিকা দেখে অর্ডার করতে পারবে', style: TextStyle(fontSize: 10.5, color: AppColors.muted, fontWeight: FontWeight.w600)),
+                      ],
+                    ),
+                  ),
+                  _canSeeCustomers == null
+                      ? const Padding(padding: EdgeInsets.all(12), child: SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)))
+                      : Switch(
+                          value: _canSeeCustomers!,
+                          onChanged: _savingAccess ? null : _setAccess,
+                          activeTrackColor: AppColors.blue,
+                        ),
                 ],
               ),
             ),
