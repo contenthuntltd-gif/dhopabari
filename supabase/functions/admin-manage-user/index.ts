@@ -35,18 +35,24 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS });
   if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405);
 
-  const authHeader = req.headers.get('Authorization');
-  if (!authHeader) return json({ error: 'Missing Authorization header' }, 401);
-
-  const caller = createClient(SUPABASE_URL, ANON_KEY, {
-    global: { headers: { Authorization: authHeader } },
-  });
-  const { data: { user }, error: userErr } = await caller.auth.getUser();
-  if (userErr || !user) return json({ error: 'Invalid or expired session' }, 401);
+  // Called as a CORS "simple request" (text/plain, no custom headers) so no
+  // preflight fires — managed/DLP browsers block preflights. The caller's
+  // session token therefore travels in the body as `access_token`.
+  let body: Record<string, unknown>;
+  try {
+    body = await req.json();
+  } catch {
+    return json({ error: 'Body must be JSON' }, 400);
+  }
 
   const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
     auth: { autoRefreshToken: false, persistSession: false },
   });
+
+  const accessToken = String(body.access_token ?? '');
+  if (!accessToken) return json({ error: 'Missing session' }, 401);
+  const { data: { user }, error: userErr } = await admin.auth.getUser(accessToken);
+  if (userErr || !user) return json({ error: 'Invalid or expired session' }, 401);
 
   const { data: callerProfile } = await admin
     .from('profiles')
@@ -59,13 +65,6 @@ Deno.serve(async (req) => {
     return json({ error: 'অনুমতি নেই' }, 403);
   }
   if (callerProfile?.blocked) return json({ error: 'Your account is blocked' }, 403);
-
-  let body: Record<string, unknown>;
-  try {
-    body = await req.json();
-  } catch {
-    return json({ error: 'Body must be JSON' }, 400);
-  }
 
   const action = String(body.action ?? '');
   const targetId = String(body.user_id ?? '');

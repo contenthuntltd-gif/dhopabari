@@ -52,27 +52,30 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS });
   if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405);
 
-  // ---- 1. Who is calling? ----
-  const authHeader = req.headers.get('Authorization');
-  if (!authHeader) return json({ error: 'Missing Authorization header' }, 401);
+  // ---- 0. Parse body ----
+  // The client calls this as a CORS "simple request" (text/plain, no custom
+  // headers) so no preflight fires — managed/DLP browsers block preflights.
+  // Because there is therefore no Authorization header, the caller's session
+  // token arrives in the body as `access_token`. (Deno's req.json() parses
+  // the body regardless of the text/plain content-type.)
+  let body: Record<string, unknown>;
+  try {
+    body = await req.json();
+  } catch {
+    return json({ error: 'Body must be JSON' }, 400);
+  }
 
-  // A client bound to the CALLER's JWT — so auth.getUser() returns them,
-  // not us, and any query runs under their RLS.
-  const caller = createClient(SUPABASE_URL, ANON_KEY, {
-    global: { headers: { Authorization: authHeader } },
-  });
-
-  const { data: { user }, error: userErr } = await caller.auth.getUser();
-  if (userErr || !user) return json({ error: 'Invalid or expired session' }, 401);
-
-  // ---- 2. Are they allowed? ----
-  // Read the role with the service client: the caller's own RLS would let
-  // them read their profile, but we do not want to depend on policy shape
-  // for an authorization decision.
   const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
     auth: { autoRefreshToken: false, persistSession: false },
   });
 
+  // ---- 1. Who is calling? ----
+  const accessToken = String(body.access_token ?? '');
+  if (!accessToken) return json({ error: 'Missing session' }, 401);
+  const { data: { user }, error: userErr } = await admin.auth.getUser(accessToken);
+  if (userErr || !user) return json({ error: 'Invalid or expired session' }, 401);
+
+  // ---- 2. Are they allowed? ----
   const { data: callerProfile } = await admin
     .from('profiles')
     .select('role, blocked')
@@ -88,12 +91,6 @@ Deno.serve(async (req) => {
   }
 
   // ---- 3. Validate input ----
-  let body: Record<string, unknown>;
-  try {
-    body = await req.json();
-  } catch {
-    return json({ error: 'Body must be JSON' }, 400);
-  }
 
   const rawPhone = String(body.phone ?? '').trim();
   const password = String(body.password ?? '');

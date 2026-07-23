@@ -59,7 +59,10 @@ class _ReceiptScreenState extends State<ReceiptScreen> {
   Future<({Uint8List png, int w, int h})?> _capturePos() async {
     final boundary = _posKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
     if (boundary == null) return null;
-    final image = await boundary.toImage(pixelRatio: 3.0);
+    // High pixelRatio → a crisp, high-resolution receipt image (≈1500px wide
+    // from the 300px logical width) so the printed/downloaded invoice is sharp
+    // rather than soft/pixelated.
+    final image = await boundary.toImage(pixelRatio: 5.0);
     final data = await image.toByteData(format: ui.ImageByteFormat.png);
     if (data == null) return null;
     return (png: data.buffer.asUint8List(), w: image.width, h: image.height);

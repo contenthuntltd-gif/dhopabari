@@ -92,27 +92,61 @@ class AdminService {
     String? localAddress,
     String? whatsappNumber,
   }) async {
-    try {
-      final res = await _db.functions.invoke('admin-create-user', body: {
-        'name': name,
-        'phone': phone,
-        'password': password,
-        'role': role,
-        'area': area ?? '',
-        'local_address': localAddress ?? '',
-        'whatsapp_number': whatsappNumber ?? '',
-      });
-
-      final data = res.data;
-      if (data is Map && data['user'] != null) {
-        return AdminCustomer.fromRow(Map<String, dynamic>.from(data['user']));
-      }
+    final data = await _callFn('admin-create-user', {
+      'name': name,
+      'phone': phone,
+      'password': password,
+      'role': role,
+      'area': area ?? '',
+      'local_address': localAddress ?? '',
+      'whatsapp_number': whatsappNumber ?? '',
+    });
+    final user = data is Map ? data['user'] : null;
+    if (user == null) {
       throw AdminServiceException(_errorFrom(data) ?? 'অ্যাকাউন্ট তৈরি করা যায়নি');
-    } on FunctionException catch (e) {
-      throw AdminServiceException(
-        _errorFrom(e.details) ?? 'অ্যাকাউন্ট তৈরি করা যায়নি (${e.status})',
-      );
     }
+    return AdminCustomer.fromRow(Map<String, dynamic>.from(user as Map));
+  }
+
+  /// Calls a staff Edge Function as a CORS *simple request* — POST with
+  /// `Content-Type: text/plain` and NO custom headers — so the browser fires
+  /// no preflight. This is the same fix as [guestOrder]: managed/DLP browsers
+  /// block the OPTIONS preflight that `apikey`/`authorization`/`json` headers
+  /// trigger, which made `functions.invoke` fail with a false "no internet".
+  ///
+  /// Because there's no Authorization header, the caller's identity travels in
+  /// the body as `access_token`; the function verifies it server-side and
+  /// checks the caller is staff. Returns the decoded JSON body; throws
+  /// [AdminServiceException] on a network failure or non-2xx reply.
+  static Future<dynamic> _callFn(String fnName, Map<String, dynamic> body) async {
+    final token = _db.auth.currentSession?.accessToken;
+    if (token == null) {
+      throw AdminServiceException('আপনি লগইন করা নেই — আবার লগইন করুন');
+    }
+    final uri = Uri.parse('${SupabaseConfig.url}/functions/v1/$fnName');
+    final http.Response res;
+    try {
+      res = await http
+          .post(
+            uri,
+            headers: const {'Content-Type': 'text/plain;charset=UTF-8'},
+            body: jsonEncode({'access_token': token, ...body}),
+          )
+          .timeout(const Duration(seconds: 30));
+    } catch (_) {
+      throw AdminServiceException('সার্ভারে সংযোগ করা যায়নি — ইন্টারনেট দেখে আবার চেষ্টা করুন');
+    }
+    dynamic data;
+    try {
+      data = jsonDecode(utf8.decode(res.bodyBytes));
+    } catch (_) {
+      data = null;
+    }
+    if (res.statusCode < 200 || res.statusCode >= 300) {
+      throw AdminServiceException(
+          _errorFrom(data) ?? 'কাজটি সম্পন্ন করা যায়নি (কোড ${res.statusCode})');
+    }
+    return data;
   }
 
   static String? _errorFrom(dynamic details) {
@@ -134,16 +168,9 @@ class AdminService {
   }
 
   static Future<void> _manage(Map<String, dynamic> body) async {
-    try {
-      final res = await _db.functions.invoke('admin-manage-user', body: body);
-      final data = res.data;
-      if (data is Map && data['ok'] == true) return;
-      throw AdminServiceException(_errorFrom(data) ?? 'কাজটি সম্পন্ন করা যায়নি');
-    } on FunctionException catch (e) {
-      throw AdminServiceException(
-        _errorFrom(e.details) ?? 'কাজটি সম্পন্ন করা যায়নি (${e.status})',
-      );
-    }
+    final data = await _callFn('admin-manage-user', body);
+    if (data is Map && data['ok'] == true) return;
+    throw AdminServiceException(_errorFrom(data) ?? 'কাজটি সম্পন্ন করা যায়নি');
   }
 
   static Future<void> setBlocked(String customerId, bool blocked) async {
