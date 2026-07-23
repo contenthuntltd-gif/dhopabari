@@ -98,23 +98,30 @@ Deno.serve(async (req) => {
   // ── 1. Find or create the account for this phone ──
   const { data: existing } = await admin
     .from('profiles')
-    .select('id')
+    .select('id, role')
     .eq('phone', phone)
     .maybeSingle();
 
   let userId: string;
+  // SECURITY: if the phone belongs to a STAFF account, record the order under
+  // it but NEVER reset its password or hand back credentials — otherwise a
+  // guest order on an admin/rider number would clobber their password and
+  // sign the device in as that staff member.
+  const isStaff = existing?.role === 'admin' || existing?.role === 'rider';
 
   if (existing?.id) {
     userId = existing.id as string;
-    // Set a fresh password so the app can sign this device in. (A guest
-    // order re-establishes access on whatever device placed it.)
-    const { error } = await admin.auth.admin.updateUserById(userId, { password });
-    if (error) return json({ error: error.message }, 400);
-    // Keep the profile's contact details current with what they just typed.
-    await admin
-      .from('profiles')
-      .update({ name, area: area || null, local_address: address })
-      .eq('id', userId);
+    if (!isStaff) {
+      // Set a fresh password so the app can sign this device in. (A guest
+      // order re-establishes access on whatever device placed it.)
+      const { error } = await admin.auth.admin.updateUserById(userId, { password });
+      if (error) return json({ error: error.message }, 400);
+      // Keep the profile's contact details current with what they just typed.
+      await admin
+        .from('profiles')
+        .update({ name, area: area || null, local_address: address })
+        .eq('id', userId);
+    }
   } else {
     const { data: created, error } = await admin.auth.admin.createUser({
       email: phoneToEmail(phone),
@@ -151,6 +158,7 @@ Deno.serve(async (req) => {
   if (orderErr) return json({ error: `অর্ডার সংরক্ষণ করা যায়নি: ${orderErr.message}` }, 500);
 
   // password + phone let the app sign the device in silently, so the
-  // customer immediately has a session and can see this order.
-  return json({ order, phone, password }, 201);
+  // customer immediately has a session and can see this order. For a staff
+  // account we withhold the password (null) so no silent staff sign-in happens.
+  return json({ order, phone, password: isStaff ? null : password }, 201);
 });

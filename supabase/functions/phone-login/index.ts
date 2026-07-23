@@ -85,9 +85,16 @@ Deno.serve(async (req) => {
 
   const { data: existing } = await admin
     .from('profiles')
-    .select('id')
+    .select('id, role')
     .eq('phone', phone)
     .maybeSingle();
+
+  // SECURITY: never let passwordless customer login touch a STAFF account —
+  // otherwise anyone typing an admin/rider number would reset its password
+  // and sign in as that staff member. Staff use their own password + URL.
+  if (existing?.role === 'admin' || existing?.role === 'rider') {
+    return json({ error: 'এই নম্বরটি স্টাফ অ্যাকাউন্টের — এটি দিয়ে কাস্টমার লগইন করা যাবে না।' }, 403);
+  }
 
   if (existing?.id) {
     const userId = existing.id as string;
