@@ -24,6 +24,10 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
   late AdminCustomer _c = widget.customer;
   late Future<List<AdminOrder>> _orders = AdminService.orders(customerId: _c.id);
   bool _busy = false;
+  bool _activeOnly = false; // order-history filter: All vs Active (running)
+
+  /// Running = not yet delivered and not cancelled.
+  bool _isActive(AdminOrder o) => o.status != 'Delivered' && o.status != 'Cancelled';
 
   void _snack(String msg) {
     if (!mounted) return;
@@ -71,57 +75,6 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
         _busy = false;
       });
       _snack(next ? 'কাস্টমার ব্লক করা হয়েছে' : 'কাস্টমার আনব্লক করা হয়েছে');
-    } catch (e) {
-      if (!mounted) return;
-      setState(() => _busy = false);
-      _snack(AdminService.messageFor(e));
-    }
-  }
-
-  Future<void> _setPassword() async {
-    final controller = TextEditingController();
-    final newPassword = await showDialog<String>(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.lg)),
-        title: const Text('নতুন পাসওয়ার্ড দিন', style: AppText.h2),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              '${_c.name} এই নতুন পাসওয়ার্ড দিয়ে লগইন করবেন। তাঁকে পাসওয়ার্ডটি জানিয়ে দিন।',
-              style: AppText.bodyMuted,
-            ),
-            const SizedBox(height: 14),
-            TextField(
-              controller: controller,
-              autofocus: true,
-              decoration: const InputDecoration(hintText: 'কমপক্ষে ৬ অক্ষর'),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('বাতিল')),
-          TextButton(
-            onPressed: () => Navigator.pop(context, controller.text),
-            child: const Text('সেট করুন'),
-          ),
-        ],
-      ),
-    );
-
-    if (newPassword == null) return;
-    if (newPassword.length < 6) {
-      _snack('পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে');
-      return;
-    }
-
-    setState(() => _busy = true);
-    try {
-      await AdminService.setPassword(_c.id, newPassword);
-      if (!mounted) return;
-      setState(() => _busy = false);
-      _snack('পাসওয়ার্ড পরিবর্তন হয়েছে');
     } catch (e) {
       if (!mounted) return;
       setState(() => _busy = false);
@@ -213,43 +166,48 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
 
   Widget _profileCard(AdminCustomer c) {
     return Container(
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(AppRadius.md),
-        border: Border.all(color: AppColors.line),
-        boxShadow: AppShadows.soft,
+        gradient: const LinearGradient(colors: [AppColors.blue, AppColors.blueDeep], begin: Alignment.topLeft, end: Alignment.bottomRight),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        boxShadow: [BoxShadow(color: AppColors.blue.withValues(alpha: 0.3), blurRadius: 20, offset: const Offset(0, 10))],
       ),
       child: Column(
         children: [
-          CircleAvatar(
-            radius: 32,
-            backgroundColor: AppColors.blueSoft,
-            child: Icon(Icons.person_rounded, color: AppColors.blue, size: 32),
+          Container(
+            width: 72,
+            height: 72,
+            decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.18), shape: BoxShape.circle, border: Border.all(color: Colors.white24, width: 2)),
+            child: const Icon(Icons.person_rounded, color: Colors.white, size: 36),
           ),
-          const SizedBox(height: 10),
-          Text(c.name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: AppColors.ink)),
-          Text(c.phone, style: const TextStyle(fontSize: 12.5, color: AppColors.muted, fontWeight: FontWeight.w600)),
+          const SizedBox(height: 12),
+          Text(c.name, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Colors.white)),
+          const SizedBox(height: 2),
+          Text(c.phone, style: const TextStyle(fontSize: 12.5, color: Colors.white70, fontWeight: FontWeight.w600)),
           if (c.whatsappNumber.isNotEmpty)
-            Text('হোয়াটসঅ্যাপ: ${c.whatsappNumber}',
-                style: const TextStyle(fontSize: 11.5, color: AppColors.muted, fontWeight: FontWeight.w600)),
-          const SizedBox(height: 10),
-          if (c.blocked)
+            Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Text('হোয়াটসঅ্যাপ: ${c.whatsappNumber}', style: const TextStyle(fontSize: 11.5, color: Colors.white60, fontWeight: FontWeight.w600)),
+            ),
+          if (c.blocked) ...[
+            const SizedBox(height: 8),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(color: AppColors.dangerSoft, borderRadius: BorderRadius.circular(999)),
-              child: const Text('ব্লক করা হয়েছে',
-                  style: TextStyle(fontSize: 10.5, color: AppColors.danger, fontWeight: FontWeight.w800)),
+              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(999)),
+              child: const Text('ব্লক করা হয়েছে', style: TextStyle(fontSize: 10.5, color: AppColors.danger, fontWeight: FontWeight.w900)),
             ),
-          const SizedBox(height: 14),
-          Row(
-            children: [
-              Expanded(child: _stat(toBn(c.totalOrders), 'মোট অর্ডার')),
-              Container(width: 1, height: 30, color: AppColors.line),
-              Expanded(child: _stat(money(c.totalSpent), 'মোট খরচ')),
-              Container(width: 1, height: 30, color: AppColors.line),
-              Expanded(child: _stat(c.joined, 'যোগদান')),
-            ],
+          ],
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(AppRadius.md)),
+            child: Row(
+              children: [
+                Expanded(child: _stat(toBn(c.totalOrders), 'মোট অর্ডার')),
+                Container(width: 1, height: 30, color: Colors.white24),
+                Expanded(child: _stat(c.joined, 'যোগদান')),
+              ],
+            ),
           ),
         ],
       ),
@@ -310,6 +268,15 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
         children: [
           const Text('অর্ডার ইতিহাস', style: AppText.h3),
           const SizedBox(height: 10),
+          // All vs Active (running) filter.
+          Row(
+            children: [
+              _historyTab('সব অর্ডার', !_activeOnly, () => setState(() => _activeOnly = false)),
+              const SizedBox(width: 8),
+              _historyTab('চলমান অর্ডার', _activeOnly, () => setState(() => _activeOnly = true)),
+            ],
+          ),
+          const SizedBox(height: 6),
           FutureBuilder<List<AdminOrder>>(
             future: _orders,
             builder: (context, snap) {
@@ -323,9 +290,13 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                 return Text(AdminService.messageFor(snap.error!),
                     style: const TextStyle(fontSize: 12, color: AppColors.danger, fontWeight: FontWeight.w600));
               }
-              final orders = snap.data ?? const <AdminOrder>[];
+              final all = snap.data ?? const <AdminOrder>[];
+              final orders = _activeOnly ? all.where(_isActive).toList() : all;
               if (orders.isEmpty) {
-                return const Text('এখনো কোনো অর্ডার নেই', style: AppText.bodyMuted);
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  child: Text(_activeOnly ? 'কোনো চলমান অর্ডার নেই' : 'এখনো কোনো অর্ডার নেই', style: AppText.bodyMuted),
+                );
               }
               return Column(
                 children: [
@@ -382,18 +353,24 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
     );
   }
 
+  Widget _historyTab(String label, bool active, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+        decoration: BoxDecoration(
+          color: active ? AppColors.blue : Colors.white,
+          border: Border.all(color: active ? AppColors.blue : AppColors.line),
+          borderRadius: BorderRadius.circular(999),
+        ),
+        child: Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: active ? Colors.white : AppColors.ink)),
+      ),
+    );
+  }
+
   Widget _actions(AdminCustomer c) {
     return Column(
       children: [
-        SizedBox(
-          width: double.infinity,
-          child: OutlinedButton.icon(
-            onPressed: _busy ? null : _setPassword,
-            icon: const Icon(Icons.lock_reset_rounded, size: 18),
-            label: const Text('পাসওয়ার্ড পরিবর্তন করুন'),
-          ),
-        ),
-        const SizedBox(height: 10),
         SizedBox(
           width: double.infinity,
           child: OutlinedButton.icon(
@@ -427,10 +404,10 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
     return Column(
       children: [
         Text(value,
-            style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w900, color: AppColors.ink),
+            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w900, color: Colors.white),
             overflow: TextOverflow.ellipsis),
         const SizedBox(height: 2),
-        Text(label, style: const TextStyle(fontSize: 10, color: AppColors.muted, fontWeight: FontWeight.w600)),
+        Text(label, style: const TextStyle(fontSize: 10.5, color: Colors.white70, fontWeight: FontWeight.w600)),
       ],
     );
   }
