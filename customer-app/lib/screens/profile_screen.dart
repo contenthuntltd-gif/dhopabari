@@ -23,50 +23,70 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   bool _loggingOut = false;
 
-  /// Logout — clean. Confirm (হ্যাঁ / না) → sign out → instantly switch to the
-  /// Home tab in-place. No route push and no page reload anywhere, so a blank
-  /// or white flash is impossible. Errors are swallowed (the local session is
-  /// cleared regardless) and a guard blocks double taps.
+  /// Logout — brand-new bottom-sheet flow. Tapping the button slides up a
+  /// confirmation sheet (হ্যাঁ / না). On confirm we sign out and drop to the
+  /// Home tab in-place (no route push, no page reload → no white/blank flash).
   Future<void> _logout() async {
     if (_loggingOut) return;
 
-    final yes = await showDialog<bool>(
+    final yes = await showModalBottomSheet<bool>(
       context: context,
-      builder: (dctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.lg)),
-        contentPadding: const EdgeInsets.fromLTRB(24, 26, 24, 12),
-        content: Column(
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (sheetCtx) => Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(topLeft: Radius.circular(28), topRight: Radius.circular(28)),
+        ),
+        padding: EdgeInsets.fromLTRB(24, 14, 24, MediaQuery.of(sheetCtx).padding.bottom + 22),
+        child: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Container(
-              width: 56,
-              height: 56,
-              decoration: const BoxDecoration(color: AppColors.dangerSoft, shape: BoxShape.circle),
-              child: const Icon(Icons.logout_rounded, color: AppColors.danger, size: 26),
+            Center(child: Container(width: 42, height: 5, decoration: BoxDecoration(color: AppColors.line, borderRadius: BorderRadius.circular(3)))),
+            const SizedBox(height: 22),
+            Center(
+              child: Container(
+                width: 64,
+                height: 64,
+                decoration: const BoxDecoration(color: AppColors.dangerSoft, shape: BoxShape.circle),
+                child: const Icon(Icons.logout_rounded, color: AppColors.danger, size: 30),
+              ),
             ),
             const SizedBox(height: 16),
-            const Text('লগআউট করবেন?', style: AppText.h2, textAlign: TextAlign.center),
+            const Center(child: Text('লগআউট করবেন?', style: AppText.h1)),
             const SizedBox(height: 6),
-            const Text('আপনি চাইলে আবার নম্বর দিয়ে লগইন করতে পারবেন।', style: AppText.bodyMuted, textAlign: TextAlign.center),
+            const Center(
+              child: Text(
+                'আপনি চাইলে যেকোনো সময় আবার মোবাইল নম্বর দিয়ে লগইন করতে পারবেন।',
+                textAlign: TextAlign.center,
+                style: AppText.bodyMuted,
+              ),
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              height: 52,
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.danger,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
+                ),
+                onPressed: () => Navigator.pop(sheetCtx, true),
+                icon: const Icon(Icons.logout_rounded, size: 19),
+                label: const Text('হ্যাঁ, লগআউট করুন', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800)),
+              ),
+            ),
+            const SizedBox(height: 10),
+            SizedBox(
+              height: 52,
+              child: TextButton(
+                style: TextButton.styleFrom(foregroundColor: AppColors.ink),
+                onPressed: () => Navigator.pop(sheetCtx, false),
+                child: const Text('না, থাক', style: TextStyle(fontSize: 14.5, fontWeight: FontWeight.w700)),
+              ),
+            ),
           ],
         ),
-        actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-        actions: [
-          Expanded(
-            child: OutlinedButton(
-              onPressed: () => Navigator.pop(dctx, false),
-              child: const Text('না'),
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: AppColors.danger),
-              onPressed: () => Navigator.pop(dctx, true),
-              child: const Text('হ্যাঁ, লগআউট'),
-            ),
-          ),
-        ],
       ),
     );
 
@@ -85,6 +105,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
     // the Home tab. No navigation → no white/blank flash, no reload delay.
     setState(() {});
     widget.onSwitchTab?.call(0);
+
+    // A brief confirmation so the action feels acknowledged.
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('আপনি লগআউট হয়েছেন'), duration: Duration(seconds: 2)),
+    );
   }
 
   Future<void> _editProfile() async {
