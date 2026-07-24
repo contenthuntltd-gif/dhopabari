@@ -11,7 +11,6 @@ import '../services/language.dart';
 import '../data/business_info.dart';
 import 'login_screen.dart';
 import 'orders_screen.dart';
-import 'root_shell.dart';
 
 class ProfileScreen extends StatefulWidget {
   final void Function(int tabIndex)? onSwitchTab;
@@ -22,10 +21,18 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
+  bool _loggingOut = false;
+
+  /// Logout — rewritten clean. Confirm (হ্যাঁ / না) → sign out → drop to the
+  /// Home tab IN-PLACE. There is no route push anywhere in this flow, so a
+  /// blank/white transition frame is impossible. Sign-out errors are swallowed
+  /// (the session is cleared regardless), and a guard prevents double taps.
   Future<void> _confirmLogout() async {
-    final confirmed = await showDialog<bool>(
+    if (_loggingOut) return;
+
+    final yes = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.lg)),
         contentPadding: const EdgeInsets.fromLTRB(24, 26, 24, 12),
         content: Column(
@@ -40,14 +47,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
             const SizedBox(height: 16),
             const Text('লগআউট করবেন?', style: AppText.h2, textAlign: TextAlign.center),
             const SizedBox(height: 6),
-            const Text('আপনাকে আবার লগইন করতে হবে।', style: AppText.bodyMuted, textAlign: TextAlign.center),
+            const Text('আপনি চাইলে আবার নম্বর দিয়ে লগইন করতে পারবেন।', style: AppText.bodyMuted, textAlign: TextAlign.center),
           ],
         ),
         actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
         actions: [
           Expanded(
             child: OutlinedButton(
-              onPressed: () => Navigator.pop(context, false),
+              onPressed: () => Navigator.pop(dctx, false),
               child: const Text('না'),
             ),
           ),
@@ -55,31 +62,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
           Expanded(
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: AppColors.danger),
-              onPressed: () => Navigator.pop(context, true),
+              onPressed: () => Navigator.pop(dctx, true),
               child: const Text('হ্যাঁ, লগআউট'),
             ),
           ),
         ],
       ),
     );
-    if (confirmed != true || !mounted) return;
 
-    await AuthService.logout();
+    if (yes != true || !mounted) return;
+
+    _loggingOut = true;
+    try {
+      await AuthService.logout();
+    } catch (_) {
+      // Ignore — the local session is cleared either way.
+    }
+    _loggingOut = false;
     if (!mounted) return;
 
-    // IMPORTANT: do NOT push a new route here — a full-stack route swap was
-    // flashing a blank white page. Instead just rebuild (Profile now shows the
-    // login page as a guest) and drop back to the Home tab in-place. If for
-    // some reason we're not inside the tab shell, fall back to a fresh shell.
-    if (widget.onSwitchTab != null) {
-      setState(() {});
-      widget.onSwitchTab!(0);
-    } else {
-      Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
-        AppPageRoute(builder: (_) => const RootShell()),
-        (r) => false,
-      );
-    }
+    // Rebuild (this tab now shows the guest login), then return to Home.
+    setState(() {});
+    widget.onSwitchTab?.call(0);
   }
 
   Future<void> _editProfile() async {
