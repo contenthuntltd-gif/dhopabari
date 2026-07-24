@@ -48,7 +48,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           Expanded(
             child: OutlinedButton(
               onPressed: () => Navigator.pop(context, false),
-              child: const Text('বাতিল'),
+              child: const Text('না'),
             ),
           ),
           const SizedBox(width: 10),
@@ -56,23 +56,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: AppColors.danger),
               onPressed: () => Navigator.pop(context, true),
-              child: const Text('লগআউট'),
+              child: const Text('হ্যাঁ, লগআউট'),
             ),
           ),
         ],
       ),
     );
     if (confirmed != true || !mounted) return;
-    // The confirmation dialog has already closed, so this is the ONLY
-    // navigation for the logout — clear the whole stack and land on a fresh
-    // guest home. (The auth listener no longer navigates, so no race, no
-    // blank white page.)
+
     await AuthService.logout();
     if (!mounted) return;
-    Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
-      AppPageRoute(builder: (_) => const RootShell()),
-      (r) => false,
-    );
+
+    // IMPORTANT: do NOT push a new route here — a full-stack route swap was
+    // flashing a blank white page. Instead just rebuild (Profile now shows the
+    // login page as a guest) and drop back to the Home tab in-place. If for
+    // some reason we're not inside the tab shell, fall back to a fresh shell.
+    if (widget.onSwitchTab != null) {
+      setState(() {});
+      widget.onSwitchTab!(0);
+    } else {
+      Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
+        AppPageRoute(builder: (_) => const RootShell()),
+        (r) => false,
+      );
+    }
   }
 
   Future<void> _editProfile() async {
