@@ -264,6 +264,7 @@ class ReceiptData {
       riderId: order.riderName == null ? null : 'RDR-1042',
       deliveredBy: order.riderName,
       customerConfirmed: order.status == 'Delivered',
+      pickupAddress: order.address, // customer's delivery location
       items: _reconstructAdminItems(order),
     );
   }
@@ -277,6 +278,7 @@ class ReceiptData {
       customerName: order.customerName,
       customerPhone: order.customerPhone,
       customerId: 'CUST-${order.customerPhone}',
+      pickupAddress: order.address, // customer's location on the memo
       items: _reconstructAdminItems(order),
       paymentMethod: order.paymentMethod,
       paymentStatus: order.status == 'Delivered' ? 'পরিশোধিত' : 'বাকি',

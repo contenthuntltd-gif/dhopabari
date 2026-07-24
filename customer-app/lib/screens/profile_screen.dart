@@ -8,7 +8,7 @@ import '../widgets/app_button.dart';
 import '../widgets/app_logo.dart';
 import '../services/auth_service.dart';
 import '../services/language.dart';
-import '../data/business_info.dart';
+import '../data/app_settings.dart';
 import 'login_screen.dart';
 import 'orders_screen.dart';
 
@@ -157,35 +157,50 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  void _openAbout() {
+  void _openAbout() => _openTextPage(
+        title: AppLanguage.tr('সম্পর্কে'),
+        text: AppSettings.aboutText.trim(),
+        fallback: 'ধোপা বাড়ি — কাপড়ের যত্নে আপনার বিশ্বস্ত পার্টনার।\n\nবিস্তারিত তথ্য শীঘ্রই যোগ করা হবে।',
+      );
+
+  void _openPrivacy() => _openTextPage(
+        title: AppLanguage.tr('প্রাইভেসি পলিসি'),
+        text: AppSettings.privacyText.trim(),
+        fallback: 'আমরা আপনার তথ্যের গোপনীয়তাকে সম্মান করি।\n\nবিস্তারিত প্রাইভেসি পলিসি শীঘ্রই যোগ করা হবে।',
+      );
+
+  /// Shows an admin-editable text page (About / Privacy) as a bottom sheet.
+  void _openTextPage({required String title, required String text, required String fallback}) {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.only(topLeft: Radius.circular(24), topRight: Radius.circular(24))),
-        padding: EdgeInsets.fromLTRB(20, 14, 20, MediaQuery.of(context).padding.bottom + 24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.line, borderRadius: BorderRadius.circular(2)))),
-            const SizedBox(height: 20),
-            const AppLogo(size: 96),
-            const SizedBox(height: 16),
-            const Text('সংস্করণ ১.০.০', style: AppText.bodyMuted),
-            const SizedBox(height: 10),
-            const Text('কাপড়ের যত্নে আপনার বিশ্বস্ত পার্টনার।', textAlign: TextAlign.center, style: AppText.caption),
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.access_time_filled_rounded, size: 12, color: AppColors.muted),
-                const SizedBox(width: 4),
-                Text('অফিস সময়: ${BusinessHours.labelWithDays}', style: const TextStyle(fontSize: 10.5, color: AppColors.muted, fontWeight: FontWeight.w700)),
-              ],
-            ),
-            const SizedBox(height: 6),
-            const Text('© ২০২৬ ধোপা বাড়ি — সকল অধিকার সংরক্ষিত', textAlign: TextAlign.center, style: AppText.caption),
-          ],
+      isScrollControlled: true,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.6,
+        minChildSize: 0.35,
+        maxChildSize: 0.92,
+        expand: false,
+        builder: (context, scroll) => Container(
+          decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.only(topLeft: Radius.circular(24), topRight: Radius.circular(24))),
+          padding: const EdgeInsets.fromLTRB(20, 14, 20, 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.line, borderRadius: BorderRadius.circular(2)))),
+              const SizedBox(height: 16),
+              Text(title, style: AppText.h1),
+              const SizedBox(height: 12),
+              Expanded(
+                child: SingleChildScrollView(
+                  controller: scroll,
+                  child: Text(
+                    text.isNotEmpty ? text : fallback,
+                    style: const TextStyle(fontSize: 13.5, height: 1.6, color: AppColors.ink, fontWeight: FontWeight.w500),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -245,8 +260,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     tiles: [
                       _menuTile(context, Icons.language_rounded, AppLanguage.tr('ভাষা'), AppColors.muted, trailing: AppLanguage.isEnglish.value ? 'English' : 'বাংলা', onTap: () => AppLanguage.showPicker(context)),
                       _menuTile(context, Icons.info_outline_rounded, AppLanguage.tr('সম্পর্কে'), AppColors.muted, onTap: _openAbout),
-                      _menuTile(context, Icons.privacy_tip_outlined, AppLanguage.tr('প্রাইভেসি পলিসি'), AppColors.muted),
-                      _menuTile(context, Icons.description_outlined, AppLanguage.tr('শর্তাবলী'), AppColors.muted, isLast: true),
+                      _menuTile(context, Icons.privacy_tip_outlined, AppLanguage.tr('প্রাইভেসি পলিসি'), AppColors.muted, isLast: true, onTap: _openPrivacy),
                     ],
                   ),
                 ),

@@ -487,14 +487,19 @@ class _QuickOrderSectionState extends State<_QuickOrderSection> {
 
   Widget _stepper(int qty, VoidCallback onMinus, VoidCallback onPlus) {
     return Container(
-      decoration: BoxDecoration(color: AppColors.blueSoft, borderRadius: BorderRadius.circular(9)),
+      // Bigger and lighter: soft translucent fill + subtle outline.
+      decoration: BoxDecoration(
+        color: AppColors.blueSoft.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.blue.withValues(alpha: 0.22)),
+      ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           _stepBtn(Icons.remove_rounded, onMinus),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4),
-            child: Text(toBn(qty), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w900, color: AppColors.blue)),
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: Text(toBn(qty), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: AppColors.blue)),
           ),
           _stepBtn(Icons.add_rounded, onPlus),
         ],
@@ -506,9 +511,9 @@ class _QuickOrderSectionState extends State<_QuickOrderSection> {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        borderRadius: BorderRadius.circular(7),
+        borderRadius: BorderRadius.circular(10),
         onTap: onTap,
-        child: Padding(padding: const EdgeInsets.all(5), child: Icon(icon, size: 16, color: AppColors.blue)),
+        child: Padding(padding: const EdgeInsets.all(9), child: Icon(icon, size: 20, color: AppColors.blue)),
       ),
     );
   }

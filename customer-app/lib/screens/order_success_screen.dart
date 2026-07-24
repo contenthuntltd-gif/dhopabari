@@ -4,7 +4,6 @@ import '../theme/app_theme.dart';
 import '../widgets/app_page_route.dart';
 import '../widgets/fade_slide_in.dart';
 import '../widgets/app_logo.dart';
-import '../data/business_info.dart';
 import 'root_shell.dart';
 
 class OrderSuccessScreen extends StatefulWidget {
@@ -98,30 +97,28 @@ class _OrderSuccessScreenState extends State<OrderSuccessScreen> with SingleTick
                   ],
                 ),
               ),
-              if (widget.placedOffHours) ...[
-                const SizedBox(height: 14),
-                FadeSlideIn(
-                  delayMs: 180,
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(color: AppColors.amberSoft, borderRadius: BorderRadius.circular(AppRadius.sm), border: Border.all(color: AppColors.amber.withValues(alpha: 0.4))),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Icon(Icons.access_time_filled_rounded, size: 18, color: AppColors.amber),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Text(
-                            BusinessHours.offHoursMessage,
-                            style: const TextStyle(fontSize: 11.5, color: AppColors.ink, fontWeight: FontWeight.w700, height: 1.4),
-                          ),
+              const SizedBox(height: 14),
+              FadeSlideIn(
+                delayMs: 180,
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(color: AppColors.blueSoft.withValues(alpha: 0.55), borderRadius: BorderRadius.circular(AppRadius.sm), border: Border.all(color: AppColors.blue.withValues(alpha: 0.3))),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Icon(Icons.support_agent_rounded, size: 20, color: AppColors.blue),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          'আমাদের ধোপা বাড়ি টিম শীঘ্রই আপনার সাথে যোগাযোগ করবে।',
+                          style: const TextStyle(fontSize: 12, color: AppColors.ink, fontWeight: FontWeight.w700, height: 1.45),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
-              ],
+              ),
               const SizedBox(height: 18),
               FadeSlideIn(
                 delayMs: 200,

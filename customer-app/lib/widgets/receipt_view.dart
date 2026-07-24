@@ -115,9 +115,11 @@ class ReceiptView extends StatelessWidget {
         Row(children: [Expanded(child: _infoTile('অর্ডার আইডি', receipt.orderId)), const SizedBox(width: 10), Expanded(child: _infoTile('রিসিট আইডি', receipt.receiptNumber))]),
         const SizedBox(height: 8),
         Row(children: [Expanded(child: _infoTile('কাস্টমার নাম', receipt.customerName)), const SizedBox(width: 10), Expanded(child: _infoTile('কাস্টমার ফোন', receipt.customerPhone))]),
-        if (_isPickup && receipt.pickupAddress != null) ...[
+        // Customer location — shown on every receipt type (pickup / delivery /
+        // payment memo) whenever an address is available.
+        if (receipt.pickupAddress != null && receipt.pickupAddress!.trim().isNotEmpty) ...[
           const SizedBox(height: 8),
-          _infoTile('পিকআপ ঠিকানা', receipt.pickupAddress!),
+          _infoTile(_isPickup ? 'পিকআপ ঠিকানা' : 'কাস্টমার ঠিকানা', receipt.pickupAddress!),
         ],
         if (_isPickup && receipt.estimatedDelivery != null) ...[
           const SizedBox(height: 8),

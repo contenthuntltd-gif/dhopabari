@@ -38,6 +38,68 @@ class _ChatListScreenState extends State<ChatListScreen> {
     }
   }
 
+  Future<void> _openFacebook(String url) async {
+    var link = url.trim();
+    if (!link.startsWith('http')) link = 'https://$link';
+    final uri = Uri.tryParse(link);
+    if (uri == null) return;
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('ফেসবুক পেজ খোলা যায়নি')),
+        );
+      }
+    }
+  }
+
+  Widget _facebookCard(String url) {
+    return PressableScale(
+      onTap: () => _openFacebook(url),
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          border: Border.all(color: AppColors.line),
+          boxShadow: AppShadows.soft,
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 46,
+              height: 46,
+              decoration: BoxDecoration(color: const Color(0xFF1877F2).withValues(alpha: 0.14), borderRadius: BorderRadius.circular(13)),
+              child: const Icon(Icons.facebook_rounded, color: Color(0xFF1877F2), size: 26),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(AppLanguage.tr('আমাদের ফেসবুক পেজ'), style: const TextStyle(fontSize: 11.5, color: AppColors.muted, fontWeight: FontWeight.w700)),
+                  const SizedBox(height: 2),
+                  Text(AppLanguage.tr('ভিজিট করুন'), style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w900, color: AppColors.ink)),
+                ],
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(color: const Color(0xFF1877F2), borderRadius: BorderRadius.circular(999)),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.open_in_new_rounded, color: Colors.white, size: 14),
+                  const SizedBox(width: 5),
+                  Text(AppLanguage.tr('ওপেন'), style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w800)),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final numbers = <String>[
@@ -95,24 +157,16 @@ class _ChatListScreenState extends State<ChatListScreen> {
                       child: _whatsappCard(numbers[i], i == 0 ? AppLanguage.tr('সাপোর্ট লাইন ১') : AppLanguage.tr('সাপোর্ট লাইন ২')),
                     ),
                   ),
-              const SizedBox(height: AppSpace.md),
-              // Office hours note
-              Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(color: AppColors.blueSoft.withValues(alpha: 0.5), borderRadius: BorderRadius.circular(AppRadius.md)),
-                child: Row(
-                  children: [
-                    const Icon(Icons.access_time_filled_rounded, size: 18, color: AppColors.blue),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        AppLanguage.tr('অফিস সময়: প্রতিদিন সকাল ৯টা – রাত ৯টা'),
-                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.ink),
-                      ),
-                    ),
-                  ],
+              // Facebook page (admin-configurable).
+              if (AppSettings.facebookUrl.trim().isNotEmpty) ...[
+                const SizedBox(height: AppSpace.md),
+                Text(AppLanguage.tr('ফেসবুক পেজ'), style: AppText.h3),
+                const SizedBox(height: AppSpace.xs),
+                FadeSlideIn(
+                  delayMs: 40,
+                  child: _facebookCard(AppSettings.facebookUrl.trim()),
                 ),
-              ),
+              ],
             ],
           ),
         ),

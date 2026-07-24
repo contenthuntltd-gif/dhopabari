@@ -16,6 +16,9 @@ class SupportSettingsScreen extends StatefulWidget {
 class _SupportSettingsScreenState extends State<SupportSettingsScreen> {
   late final _one = TextEditingController(text: AppSettings.supportWhatsapp1);
   late final _two = TextEditingController(text: AppSettings.supportWhatsapp2);
+  late final _facebook = TextEditingController(text: AppSettings.facebookUrl);
+  late final _about = TextEditingController(text: AppSettings.aboutText);
+  late final _privacy = TextEditingController(text: AppSettings.privacyText);
   bool _loading = true;
   bool _saving = false;
 
@@ -28,6 +31,9 @@ class _SupportSettingsScreenState extends State<SupportSettingsScreen> {
       setState(() {
         _one.text = AppSettings.supportWhatsapp1;
         _two.text = AppSettings.supportWhatsapp2;
+        _facebook.text = AppSettings.facebookUrl;
+        _about.text = AppSettings.aboutText;
+        _privacy.text = AppSettings.privacyText;
         _loading = false;
       });
     });
@@ -38,11 +44,16 @@ class _SupportSettingsScreenState extends State<SupportSettingsScreen> {
     FocusScope.of(context).unfocus();
     setState(() => _saving = true);
     try {
-      await AppSettings.setSupportNumbers(_one.text, _two.text);
+      await AppSettings.setContact(
+        whatsapp1: _one.text,
+        whatsapp2: _two.text,
+        facebook: _facebook.text,
+      );
+      await AppSettings.setPages(about: _about.text, privacy: _privacy.text);
       if (!mounted) return;
       setState(() => _saving = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('সাপোর্ট নম্বর সংরক্ষণ হয়েছে')),
+        const SnackBar(content: Text('সব সেটিংস সংরক্ষণ হয়েছে')),
       );
     } catch (e) {
       if (!mounted) return;
@@ -57,6 +68,9 @@ class _SupportSettingsScreenState extends State<SupportSettingsScreen> {
   void dispose() {
     _one.dispose();
     _two.dispose();
+    _facebook.dispose();
+    _about.dispose();
+    _privacy.dispose();
     super.dispose();
   }
 
@@ -111,6 +125,16 @@ class _SupportSettingsScreenState extends State<SupportSettingsScreen> {
                           prefixIcon: Icon(Icons.chat_rounded, size: 20, color: Color(0xFF25D366)),
                         ),
                       ),
+                      const SizedBox(height: 16),
+                      TextField(
+                        controller: _facebook,
+                        keyboardType: TextInputType.url,
+                        decoration: const InputDecoration(
+                          labelText: 'ফেসবুক পেজ লিংক (ঐচ্ছিক)',
+                          hintText: 'https://facebook.com/yourpage',
+                          prefixIcon: Icon(Icons.facebook_rounded, size: 20, color: Color(0xFF1877F2)),
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -118,8 +142,48 @@ class _SupportSettingsScreenState extends State<SupportSettingsScreen> {
                 const Padding(
                   padding: EdgeInsets.symmetric(horizontal: 4),
                   child: Text(
-                    'ফরম্যাট: দেশ কোড সহ, + ছাড়া — যেমন 8801712345678',
+                    'নম্বর ফরম্যাট: দেশ কোড সহ, + ছাড়া — যেমন 8801712345678',
                     style: TextStyle(fontSize: 11, color: AppColors.muted, fontWeight: FontWeight.w600),
+                  ),
+                ),
+                const SizedBox(height: 22),
+                // ── About / Privacy page text (shown in customer Profile) ──
+                const Text('প্রোফাইল পেজের লেখা', style: AppText.h3),
+                const SizedBox(height: 4),
+                const Text(
+                  'নিচের লেখা কাস্টমার অ্যাপের প্রোফাইল → "সম্পর্কে" ও "প্রাইভেসি পলিসি"-তে দেখাবে।',
+                  style: TextStyle(fontSize: 11.5, color: AppColors.muted, fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(AppRadius.md), border: Border.all(color: AppColors.line)),
+                  child: Column(
+                    children: [
+                      TextField(
+                        controller: _about,
+                        maxLines: 5,
+                        minLines: 3,
+                        decoration: const InputDecoration(
+                          labelText: 'সম্পর্কে (About)',
+                          hintText: 'ধোপা বাড়ি সম্পর্কে লিখুন…',
+                          alignLabelWithHint: true,
+                          prefixIcon: Padding(padding: EdgeInsets.only(bottom: 60), child: Icon(Icons.info_outline_rounded, size: 20, color: AppColors.blue)),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      TextField(
+                        controller: _privacy,
+                        maxLines: 7,
+                        minLines: 4,
+                        decoration: const InputDecoration(
+                          labelText: 'প্রাইভেসি পলিসি',
+                          hintText: 'প্রাইভেসি পলিসি লিখুন…',
+                          alignLabelWithHint: true,
+                          prefixIcon: Padding(padding: EdgeInsets.only(bottom: 90), child: Icon(Icons.privacy_tip_outlined, size: 20, color: AppColors.blue)),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(height: 20),
