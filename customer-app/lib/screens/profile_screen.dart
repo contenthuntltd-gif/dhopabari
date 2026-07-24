@@ -1,5 +1,7 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
+import '../utils/web_reload.dart';
 import '../data/mock_data.dart';
 import '../widgets/pressable_scale.dart';
 import '../widgets/fade_slide_in.dart';
@@ -78,10 +80,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
     } catch (_) {
       // Ignore — the local session is cleared either way.
     }
+
+    if (kIsWeb) {
+      // Bulletproof on web: hard-reload to the app root as a fresh guest. No
+      // Flutter route transition at all, so a blank/white flash is impossible,
+      // and every tab starts clean (no stale data from the previous session).
+      reloadToHome();
+      return;
+    }
+
     _loggingOut = false;
     if (!mounted) return;
-
-    // Rebuild (this tab now shows the guest login), then return to Home.
     setState(() {});
     widget.onSwitchTab?.call(0);
   }

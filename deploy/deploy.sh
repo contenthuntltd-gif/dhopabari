@@ -20,7 +20,11 @@ git pull --ff-only
 echo "▶ Building Flutter web (release)…"
 cd "$APP_DIR"
 flutter pub get
-flutter build web --release
+# --pwa-strategy=none disables the Flutter service worker. Combined with the
+# no-store headers in nginx, this means a browser NEVER serves a stale cached
+# app — every deploy is picked up on the next normal refresh, no incognito or
+# manual cache-clearing needed.
+flutter build web --release --pwa-strategy=none
 cd ..
 
 echo "▶ Publishing to $WEB_ROOT…"
