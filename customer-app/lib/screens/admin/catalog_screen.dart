@@ -302,6 +302,34 @@ class _PriceListTabState extends State<_PriceListTab> {
     }
   }
 
+  Future<void> _deleteItem(PriceItem item) async {
+    if (_saving) return;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.lg)),
+        title: const Text('আইটেম মুছবেন?'),
+        content: Text('${item.nameBn} মূল্য তালিকা থেকে স্থায়ীভাবে মুছে যাবে।', style: const TextStyle(fontSize: 13.5, height: 1.5)),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('বাতিল')),
+          ElevatedButton(style: ElevatedButton.styleFrom(backgroundColor: AppColors.danger), onPressed: () => Navigator.pop(context, true), child: const Text('মুছুন')),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    setState(() => _saving = true);
+    try {
+      await Catalog.deleteItem(item.id);
+      if (!mounted) return;
+      setState(() => _saving = false);
+      widget.onSnack('${item.nameBn} মুছে ফেলা হয়েছে');
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _saving = false);
+      widget.onSnack(AdminService.messageFor(e));
+    }
+  }
+
   Future<void> _editPrice(PriceItem item) async {
     final washCtrl = TextEditingController(text: '${item.washPrice}');
     final dryCtrl = TextEditingController(text: '${item.dryPrice}');
@@ -349,7 +377,12 @@ class _PriceListTabState extends State<_PriceListTab> {
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
+    // Constrain the width so item name, prices and action buttons stay in a
+    // tidy line on a wide desktop instead of spreading far apart.
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 760),
+        child: ListView(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
       children: [
         // Add a brand-new item to the catalog.
@@ -416,14 +449,25 @@ class _PriceListTabState extends State<_PriceListTab> {
                           // English numerals — official price list typography
                           SizedBox(width: 44, child: Text('৳${item.washPrice}', textAlign: TextAlign.right, style: const TextStyle(fontSize: 12.5, color: AppColors.blue, fontWeight: FontWeight.w900))),
                           SizedBox(width: 52, child: Text('৳${item.dryPrice}', textAlign: TextAlign.right, style: const TextStyle(fontSize: 12.5, color: AppColors.teal, fontWeight: FontWeight.w900))),
-                          // Pin this item to the top of its category.
+                          // Pin to top / edit / delete.
                           IconButton(
                             tooltip: 'উপরে তুলুন',
                             visualDensity: VisualDensity.compact,
-                            icon: const Icon(Icons.vertical_align_top_rounded, size: 18, color: AppColors.blue),
+                            icon: const Icon(Icons.vertical_align_top_rounded, size: 19, color: AppColors.blue),
                             onPressed: _saving ? null : () => _moveToTop(item),
                           ),
-                          const Icon(Icons.edit_rounded, size: 14, color: AppColors.muted),
+                          IconButton(
+                            tooltip: 'মূল্য সম্পাদনা',
+                            visualDensity: VisualDensity.compact,
+                            icon: const Icon(Icons.edit_rounded, size: 18, color: AppColors.muted),
+                            onPressed: _saving ? null : () => _editPrice(item),
+                          ),
+                          IconButton(
+                            tooltip: 'মুছুন',
+                            visualDensity: VisualDensity.compact,
+                            icon: const Icon(Icons.delete_outline_rounded, size: 19, color: AppColors.danger),
+                            onPressed: _saving ? null : () => _deleteItem(item),
+                          ),
                         ],
                       ),
                     ),
@@ -450,6 +494,8 @@ class _PriceListTabState extends State<_PriceListTab> {
           ),
         ),
       ],
+        ),
+      ),
     );
   }
 }

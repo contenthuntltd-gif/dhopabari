@@ -142,11 +142,9 @@ class _RiderDetailScreenState extends State<RiderDetailScreen> {
                   const SizedBox(height: 14),
                   Row(
                     children: [
-                      Expanded(child: _stat('${r.rating} ★', 'রেটিং')),
+                      Expanded(child: _stat('${r.completedOrders}', 'সম্পন্ন ডেলিভারি')),
                       Container(width: 1, height: 30, color: AppColors.line),
-                      Expanded(child: _stat('${r.completedOrders}', 'সম্পন্ন অর্ডার')),
-                      Container(width: 1, height: 30, color: AppColors.line),
-                      Expanded(child: _stat('৳${r.totalEarnings}', 'মোট আয়')),
+                      Expanded(child: _stat('৳${r.totalEarnings}', 'সংগৃহীত ক্যাশ')),
                     ],
                   ),
                 ],

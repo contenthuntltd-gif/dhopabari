@@ -132,6 +132,13 @@ class Catalog {
     return id;
   }
 
+  /// Deletes a catalog item permanently, then reloads so it disappears
+  /// everywhere. Old orders keep their stored line items unchanged.
+  static Future<void> deleteItem(String id) async {
+    await Supabase.instance.client.from('catalog_items').delete().eq('id', id);
+    await refresh();
+  }
+
   /// Moves an item to the top of ITS category (an admin "pin to top"). Reads
   /// the category's current lowest sort_order, drops this item just below it,
   /// then reloads so every screen reflects the new order.

@@ -17,7 +17,6 @@ class RidersScreen extends StatefulWidget {
 }
 
 class _RidersScreenState extends State<RidersScreen> {
-  String _filter = 'All'; // All, Online, Offline
 
   List<AdminRider> _all = const [];
   bool _loading = true;
@@ -50,18 +49,9 @@ class _RidersScreenState extends State<RidersScreen> {
     }
   }
 
-  // Online/offline is not tracked in the database yet — there is no presence
-  // or heartbeat table — so every rider currently reads as offline and these
-  // filters are inert until that lands.
-  List<AdminRider> get _filtered {
-    if (_filter == 'Online') return _all.where((r) => r.online).toList();
-    if (_filter == 'Offline') return _all.where((r) => !r.online).toList();
-    return _all;
-  }
-
   @override
   Widget build(BuildContext context) {
-    final riders = _filtered;
+    final riders = _all;
 
     return Scaffold(
       floatingActionButton: FloatingActionButton.extended(
@@ -98,31 +88,6 @@ class _RidersScreenState extends State<RidersScreen> {
               ),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-            child: Row(
-              children: ['All', 'Online', 'Offline'].map((f) {
-                final active = f == _filter;
-                final label = f == 'All' ? 'সবাই' : (f == 'Online' ? 'অনলাইন' : 'অফলাইন');
-                return Expanded(
-                  child: GestureDetector(
-                    onTap: () => setState(() => _filter = f),
-                    child: Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 3),
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: active ? AppColors.blue : Colors.white,
-                        border: Border.all(color: active ? AppColors.blue : AppColors.line),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Text(label, style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: active ? Colors.white : AppColors.ink)),
-                    ),
-                  ),
-                );
-              }).toList(),
-            ),
-          ),
           Expanded(
             child: _loading
                 ? const Center(child: CircularProgressIndicator())
@@ -151,16 +116,7 @@ class _RidersScreenState extends State<RidersScreen> {
                             decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(AppRadius.md), border: Border.all(color: !r.active ? AppColors.danger.withValues(alpha: 0.3) : AppColors.line), boxShadow: AppShadows.soft),
                             child: Row(
                               children: [
-                                Stack(
-                                  children: [
-                                    CircleAvatar(radius: 22, backgroundColor: AppColors.tealSoft, child: Icon(Icons.two_wheeler_rounded, color: AppColors.teal)),
-                                    Positioned(
-                                      right: 0,
-                                      bottom: 0,
-                                      child: Container(width: 11, height: 11, decoration: BoxDecoration(color: r.online ? AppColors.green : AppColors.muted, shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 2))),
-                                    ),
-                                  ],
-                                ),
+                                CircleAvatar(radius: 22, backgroundColor: AppColors.tealSoft, child: Icon(Icons.two_wheeler_rounded, color: AppColors.teal)),
                                 const SizedBox(width: 12),
                                 Expanded(
                                   child: Column(
@@ -177,14 +133,8 @@ class _RidersScreenState extends State<RidersScreen> {
                                             ),
                                         ],
                                       ),
+                                      const SizedBox(height: 2),
                                       Text('${r.area} • ${r.phone}', style: const TextStyle(fontSize: 11.5, color: AppColors.muted, fontWeight: FontWeight.w600)),
-                                      const SizedBox(height: 3),
-                                      Row(
-                                        children: [
-                                          const Icon(Icons.star_rounded, size: 13, color: AppColors.amber),
-                                          Text(' ${r.rating} • ${r.completedOrders} সম্পন্ন', style: const TextStyle(fontSize: 11, color: AppColors.ink, fontWeight: FontWeight.w700)),
-                                        ],
-                                      ),
                                     ],
                                   ),
                                 ),
