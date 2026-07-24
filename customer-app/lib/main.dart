@@ -30,8 +30,13 @@ void main() async {
         // Implicit flow returns the session token directly in the redirect
         // URL fragment (no PKCE code exchange), which avoids the web
         // `flow_state_already_used` error on the OAuth round-trip.
+        //
+        // The session is persisted in the browser's local storage by default
+        // and auto-refreshed, so a logged-in user STAYS logged in across
+        // refreshes and restarts — no sudden logouts.
         authOptions: const FlutterAuthClientOptions(
           authFlowType: AuthFlowType.implicit,
+          autoRefreshToken: true,
         ),
       );
       await AuthService.restoreSession();

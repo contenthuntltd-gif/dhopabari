@@ -10,6 +10,7 @@ import '../services/language.dart';
 import '../services/auth_service.dart';
 import 'register_screen.dart';
 import 'rider_login_screen.dart';
+import 'admin_login_screen.dart';
 import 'root_shell.dart';
 
 /// Customer login — phone number only (no password). The shop chose the
@@ -77,15 +78,19 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     }
   }
 
-  /// The ⋮ menu — rider access only (admins sign in via the /admin URL).
+  /// The ⋮ menu — staff access: Rider or Admin.
   void _openRiderSheet() {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (_) => _RiderSheet(
+      builder: (_) => _StaffSheet(
         onRider: () {
           Navigator.pop(context);
           Navigator.push(context, AppPageRoute(builder: (_) => const RiderLoginScreen()));
+        },
+        onAdmin: () {
+          Navigator.pop(context);
+          Navigator.push(context, AppPageRoute(builder: (_) => const AdminLoginScreen()));
         },
       ),
     );
@@ -512,10 +517,11 @@ class _Hero extends StatelessWidget {
   }
 }
 
-/// The ⋮ menu sheet — rider access only.
-class _RiderSheet extends StatelessWidget {
+/// The ⋮ menu sheet — staff access: Rider or Admin.
+class _StaffSheet extends StatelessWidget {
   final VoidCallback onRider;
-  const _RiderSheet({required this.onRider});
+  final VoidCallback onAdmin;
+  const _StaffSheet({required this.onRider, required this.onAdmin});
 
   @override
   Widget build(BuildContext context) {
@@ -528,38 +534,27 @@ class _RiderSheet extends StatelessWidget {
           Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.line, borderRadius: BorderRadius.circular(2))),
           const SizedBox(height: 16),
           const Text('লগইন করুন', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w900, color: AppColors.ink)),
+          const SizedBox(height: 4),
+          const Text('আপনার অ্যাকাউন্ট টাইপ নির্বাচন করুন', style: TextStyle(fontSize: 12.5, color: AppColors.muted, fontWeight: FontWeight.w600)),
           const SizedBox(height: 18),
-          Material(
-            color: AppColors.tealSoft,
-            borderRadius: BorderRadius.circular(16),
-            child: InkWell(
-              borderRadius: BorderRadius.circular(16),
-              onTap: onRider,
-              child: Padding(
-                padding: const EdgeInsets.all(14),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(color: AppColors.teal, borderRadius: BorderRadius.circular(14)),
-                      child: const Center(child: Text('🏍️', style: TextStyle(fontSize: 20))),
-                    ),
-                    const SizedBox(width: 14),
-                    const Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Rider', style: TextStyle(fontSize: 15.5, fontWeight: FontWeight.w900, color: AppColors.teal)),
-                          Text('রাইডার অ্যাপে লগইন করুন', style: TextStyle(fontSize: 11.5, color: AppColors.muted, fontWeight: FontWeight.w600)),
-                        ],
-                      ),
-                    ),
-                    const Icon(Icons.chevron_right_rounded, color: AppColors.teal, size: 26),
-                  ],
-                ),
-              ),
-            ),
+          _option(
+            bg: AppColors.tealSoft,
+            iconBg: AppColors.teal,
+            emoji: '🏍️',
+            title: 'Rider',
+            titleColor: AppColors.teal,
+            subtitle: 'রাইডার অ্যাপে লগইন করুন',
+            onTap: onRider,
+          ),
+          const SizedBox(height: 12),
+          _option(
+            bg: AppColors.blueSoft,
+            iconBg: AppColors.blue,
+            emoji: '🛠️',
+            title: 'Admin',
+            titleColor: AppColors.blue,
+            subtitle: 'অ্যাডমিন প্যানেলে লগইন করুন',
+            onTap: onAdmin,
           ),
           const SizedBox(height: 14),
           SizedBox(
@@ -571,6 +566,49 @@ class _RiderSheet extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _option({
+    required Color bg,
+    required Color iconBg,
+    required String emoji,
+    required String title,
+    required Color titleColor,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: bg,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(color: iconBg, borderRadius: BorderRadius.circular(14)),
+                child: Center(child: Text(emoji, style: const TextStyle(fontSize: 20))),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title, style: TextStyle(fontSize: 15.5, fontWeight: FontWeight.w900, color: titleColor)),
+                    Text(subtitle, style: const TextStyle(fontSize: 11.5, color: AppColors.muted, fontWeight: FontWeight.w600)),
+                  ],
+                ),
+              ),
+              Icon(Icons.chevron_right_rounded, color: titleColor, size: 26),
+            ],
+          ),
+        ),
       ),
     );
   }
