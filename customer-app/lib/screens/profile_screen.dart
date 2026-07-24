@@ -21,73 +21,6 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  bool _loggingOut = false;
-
-  /// Logout — rewritten clean. Confirm (হ্যাঁ / না) → sign out → drop to the
-  /// Home tab IN-PLACE. There is no route push anywhere in this flow, so a
-  /// blank/white transition frame is impossible. Sign-out errors are swallowed
-  /// (the session is cleared regardless), and a guard prevents double taps.
-  Future<void> _confirmLogout() async {
-    if (_loggingOut) return;
-
-    final yes = await showDialog<bool>(
-      context: context,
-      builder: (dctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.lg)),
-        contentPadding: const EdgeInsets.fromLTRB(24, 26, 24, 12),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 56,
-              height: 56,
-              decoration: const BoxDecoration(color: AppColors.dangerSoft, shape: BoxShape.circle),
-              child: const Icon(Icons.logout_rounded, color: AppColors.danger, size: 26),
-            ),
-            const SizedBox(height: 16),
-            const Text('লগআউট করবেন?', style: AppText.h2, textAlign: TextAlign.center),
-            const SizedBox(height: 6),
-            const Text('আপনি চাইলে আবার নম্বর দিয়ে লগইন করতে পারবেন।', style: AppText.bodyMuted, textAlign: TextAlign.center),
-          ],
-        ),
-        actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-        actions: [
-          Expanded(
-            child: OutlinedButton(
-              onPressed: () => Navigator.pop(dctx, false),
-              child: const Text('না'),
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: AppColors.danger),
-              onPressed: () => Navigator.pop(dctx, true),
-              child: const Text('হ্যাঁ, লগআউট'),
-            ),
-          ),
-        ],
-      ),
-    );
-
-    if (yes != true || !mounted) return;
-
-    _loggingOut = true;
-    try {
-      await AuthService.logout();
-    } catch (_) {
-      // Ignore — the local session is cleared either way.
-    }
-    _loggingOut = false;
-    if (!mounted) return;
-
-    // Instant, in-place: rebuild (this tab now shows the guest login) and jump
-    // to the Home tab. No route push and no page reload, so there is neither a
-    // blank/white flash nor a multi-second reload.
-    setState(() {});
-    widget.onSwitchTab?.call(0);
-  }
-
   Future<void> _editProfile() async {
     final nameCtrl = TextEditingController(text: MockData.userName);
     final areaCtrl = TextEditingController(text: MockData.userArea);
@@ -226,20 +159,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ],
                   ),
                 ),
-                const SizedBox(height: AppSpace.md),
-                FadeSlideIn(
-                  delayMs: 180,
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      onPressed: _confirmLogout,
-                      style: ElevatedButton.styleFrom(backgroundColor: AppColors.danger, padding: const EdgeInsets.symmetric(vertical: 15)),
-                      icon: const Icon(Icons.logout_rounded, size: 18),
-                      label: Text(AppLanguage.tr('লগআউট'), style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800)),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: AppSpace.sm),
+                const SizedBox(height: AppSpace.lg),
                 const Center(child: AppLogo(size: 36)),
                 const SizedBox(height: AppSpace.xs),
                 const Center(child: Text('সংস্করণ ১.০.০', style: AppText.caption)),
