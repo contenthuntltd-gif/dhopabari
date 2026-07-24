@@ -11,6 +11,7 @@ import '../services/language.dart';
 import '../data/business_info.dart';
 import 'login_screen.dart';
 import 'orders_screen.dart';
+import 'root_shell.dart';
 
 class ProfileScreen extends StatefulWidget {
   final void Function(int tabIndex)? onSwitchTab;
@@ -61,11 +62,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ],
       ),
     );
-    if (confirmed == true && mounted) {
-      // The signedOut auth listener (main.dart) navigates to a fresh guest
-      // shell. Doing it here too would race that and blank the navigator.
-      await AuthService.logout();
-    }
+    if (confirmed != true || !mounted) return;
+    // The confirmation dialog has already closed, so this is the ONLY
+    // navigation for the logout — clear the whole stack and land on a fresh
+    // guest home. (The auth listener no longer navigates, so no race, no
+    // blank white page.)
+    await AuthService.logout();
+    if (!mounted) return;
+    Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
+      AppPageRoute(builder: (_) => const RootShell()),
+      (r) => false,
+    );
   }
 
   Future<void> _editProfile() async {

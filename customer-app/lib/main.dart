@@ -82,15 +82,10 @@ class _DhopaBariAppState extends State<DhopaBariApp> {
               );
             }
           case AuthChangeEvent.signedOut:
-            // Land on a fresh GUEST shell — browsing and guest ordering keep
-            // working without a login. Going to the login screen here would
-            // also race the profile screen's own post-logout navigation and
-            // leave a blank navigator. This listener is the single source of
-            // truth for where a sign-out lands.
-            navigatorKey.currentState?.pushAndRemoveUntil(
-              AppPageRoute(builder: (_) => const RootShell()),
-              (route) => false,
-            );
+            // Each logout site drives its own navigation (profile → guest
+            // home, rider/admin → their login). Navigating here too would
+            // race that and briefly leave a blank white page. So do nothing.
+            break;
           default:
             break;
         }
