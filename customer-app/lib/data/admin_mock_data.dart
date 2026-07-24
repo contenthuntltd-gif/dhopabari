@@ -18,6 +18,7 @@ class AdminOrder {
   final String customerPhone;
   String? riderId;
   String? riderName;
+  String? riderPhone;
   final String service;
   final String category;
   final String itemsSummary;
@@ -40,6 +41,7 @@ class AdminOrder {
     required this.customerPhone,
     this.riderId,
     this.riderName,
+    this.riderPhone,
     required this.service,
     required this.category,
     required this.itemsSummary,
@@ -70,6 +72,7 @@ class AdminOrder {
       customerPhone: (customer?['phone'] as String?) ?? '',
       riderId: r['rider_id'] as String?,
       riderName: rider?['name'] as String?,
+      riderPhone: rider?['phone'] as String?,
       service: (r['service'] as String?) ?? '',
       category: (r['category'] as String?) ?? '',
       itemsSummary: summarizeItems(items),
@@ -106,6 +109,7 @@ extension AdminOrderView on AdminOrder {
       area: address,
       total: total,
       riderName: riderName,
+      riderPhone: riderPhone,
       timeline: timeline,
       items: items,
     );

@@ -307,19 +307,25 @@ class _TrackingScreenState extends State<TrackingScreen>
                 delayMs: 140,
                 child: SizedBox(
                   width: double.infinity,
-                  child: OutlinedButton.icon(
-                    onPressed: () => Navigator.push(
-                      context,
-                      AppPageRoute(
-                        builder: (_) => ChatScreen(chat: MockData.chats.first),
-                      ),
-                    ),
-                    icon: const Icon(
-                      Icons.support_agent_rounded,
-                      size: AppIconSize.md,
-                    ),
-                    label: const Text('সাপোর্ট প্রয়োজন? চ্যাট করুন'),
-                  ),
+                  // Contact the rider handling this order. If one is assigned we
+                  // show a call button with their number; otherwise a note.
+                  child: (order.riderPhone != null && order.riderPhone!.trim().isNotEmpty)
+                      ? ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(backgroundColor: AppColors.teal, padding: const EdgeInsets.symmetric(vertical: 13)),
+                          onPressed: () => launchUrl(Uri.parse('tel:${order.riderPhone!.replaceAll(' ', '')}')),
+                          icon: const Icon(Icons.call_rounded, size: AppIconSize.md),
+                          label: Text(
+                            order.riderName != null
+                                ? 'রাইডারকে কল করুন — ${order.riderName}'
+                                : 'রাইডারকে কল করুন',
+                            style: const TextStyle(fontWeight: FontWeight.w800),
+                          ),
+                        )
+                      : OutlinedButton.icon(
+                          onPressed: null,
+                          icon: const Icon(Icons.two_wheeler_outlined, size: AppIconSize.md),
+                          label: const Text('রাইডার নির্ধারিত হলে নম্বর এখানে দেখা যাবে'),
+                        ),
                 ),
               ),
             ],

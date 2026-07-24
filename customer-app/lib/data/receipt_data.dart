@@ -244,7 +244,7 @@ class ReceiptData {
       customerId: 'CUST-${order.customerPhone}',
       riderName: order.riderName,
       riderId: order.riderName == null ? null : 'RDR-1042',
-      riderPhone: null,
+      riderPhone: order.riderPhone,
       pickupAddress: order.address,
       estimatedDelivery: DeliveryOptions.free.eta,
       items: _reconstructAdminItems(order),

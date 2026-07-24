@@ -158,8 +158,12 @@ class _OrderSuccessScreenState extends State<OrderSuccessScreen> with SingleTick
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('আনুমানিক পিকআপ', style: TextStyle(fontSize: 11.5, color: AppColors.muted, fontWeight: FontWeight.w700)),
-                            Text('আজ, ১০:০০ AM - ১২:০০ PM', style: TextStyle(fontSize: 13.5, color: AppColors.ink, fontWeight: FontWeight.w800)),
+                            Text('কাপড় সংগ্রহের সময়', style: TextStyle(fontSize: 11.5, color: AppColors.muted, fontWeight: FontWeight.w700)),
+                            SizedBox(height: 2),
+                            Text(
+                              'আমাদের রাইডার আজ দুপুর ১টা থেকে রাত ৯টার মধ্যে আপনার কাপড় সংগ্রহ করতে আসবেন। অনুগ্রহ করে কাপড় প্রস্তুত রাখুন। 🙏',
+                              style: TextStyle(fontSize: 12.5, color: AppColors.ink, fontWeight: FontWeight.w700, height: 1.45),
+                            ),
                           ],
                         ),
                       ),
