@@ -68,47 +68,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  Future<void> _deleteAccount() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.lg)),
-        contentPadding: const EdgeInsets.fromLTRB(24, 26, 24, 12),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 56,
-              height: 56,
-              decoration: const BoxDecoration(color: AppColors.dangerSoft, shape: BoxShape.circle),
-              child: const Icon(Icons.delete_forever_rounded, color: AppColors.danger, size: 26),
-            ),
-            const SizedBox(height: 16),
-            const Text('অ্যাকাউন্ট মুছে ফেলবেন?', style: AppText.h2, textAlign: TextAlign.center),
-            const SizedBox(height: 6),
-            const Text('এই কাজটি পূর্বাবস্থায় ফেরানো যাবে না। আপনার সকল তথ্য স্থায়ীভাবে মুছে যাবে।', style: AppText.bodyMuted, textAlign: TextAlign.center),
-          ],
-        ),
-        actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-        actions: [
-          Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(context, false), child: const Text('বাতিল'))),
-          const SizedBox(width: 10),
-          Expanded(
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: AppColors.danger),
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text('মুছে ফেলুন'),
-            ),
-          ),
-        ],
-      ),
-    );
-    if (confirmed == true && mounted) {
-      // The signedOut auth listener (main.dart) routes back to the guest shell.
-      await AuthService.logout();
-    }
-  }
-
   Future<void> _editProfile() async {
     final nameCtrl = TextEditingController(text: MockData.userName);
     final areaCtrl = TextEditingController(text: MockData.userArea);
@@ -244,16 +203,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       _menuTile(context, Icons.info_outline_rounded, AppLanguage.tr('সম্পর্কে'), AppColors.muted, onTap: _openAbout),
                       _menuTile(context, Icons.privacy_tip_outlined, AppLanguage.tr('প্রাইভেসি পলিসি'), AppColors.muted),
                       _menuTile(context, Icons.description_outlined, AppLanguage.tr('শর্তাবলী'), AppColors.muted, isLast: true),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: AppSpace.sm),
-                FadeSlideIn(
-                  delayMs: 160,
-                  child: _menuGroup(
-                    label: AppLanguage.tr('ঝুঁকিপূর্ণ এলাকা'),
-                    tiles: [
-                      _menuTile(context, Icons.delete_forever_rounded, AppLanguage.tr('অ্যাকাউন্ট মুছে ফেলুন'), AppColors.danger, danger: true, isLast: true, onTap: _deleteAccount),
                     ],
                   ),
                 ),
