@@ -14,6 +14,7 @@ import 'data/cart.dart';
 import 'data/catalog.dart';
 import 'data/catalog_meta.dart';
 import 'data/business_info.dart';
+import 'app_globals.dart';
 import 'services/auth_service.dart';
 import 'services/supabase_config.dart';
 import 'services/language.dart';
@@ -128,6 +129,7 @@ class _DhopaBariAppState extends State<DhopaBariApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       navigatorKey: navigatorKey,
+      scaffoldMessengerKey: scaffoldMessengerKey,
       title: 'ধোপা বাড়ি — Dhopa Bari',
       debugShowCheckedModeBanner: false,
       theme: buildAppTheme(),

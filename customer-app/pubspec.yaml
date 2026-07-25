@@ -44,6 +44,7 @@ dependencies:
   qr_flutter: ^4.1.0
   share_plus: ^10.1.2
   path_provider: ^2.1.5
+  audioplayers: ^6.1.0
 
 dev_dependencies:
   flutter_test:
@@ -88,6 +89,7 @@ flutter:
   assets:
     - assets/branding/dhopa_bari_logo.png
     - assets/fonts/KohinoorBangla-Bold.otf
+    - assets/sounds/ding.wav
 
   # Brand Bangla typeface — applied app-wide via ThemeData.fontFamily and
   # embedded into receipt PDFs (with a Noto Bengali fallback there, since

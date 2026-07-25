@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
+import '../../services/order_alerts.dart';
 import '../../widgets/app_page_route.dart';
 import '../../widgets/app_logo.dart';
 import '../../widgets/phone_frame.dart';
@@ -67,11 +68,14 @@ class _AdminRootShellState extends State<AdminRootShell> {
     // The admin panel is a desktop product — break out of the phone frame
     // while it is on screen.
     PhoneFrame.fullScreen.value = true;
+    // Chime + banner on new orders / status changes while the panel is open.
+    OrderAlerts.start();
   }
 
   @override
   void dispose() {
     PhoneFrame.fullScreen.value = false;
+    OrderAlerts.stop();
     super.dispose();
   }
 
@@ -414,11 +418,21 @@ class _TopBar extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 14),
-          IconButton(
-            tooltip: 'নোটিফিকেশন',
-            icon: const Icon(Icons.notifications_none_rounded, color: AppColors.muted),
-            onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('কোনো নতুন নোটিফিকেশন নেই')),
+          // New-order / status-change chime — tap to mute or unmute.
+          ValueListenableBuilder<bool>(
+            valueListenable: OrderAlerts.muted,
+            builder: (context, muted, _) => IconButton(
+              tooltip: muted ? AppLanguage.tr('শব্দ চালু করুন') : AppLanguage.tr('শব্দ বন্ধ করুন'),
+              icon: Icon(
+                muted ? Icons.notifications_off_rounded : Icons.notifications_active_rounded,
+                color: muted ? AppColors.muted : AppColors.blue,
+              ),
+              onPressed: () {
+                OrderAlerts.muted.value = !muted;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(AppLanguage.tr(muted ? 'অর্ডার শব্দ চালু' : 'অর্ডার শব্দ বন্ধ'))),
+                );
+              },
             ),
           ),
           const SizedBox(width: 4),

@@ -5,6 +5,7 @@ import '../../data/admin_mock_data.dart';
 import '../../services/admin_service.dart';
 import '../../services/auth_service.dart';
 import '../../services/language.dart';
+import '../../services/order_alerts.dart';
 import '../../widgets/bn_number.dart';
 import '../admin/customers_screen.dart';
 import '../../widgets/fade_slide_in.dart';
@@ -40,6 +41,14 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
   void initState() {
     super.initState();
     _load();
+    // Chime + banner on new orders / status changes while on the road.
+    OrderAlerts.start();
+  }
+
+  @override
+  void dispose() {
+    OrderAlerts.stop();
+    super.dispose();
   }
 
   Future<void> _load() async {
