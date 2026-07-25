@@ -4,6 +4,7 @@ import '../theme/app_theme.dart';
 import '../data/cart.dart';
 import '../data/mock_data.dart';
 import '../data/business_info.dart';
+import '../services/language.dart';
 import '../services/admin_service.dart';
 import '../services/auth_service.dart';
 import '../widgets/laundry_icons.dart';
@@ -1184,17 +1185,14 @@ class _GuestInfoStep extends StatelessWidget {
         const SizedBox(height: AppSpace.md),
         const Text('ডেলিভারি অপশন', style: AppText.h3),
         const SizedBox(height: 10),
-        _DeliveryOptionTile(
-          option: DeliveryOptions.free,
-          selected: deliveryType == DeliveryType.free,
-          onTap: () => onDeliveryTypeChanged(DeliveryType.free),
-        ),
-        const SizedBox(height: 10),
-        _DeliveryOptionTile(
-          option: DeliveryOptions.express,
-          selected: deliveryType == DeliveryType.express,
-          onTap: () => onDeliveryTypeChanged(DeliveryType.express),
-        ),
+        for (final opt in DeliveryOptions.visible) ...[
+          _DeliveryOptionTile(
+            option: opt,
+            selected: deliveryType == opt.type,
+            onTap: () => onDeliveryTypeChanged(opt.type),
+          ),
+          const SizedBox(height: 10),
+        ],
       ],
     );
   }
@@ -1400,17 +1398,14 @@ class _AddressTimeStepState extends State<_AddressTimeStep> {
         const SizedBox(height: AppSpace.md),
         const Text('ডেলিভারি অপশন', style: AppText.h3),
         const SizedBox(height: 10),
-        _DeliveryOptionTile(
-          option: DeliveryOptions.free,
-          selected: widget.deliveryType == DeliveryType.free,
-          onTap: () => widget.onDeliveryTypeChanged(DeliveryType.free),
-        ),
-        const SizedBox(height: 10),
-        _DeliveryOptionTile(
-          option: DeliveryOptions.express,
-          selected: widget.deliveryType == DeliveryType.express,
-          onTap: () => widget.onDeliveryTypeChanged(DeliveryType.express),
-        ),
+        for (final opt in DeliveryOptions.visible) ...[
+          _DeliveryOptionTile(
+            option: opt,
+            selected: widget.deliveryType == opt.type,
+            onTap: () => widget.onDeliveryTypeChanged(opt.type),
+          ),
+          const SizedBox(height: 10),
+        ],
       ],
     );
   }
@@ -1423,60 +1418,76 @@ class _DeliveryOptionTile extends StatelessWidget {
   const _DeliveryOptionTile({required this.option, required this.selected, required this.onTap});
 
   bool get _isExpress => option.type == DeliveryType.express;
+  bool get _locked => option.comingSoon;
 
   @override
   Widget build(BuildContext context) {
     final accent = _isExpress ? AppColors.amber : AppColors.teal;
-    return Semantics(
-      button: true,
-      selected: selected,
-      label: '${option.label}, ${option.charge == 0 ? "ফ্রি" : "৳${option.charge}"}, ${option.eta}',
-      child: GestureDetector(
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: AppMotion.base,
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: selected ? accent.withValues(alpha: 0.08) : Colors.white,
-            border: Border.all(color: selected ? accent : AppColors.line, width: selected ? 1.6 : 1),
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: selected ? [BoxShadow(color: accent.withValues(alpha: 0.16), blurRadius: 10, offset: const Offset(0, 4))] : null,
-          ),
-          child: Row(
-            children: [
-              Icon(_isExpress ? Icons.bolt_rounded : Icons.local_shipping_outlined, size: 22, color: selected ? accent : AppColors.muted),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+    // A coming-soon option is shown but not selectable — dimmed, non-tappable,
+    // and never in the "selected" state.
+    final isSelected = selected && !_locked;
+    final tile = AnimatedContainer(
+      duration: AppMotion.base,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: isSelected ? accent.withValues(alpha: 0.08) : (_locked ? AppColors.paper : Colors.white),
+        border: Border.all(color: isSelected ? accent : AppColors.line, width: isSelected ? 1.6 : 1),
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: isSelected ? [BoxShadow(color: accent.withValues(alpha: 0.16), blurRadius: 10, offset: const Offset(0, 4))] : null,
+      ),
+      child: Row(
+        children: [
+          Icon(_isExpress ? Icons.bolt_rounded : Icons.local_shipping_outlined, size: 22, color: isSelected ? accent : AppColors.muted),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Wrap(
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 6,
+                  runSpacing: 2,
                   children: [
-                    Row(
-                      children: [
-                        Text(option.label, style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w800, color: selected ? accent : AppColors.ink)),
-                        if (_isExpress) ...[
-                          const SizedBox(width: 6),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                            decoration: BoxDecoration(color: AppColors.amber, borderRadius: BorderRadius.circular(999)),
-                            child: const Text('⚡ Express Delivery', style: TextStyle(fontSize: 8.5, fontWeight: FontWeight.w800, color: Colors.white)),
-                          ),
-                        ],
-                      ],
-                    ),
-                    const SizedBox(height: 2),
-                    Text('আনুমানিক সম্পন্ন: ${option.eta}', style: const TextStyle(fontSize: 11, color: AppColors.muted, fontWeight: FontWeight.w600)),
+                    Text(option.label, style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w800, color: isSelected ? accent : AppColors.ink)),
+                    if (_isExpress && !_locked)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(color: AppColors.amber, borderRadius: BorderRadius.circular(999)),
+                        child: const Text('⚡ Express Delivery', style: TextStyle(fontSize: 8.5, fontWeight: FontWeight.w800, color: Colors.white)),
+                      ),
+                    if (_locked)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                        decoration: BoxDecoration(color: AppColors.muted, borderRadius: BorderRadius.circular(999)),
+                        child: Text('🔒 ${AppLanguage.tr('শীঘ্রই আসছে')}', style: const TextStyle(fontSize: 8.5, fontWeight: FontWeight.w800, color: Colors.white)),
+                      ),
                   ],
                 ),
-              ),
-              Text(
-                option.charge == 0 ? 'ফ্রি' : '+${money(option.charge)}',
-                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w900, color: selected ? accent : AppColors.ink),
-              ),
-              const SizedBox(width: 8),
-              _SelectDot(selected: selected),
-            ],
+                const SizedBox(height: 2),
+                Text('আনুমানিক সম্পন্ন: ${option.eta}', style: const TextStyle(fontSize: 11, color: AppColors.muted, fontWeight: FontWeight.w600)),
+              ],
+            ),
           ),
-        ),
+          Text(
+            option.charge == 0 ? 'ফ্রি' : '+${money(option.charge)}',
+            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w900, color: isSelected ? accent : AppColors.ink),
+          ),
+          const SizedBox(width: 8),
+          _locked
+              ? const Icon(Icons.lock_outline_rounded, size: 18, color: AppColors.muted)
+              : _SelectDot(selected: isSelected),
+        ],
+      ),
+    );
+    return Semantics(
+      button: !_locked,
+      selected: isSelected,
+      enabled: !_locked,
+      label: '${option.label}, ${option.charge == 0 ? "ফ্রি" : "৳${option.charge}"}, ${option.eta}${_locked ? ", শীঘ্রই আসছে" : ""}',
+      child: GestureDetector(
+        onTap: _locked ? null : onTap,
+        // Dim locked options so they read as "not yet available".
+        child: _locked ? Opacity(opacity: 0.6, child: tile) : tile,
       ),
     );
   }

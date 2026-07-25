@@ -130,6 +130,13 @@ class AppLanguage {
     'এখনই অর্ডার করুন': 'Order Now',
     'ফ্রি পিকআপ': 'Free Pickup',
     'ফ্রি ডেলিভারি': 'Free Delivery',
+    'শীঘ্রই আসছে': 'Coming Soon',
+    'ডেলিভারি ব্যবস্থাপনা': 'Delivery Management',
+    'গ্রাহকদের জন্য উপলব্ধ': 'Available to customers',
+    'শীঘ্রই আসছে হিসেবে দেখান (লক করা)': 'Show as coming soon (locked)',
+    'ডেলিভারি চার্জ (৳)': 'Delivery charge (৳)',
+    'আনুমানিক সময়': 'Estimated time',
+    'ডেলিভারি সেটিং সংরক্ষিত হয়েছে': 'Delivery settings saved',
     'প্রতিটি অর্ডারে সম্পূর্ণ ফ্রি — কোনো শর্ত ছাড়াই': 'Completely free on every order — no conditions',
     'ধোপা বাড়ি': 'Dhopa Bari',
     // NOTE: our tagline ("কাপড়ের যত্নে আপনার বিশ্বস্ত পার্টনার") is

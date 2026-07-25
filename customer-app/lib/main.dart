@@ -13,6 +13,7 @@ import 'data/app_settings.dart';
 import 'data/cart.dart';
 import 'data/catalog.dart';
 import 'data/catalog_meta.dart';
+import 'data/business_info.dart';
 import 'services/auth_service.dart';
 import 'services/supabase_config.dart';
 import 'services/language.dart';
@@ -50,6 +51,7 @@ void main() async {
       // Categories/services drive the customer order screen's tabs, so load
       // them before first paint (a single, quick key/value read).
       await CatalogMeta.load();
+      await DeliveryOptions.load();
     } catch (e) {
       debugPrint('Supabase init/session restore failed: $e');
     }

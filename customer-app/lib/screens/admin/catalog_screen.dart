@@ -3,6 +3,8 @@ import '../../theme/app_theme.dart';
 import '../../data/admin_mock_data.dart';
 import '../../data/catalog.dart';
 import '../../data/catalog_meta.dart';
+import '../../data/business_info.dart';
+import '../../services/language.dart';
 import '../../data/mock_data.dart';
 import '../../services/admin_service.dart';
 import '../../widgets/fade_slide_in.dart';
@@ -15,7 +17,7 @@ class CatalogScreen extends StatefulWidget {
 }
 
 class _CatalogScreenState extends State<CatalogScreen> with SingleTickerProviderStateMixin {
-  late final TabController _tabController = TabController(length: 3, vsync: this);
+  late final TabController _tabController = TabController(length: 4, vsync: this);
 
   @override
   void dispose() {
@@ -42,6 +44,7 @@ class _CatalogScreenState extends State<CatalogScreen> with SingleTickerProvider
             Tab(text: 'মূল্য তালিকা'),
             Tab(text: 'সার্ভিস'),
             Tab(text: 'ক্যাটাগরি'),
+            Tab(text: 'ডেলিভারি'),
           ],
         ),
       ),
@@ -51,6 +54,7 @@ class _CatalogScreenState extends State<CatalogScreen> with SingleTickerProvider
           _PriceListTab(onSnack: _snack),
           _ServicesTab(onSnack: _snack),
           _CategoriesTab(onSnack: _snack),
+          _DeliveryTab(onSnack: _snack),
         ],
       ),
     );
@@ -531,6 +535,169 @@ class _PriceListTabState extends State<_PriceListTab> {
       ],
         ),
       ),
+    );
+  }
+}
+
+// ── Delivery options ─────────────────────────────────────
+//
+// Admin-configurable delivery. Each option's availability, "coming soon"
+// lock and charge persist to app_settings (DeliveryOptions.save) and drive
+// the customer checkout screen — whatever is enabled here is what customers
+// see, and a coming-soon option shows locked.
+
+class _DeliveryTab extends StatefulWidget {
+  final void Function(String) onSnack;
+  const _DeliveryTab({required this.onSnack});
+  @override
+  State<_DeliveryTab> createState() => _DeliveryTabState();
+}
+
+class _DeliveryTabState extends State<_DeliveryTab> {
+  Future<void> _save() async {
+    try {
+      await DeliveryOptions.save();
+      if (mounted) widget.onSnack(AppLanguage.tr('ডেলিভারি সেটিং সংরক্ষিত হয়েছে'));
+    } catch (e) {
+      if (mounted) widget.onSnack(AdminService.messageFor(e));
+    }
+  }
+
+  /// Edits the charge (৳) and estimated time of an option, then persists.
+  Future<void> _editDetails(DeliveryOption opt) async {
+    final chargeCtrl = TextEditingController(text: '${opt.charge}');
+    final etaCtrl = TextEditingController(text: opt.eta);
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.lg)),
+        title: Text(opt.label, style: AppText.h2),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: chargeCtrl,
+              keyboardType: TextInputType.number,
+              decoration: InputDecoration(hintText: AppLanguage.tr('ডেলিভারি চার্জ (৳)'), prefixIcon: const Icon(Icons.payments_outlined, size: 20)),
+            ),
+            const SizedBox(height: 10),
+            TextField(
+              controller: etaCtrl,
+              decoration: InputDecoration(hintText: AppLanguage.tr('আনুমানিক সময়'), prefixIcon: const Icon(Icons.schedule_rounded, size: 20)),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('বাতিল')),
+          ElevatedButton(onPressed: () => Navigator.pop(context, true), child: const Text('সংরক্ষণ করুন')),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    setState(() {
+      opt.charge = int.tryParse(chargeCtrl.text) ?? opt.charge;
+      if (etaCtrl.text.trim().isNotEmpty) opt.eta = etaCtrl.text.trim();
+    });
+    await _save();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 760),
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 90),
+          children: [
+            for (int i = 0; i < DeliveryOptions.all.length; i++) ...[
+              FadeSlideIn(delayMs: i * 60, child: _deliveryCard(DeliveryOptions.all[i])),
+              const SizedBox(height: 12),
+            ],
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(color: AppColors.blueSoft.withValues(alpha: 0.4), borderRadius: BorderRadius.circular(AppRadius.sm)),
+              child: Row(
+                children: [
+                  const Icon(Icons.info_outline_rounded, size: 16, color: AppColors.blue),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      AppLanguage.tr('এখানে যা চালু/বন্ধ করবেন তা সরাসরি গ্রাহকের অর্ডার স্ক্রিনে দেখা যাবে। "শীঘ্রই আসছে" দিলে অপশনটি দেখা যাবে কিন্তু নির্বাচন করা যাবে না।'),
+                      style: const TextStyle(fontSize: 11, color: AppColors.ink, fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _deliveryCard(DeliveryOption opt) {
+    final isExpress = opt.type == DeliveryType.express;
+    final accent = isExpress ? AppColors.amber : AppColors.teal;
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(AppRadius.md), border: Border.all(color: AppColors.line), boxShadow: AppShadows.soft),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(color: accent.withValues(alpha: 0.14), borderRadius: BorderRadius.circular(10)),
+                alignment: Alignment.center,
+                child: Icon(isExpress ? Icons.bolt_rounded : Icons.local_shipping_outlined, size: 22, color: accent),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(opt.label, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.ink)),
+                    Text('${opt.charge == 0 ? 'ফ্রি' : '৳${opt.charge}'} · ${opt.eta}', style: const TextStyle(fontSize: 11.5, color: AppColors.muted, fontWeight: FontWeight.w600)),
+                  ],
+                ),
+              ),
+              IconButton(
+                tooltip: 'চার্জ ও সময় সম্পাদনা',
+                icon: const Icon(Icons.edit_rounded, size: 19, color: AppColors.muted),
+                onPressed: () => _editDetails(opt),
+              ),
+            ],
+          ),
+          const Divider(height: 20),
+          _switchRow(
+            label: AppLanguage.tr('গ্রাহকদের জন্য উপলব্ধ'),
+            value: opt.enabled,
+            onChanged: (v) {
+              setState(() => opt.enabled = v);
+              _save();
+            },
+          ),
+          _switchRow(
+            label: AppLanguage.tr('শীঘ্রই আসছে হিসেবে দেখান (লক করা)'),
+            value: opt.comingSoon,
+            onChanged: (v) {
+              setState(() => opt.comingSoon = v);
+              _save();
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _switchRow({required String label, required bool value, required ValueChanged<bool> onChanged}) {
+    return Row(
+      children: [
+        Expanded(child: Text(label, style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: AppColors.ink))),
+        Switch(value: value, onChanged: onChanged, activeTrackColor: AppColors.blue),
+      ],
     );
   }
 }
