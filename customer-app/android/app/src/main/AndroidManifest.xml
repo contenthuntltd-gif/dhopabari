@@ -1,6 +1,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Network access — required for Supabase, order APIs, receipts, etc.
+         Without this the release build cannot reach the internet. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <application
-        android:label="customer_app"
+        android:label="ধোপা বাড়ি"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
