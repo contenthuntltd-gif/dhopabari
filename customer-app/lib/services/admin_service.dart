@@ -50,9 +50,11 @@ class AdminService {
   // ----- Customers -----
 
   /// Every customer, with order count and lifetime spend, newest first.
-  /// [search] matches name or phone.
-  static Future<List<AdminCustomer>> customers({String? search}) async {
+  /// [search] matches name or phone. Soft-deleted customers live in the
+  /// recycle bin, not the normal list ([trashed] switches between them).
+  static Future<List<AdminCustomer>> customers({String? search, bool trashed = false}) async {
     var query = _db.from('customer_summary').select().eq('role', 'customer');
+    query = trashed ? query.not('deleted_at', 'is', null) : query.isFilter('deleted_at', null);
 
     final q = search?.trim() ?? '';
     if (q.isNotEmpty) {
@@ -64,6 +66,33 @@ class AdminService {
 
     final rows = await query.order('created_at', ascending: false);
     return (rows as List).map((r) => AdminCustomer.fromRow(r)).toList();
+  }
+
+  // ----- Customer recycle bin (soft delete) -----
+
+  /// Moves customers to the recycle bin (soft delete). They leave the customer
+  /// list but can be restored. The auth account stays intact until a permanent
+  /// delete.
+  static Future<void> trashCustomers(List<String> ids) async {
+    if (ids.isEmpty) return;
+    await _db
+        .from('profiles')
+        .update({'deleted_at': DateTime.now().toUtc().toIso8601String()})
+        .inFilter('id', ids);
+  }
+
+  /// Restores trashed customers (clears deleted_at).
+  static Future<void> restoreCustomers(List<String> ids) async {
+    if (ids.isEmpty) return;
+    await _db.from('profiles').update({'deleted_at': null}).inFilter('id', ids);
+  }
+
+  /// Permanently deletes customers — removes the auth account (profile + orders
+  /// cascade). Cannot be undone. Uses the admin edge function per user.
+  static Future<void> deleteCustomersForever(List<String> ids) async {
+    for (final id in ids) {
+      await deleteUser(id);
+    }
   }
 
   /// The signed-in user's own summary row (used by the rider dashboard).
