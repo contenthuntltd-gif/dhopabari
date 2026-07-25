@@ -171,6 +171,7 @@ class AppLanguage {
     'টি ডেলিভারি': 'deliveries',
     'গতকাল': 'Yesterday',
     'কাস্টমার ও অর্ডার': 'Customers & Orders',
+    'নতুন কাস্টমার তৈরি করুন বা প্রোফাইল থেকে অর্ডার নিন': 'Add a customer or place an order from a profile',
     'ডেলিভারি পার্টনার': 'Delivery Partner',
     'হ্যালো': 'Hello',
     'ডেলিভারির জন্য প্রস্তুত?': 'Ready to deliver?',

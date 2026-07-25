@@ -219,14 +219,6 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
     final list = _filtered;
     return Scaffold(
       backgroundColor: AppColors.paper,
-      floatingActionButton: _canSeeCustomers
-          ? FloatingActionButton.extended(
-              backgroundColor: AppColors.blue,
-              onPressed: _openCustomers,
-              icon: const Icon(Icons.people_alt_rounded),
-              label: Text(AppLanguage.tr('কাস্টমার ও অর্ডার')),
-            )
-          : null,
       body: SafeArea(
         child: RefreshIndicator(
           color: AppColors.teal,
@@ -255,7 +247,50 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
                   ],
                 ),
               ),
-              const SizedBox(height: 18),
+              const SizedBox(height: 16),
+              // Customer access — only when an admin has granted this rider the
+              // "can see customers" permission (rider detail → toggle). When on,
+              // the rider can register customers, browse everyone and place an
+              // order from any profile.
+              if (_canSeeCustomers) ...[
+                FadeSlideIn(
+                  delayMs: 20,
+                  child: PressableScale(
+                    onTap: _openCustomers,
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(colors: [AppColors.blue, AppColors.blueDeep], begin: Alignment.topLeft, end: Alignment.bottomRight),
+                        borderRadius: BorderRadius.circular(AppRadius.lg),
+                        boxShadow: [BoxShadow(color: AppColors.blue.withValues(alpha: 0.3), blurRadius: 16, offset: const Offset(0, 8))],
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 46,
+                            height: 46,
+                            decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(14)),
+                            child: const Icon(Icons.people_alt_rounded, color: Colors.white, size: 24),
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(AppLanguage.tr('কাস্টমার ও অর্ডার'), style: const TextStyle(fontSize: 15.5, fontWeight: FontWeight.w900, color: Colors.white)),
+                                const SizedBox(height: 2),
+                                Text(AppLanguage.tr('নতুন কাস্টমার তৈরি করুন বা প্রোফাইল থেকে অর্ডার নিন'), style: const TextStyle(fontSize: 11, color: Colors.white70, fontWeight: FontWeight.w600)),
+                              ],
+                            ),
+                          ),
+                          const Icon(Icons.chevron_right_rounded, color: Colors.white),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
               // Four live stats — tap to filter the list below.
               FadeSlideIn(
                 delayMs: 40,
