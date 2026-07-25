@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../theme/app_theme.dart';
 import '../../data/admin_mock_data.dart';
+import '../../data/receipt_data.dart';
 import '../../services/admin_service.dart';
 import '../../services/auth_service.dart';
 import '../../services/language.dart';
@@ -11,14 +13,18 @@ import '../../widgets/fade_slide_in.dart';
 import '../../widgets/pressable_scale.dart';
 import '../../widgets/app_page_route.dart';
 import '../../widgets/state_views.dart';
+import '../../widgets/stat_card.dart';
 import '../../widgets/app_logo.dart';
 import '../login_screen.dart';
-import 'rider_queue_screen.dart';
+import '../receipt_screen.dart';
 
-/// Rider's home base. Three tap-through cards — Pickup, Delivery and
-/// Collection — each opening a two-tab (today / all) screen. No online toggle,
-/// no invented wallet balance: everything is derived from the rider's real
-/// assigned orders.
+/// Which slice of the rider's orders the list shows. Mirrors the four stat
+/// tiles: everything, delivered, still-active, cancelled.
+enum _RiderFilter { pending, completed, failed, all }
+
+/// Rider home — greeting, four live stats (total / completed / pending /
+/// failed) and the assigned-deliveries list beneath. Every card is wired to
+/// the real order: call the customer, advance the status, open receipts.
 class RiderDashboardScreen extends StatefulWidget {
   const RiderDashboardScreen({super.key});
   @override
@@ -27,16 +33,16 @@ class RiderDashboardScreen extends StatefulWidget {
 
 class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
   AdminCustomer? _me;
-  List<AdminOrder> _riderOrders = const [];
+  List<AdminOrder> _orders = const [];
   bool _loading = true;
-  bool _canSeeCustomers = false; // admin-controlled
+  bool _canSeeCustomers = false;
   Object? _error;
+  _RiderFilter _filter = _RiderFilter.pending;
 
   @override
   void initState() {
     super.initState();
     _load();
-    // Chime + banner on new orders / status changes while on the road.
     OrderAlerts.start();
   }
 
@@ -55,7 +61,7 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
       if (!mounted) return;
       setState(() {
         _me = me;
-        _riderOrders = orders;
+        _orders = orders;
         _canSeeCustomers = canSee;
         _loading = false;
       });
@@ -70,17 +76,25 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
 
   String get _riderName => _me?.name ?? 'রাইডার';
 
-  bool _isToday(DateTime? d) {
-    if (d == null) return false;
-    final n = DateTime.now();
-    return d.year == n.year && d.month == n.month && d.day == n.day;
-  }
+  bool _isActive(AdminOrder o) => o.status != 'Delivered' && o.status != 'Cancelled';
 
-  // Card metrics — pickups due today, deliveries ready to go, cash collected
-  // today (delivered orders' totals).
-  int get _pickupToday => _riderOrders.where((o) => o.status == 'Confirmed' && _isToday(o.createdAt)).length;
-  int get _deliveryToday => _riderOrders.where((o) => o.status == 'Packaging Done' || o.status == 'Out for Delivery').length;
-  int get _collectToday => _riderOrders.where((o) => o.status == 'Delivered' && _isToday(o.deliveredAt)).fold(0, (s, o) => s + o.total);
+  int get _total => _orders.length;
+  int get _completed => _orders.where((o) => o.status == 'Delivered').length;
+  int get _pending => _orders.where(_isActive).length;
+  int get _failed => _orders.where((o) => o.status == 'Cancelled').length;
+
+  List<AdminOrder> get _filtered {
+    switch (_filter) {
+      case _RiderFilter.pending:
+        return _orders.where(_isActive).toList();
+      case _RiderFilter.completed:
+        return _orders.where((o) => o.status == 'Delivered').toList();
+      case _RiderFilter.failed:
+        return _orders.where((o) => o.status == 'Cancelled').toList();
+      case _RiderFilter.all:
+        return _orders;
+    }
+  }
 
   Future<void> _logout() async {
     await AuthService.logout();
@@ -93,16 +107,101 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
     Navigator.push(context, AppPageRoute(builder: (_) => const CustomersScreen())).then((_) => _load());
   }
 
-  void _openQueue(RiderQueueMode mode) {
-    final id = _me?.id;
-    if (id == null) return;
-    Navigator.push(context, AppPageRoute(builder: (_) => RiderQueueScreen(mode: mode, riderId: id))).then((_) => _load());
+  // ── Order actions ──
+
+  String? _nextStatusFor(AdminOrder o) {
+    final idx = AdminMockData.orderStatuses.indexOf(o.status);
+    if (idx < 0 || idx >= AdminMockData.orderStatuses.length - 2) return null;
+    return AdminMockData.orderStatuses[idx + 1];
   }
 
-  void _openCollection() {
-    final id = _me?.id;
-    if (id == null) return;
-    Navigator.push(context, AppPageRoute(builder: (_) => RiderCollectionScreen(riderId: id))).then((_) => _load());
+  bool _riderCanAdvance(AdminOrder o) {
+    final next = _nextStatusFor(o);
+    return next != null && AdminMockData.riderAllowedStatuses.contains(next);
+  }
+
+  /// The action-button label for the rider's next move on this order.
+  String _advanceLabel(AdminOrder o) {
+    final next = _nextStatusFor(o);
+    if (next == 'Picked Up') return AppLanguage.tr('পিকআপ শুরু');
+    if (next == 'Delivered') return AppLanguage.tr('ডেলিভারি সম্পন্ন');
+    return AppLanguage.tr('পরবর্তী ধাপ');
+  }
+
+  Future<void> _advance(AdminOrder o) async {
+    final next = _nextStatusFor(o);
+    if (next == null || !AdminMockData.riderAllowedStatuses.contains(next)) return;
+    final prev = o.status;
+    setState(() => o.status = next);
+    try {
+      await AdminService.updateOrderStatus(o.uuid, next);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('${o.id} → ${AdminMockData.orderStatusesBn[next]}')),
+      );
+      setState(() {});
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => o.status = prev);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AdminService.messageFor(e))));
+    }
+  }
+
+  void _openReceipt(AdminOrder o, ReceiptType type) {
+    final receipt = type == ReceiptType.pickup
+        ? ReceiptData.pickupForAdminOrder(o)
+        : ReceiptData.deliveryForAdminOrder(o);
+    Navigator.push(
+      context,
+      AppPageRoute(
+        builder: (_) => ReceiptScreen(
+          receipt: receipt,
+          role: ReceiptViewerRole.rider,
+          pickupConfirmed: o.status != 'Confirmed',
+          onConfirmPickup: o.status == 'Confirmed' ? () => _advance(o) : null,
+        ),
+      ),
+    );
+  }
+
+  void _openDetails(AdminOrder o) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (_) => Container(
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+        decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.only(topLeft: Radius.circular(24), topRight: Radius.circular(24))),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.line, borderRadius: BorderRadius.circular(2)))),
+            const SizedBox(height: 14),
+            Text('${AppLanguage.tr('অর্ডার')} ${o.id}', style: AppText.h2),
+            const SizedBox(height: 4),
+            Text('${o.customerName} · ${toBn(o.pieces)} ${AppLanguage.tr('টি আইটেম')} · ৳${toBn(o.total)}', style: AppText.bodyMuted),
+            const SizedBox(height: 16),
+            OutlinedButton.icon(
+              onPressed: () {
+                Navigator.pop(context);
+                _openReceipt(o, ReceiptType.pickup);
+              },
+              icon: const Icon(Icons.receipt_long_rounded, size: 18),
+              label: Text(AppLanguage.tr('পিকআপ রিসিট')),
+            ),
+            const SizedBox(height: 10),
+            OutlinedButton.icon(
+              onPressed: () {
+                Navigator.pop(context);
+                _openReceipt(o, ReceiptType.delivery);
+              },
+              icon: const Icon(Icons.receipt_rounded, size: 18),
+              label: Text(AppLanguage.tr('ডেলিভারি রিসিট')),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -117,6 +216,7 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
       );
     }
 
+    final list = _filtered;
     return Scaffold(
       backgroundColor: AppColors.paper,
       floatingActionButton: _canSeeCustomers
@@ -135,6 +235,7 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
             physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
             children: [
+              // Greeting header.
               FadeSlideIn(
                 child: Row(
                   children: [
@@ -144,8 +245,8 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(_riderName, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: AppColors.ink)),
-                          Text(AppLanguage.tr('ডেলিভারি পার্টনার'), style: const TextStyle(fontSize: 11.5, color: AppColors.muted, fontWeight: FontWeight.w600)),
+                          Text('${AppLanguage.tr('হ্যালো')}, $_riderName', style: const TextStyle(fontSize: 16.5, fontWeight: FontWeight.w900, color: AppColors.ink)),
+                          Text(AppLanguage.tr('ডেলিভারির জন্য প্রস্তুত?'), style: const TextStyle(fontSize: 11.5, color: AppColors.muted, fontWeight: FontWeight.w600)),
                         ],
                       ),
                     ),
@@ -154,39 +255,61 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
                   ],
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 18),
+              // Four live stats — tap to filter the list below.
               FadeSlideIn(
                 delayMs: 40,
-                child: _optionCard(
-                  icon: Icons.inventory_2_rounded,
-                  color: AppColors.blue,
-                  title: AppLanguage.tr('পিকআপ'),
-                  subtitle: '${AppLanguage.tr('আজকে তুলতে হবে')}: ${toBn(_pickupToday)}',
-                  onTap: () => _openQueue(RiderQueueMode.pickup),
+                child: Row(
+                  children: [
+                    Expanded(child: _stat(AppLanguage.tr('মোট ডেলিভারি'), _total, AppColors.blue, _RiderFilter.all)),
+                    const SizedBox(width: 10),
+                    Expanded(child: _stat(AppLanguage.tr('সম্পন্ন'), _completed, AppColors.green, _RiderFilter.completed)),
+                  ],
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 10),
               FadeSlideIn(
-                delayMs: 70,
-                child: _optionCard(
-                  icon: Icons.local_shipping_rounded,
-                  color: AppColors.teal,
-                  title: AppLanguage.tr('ডেলিভারি'),
-                  subtitle: '${AppLanguage.tr('আজকে দিতে হবে')}: ${toBn(_deliveryToday)}',
-                  onTap: () => _openQueue(RiderQueueMode.delivery),
+                delayMs: 60,
+                child: Row(
+                  children: [
+                    Expanded(child: _stat(AppLanguage.tr('চলমান'), _pending, AppColors.amber, _RiderFilter.pending)),
+                    const SizedBox(width: 10),
+                    Expanded(child: _stat(AppLanguage.tr('বাতিল'), _failed, AppColors.danger, _RiderFilter.failed)),
+                  ],
                 ),
               ),
-              const SizedBox(height: 12),
-              FadeSlideIn(
-                delayMs: 100,
-                child: _optionCard(
-                  icon: Icons.account_balance_wallet_rounded,
-                  color: AppColors.green,
-                  title: AppLanguage.tr('কালেক্ট'),
-                  subtitle: '${AppLanguage.tr('আজকে কালেক্ট')}: ৳${toBn(_collectToday)}',
-                  onTap: _openCollection,
-                ),
+              const SizedBox(height: 22),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(_filterTitle, style: AppText.h2),
+                  if (_filter != _RiderFilter.all)
+                    TextButton(
+                      onPressed: () => setState(() => _filter = _RiderFilter.all),
+                      child: Text(AppLanguage.tr('সব দেখুন'), style: const TextStyle(fontWeight: FontWeight.w800)),
+                    ),
+                ],
               ),
+              const SizedBox(height: 6),
+              if (list.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 40),
+                  child: Column(
+                    children: [
+                      const Icon(Icons.local_shipping_outlined, color: AppColors.muted, size: 42),
+                      const SizedBox(height: 10),
+                      Text(AppLanguage.tr('কোনো ডেলিভারি নেই'), style: const TextStyle(color: AppColors.muted, fontWeight: FontWeight.w700)),
+                    ],
+                  ),
+                )
+              else
+                ...List.generate(list.length, (i) => FadeSlideIn(
+                      delayMs: 80 + i * 40,
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: _orderCard(list[i]),
+                      ),
+                    )),
             ],
           ),
         ),
@@ -194,38 +317,119 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
     );
   }
 
-  Widget _optionCard({
-    required IconData icon,
-    required Color color,
-    required String title,
-    required String subtitle,
-    required VoidCallback onTap,
-  }) {
+  String get _filterTitle {
+    switch (_filter) {
+      case _RiderFilter.pending:
+        return AppLanguage.tr('নির্ধারিত ডেলিভারি');
+      case _RiderFilter.completed:
+        return AppLanguage.tr('সম্পন্ন ডেলিভারি');
+      case _RiderFilter.failed:
+        return AppLanguage.tr('বাতিল অর্ডার');
+      case _RiderFilter.all:
+        return AppLanguage.tr('সব অর্ডার');
+    }
+  }
+
+  Widget _stat(String label, int value, Color color, _RiderFilter filter) {
+    final selected = _filter == filter;
     return PressableScale(
-      onTap: onTap,
+      onTap: () => setState(() => _filter = filter),
       child: Container(
-        padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(AppRadius.lg), border: Border.all(color: AppColors.line), boxShadow: AppShadows.soft),
-        child: Row(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: selected ? color.withValues(alpha: 0.1) : Colors.white,
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          border: Border.all(color: selected ? color : AppColors.line, width: selected ? 1.6 : 1),
+          boxShadow: AppShadows.soft,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              width: 52,
-              height: 52,
-              decoration: BoxDecoration(color: color.withValues(alpha: 0.14), borderRadius: BorderRadius.circular(15)),
-              child: Icon(icon, color: color, size: 26),
+            Text(toBn(value), style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: color)),
+            const SizedBox(height: 2),
+            Text(label, style: const TextStyle(fontSize: 12, color: AppColors.muted, fontWeight: FontWeight.w700)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _orderCard(AdminOrder o) {
+    return PressableScale(
+      onTap: () => _openDetails(o),
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(AppRadius.md), border: Border.all(color: AppColors.line), boxShadow: AppShadows.soft),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(color: AppColors.blueSoft, borderRadius: BorderRadius.circular(11)),
+                  child: const Icon(Icons.inventory_2_rounded, color: AppColors.blue, size: 19),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('${AppLanguage.tr('অর্ডার')} ${o.id}', style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w900, color: AppColors.ink)),
+                      Text(o.date, style: const TextStyle(fontSize: 10.5, color: AppColors.muted, fontWeight: FontWeight.w600)),
+                    ],
+                  ),
+                ),
+                StatusBadge(status: o.status, label: AdminMockData.orderStatusesBn[o.status]),
+              ],
             ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title, style: const TextStyle(fontSize: 16.5, fontWeight: FontWeight.w900, color: AppColors.ink)),
-                  const SizedBox(height: 3),
-                  Text(subtitle, style: const TextStyle(fontSize: 12.5, color: AppColors.muted, fontWeight: FontWeight.w700)),
-                ],
-              ),
+            const Divider(height: 18),
+            Text(o.customerName, style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w800, color: AppColors.ink)),
+            const SizedBox(height: 4),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(Icons.location_on_outlined, size: 13, color: AppColors.muted),
+                const SizedBox(width: 4),
+                Expanded(child: Text(o.address, style: const TextStyle(fontSize: 11.5, color: AppColors.muted, fontWeight: FontWeight.w600))),
+              ],
             ),
-            Icon(Icons.chevron_right_rounded, color: color, size: 26),
+            const SizedBox(height: 3),
+            Row(
+              children: [
+                const Icon(Icons.phone_outlined, size: 13, color: AppColors.muted),
+                const SizedBox(width: 4),
+                Text(o.customerPhone, style: const TextStyle(fontSize: 11.5, color: AppColors.muted, fontWeight: FontWeight.w600)),
+              ],
+            ),
+            const Divider(height: 18),
+            Row(
+              children: [
+                const Icon(Icons.receipt_long_outlined, size: 15, color: AppColors.ink),
+                const SizedBox(width: 5),
+                Text('${toBn(o.pieces)} ${AppLanguage.tr('টি আইটেম')} · ৳${toBn(o.total)}', style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800, color: AppColors.ink)),
+                const Spacer(),
+                IconButton(
+                  onPressed: () => launchUrl(Uri.parse('tel:${o.customerPhone}')),
+                  icon: const Icon(Icons.call_rounded, color: AppColors.teal),
+                  visualDensity: VisualDensity.compact,
+                  tooltip: AppLanguage.tr('কল করুন'),
+                ),
+                const SizedBox(width: 2),
+                _riderCanAdvance(o)
+                    ? ElevatedButton(
+                        onPressed: () => _advance(o),
+                        style: ElevatedButton.styleFrom(backgroundColor: AppColors.amber, foregroundColor: AppColors.ink, padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10)),
+                        child: Text(_advanceLabel(o), style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 12.5)),
+                      )
+                    : OutlinedButton(
+                        onPressed: () => _openDetails(o),
+                        style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10)),
+                        child: Text(AppLanguage.tr('বিস্তারিত'), style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 12.5)),
+                      ),
+              ],
+            ),
           ],
         ),
       ),
