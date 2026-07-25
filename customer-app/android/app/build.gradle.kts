@@ -37,6 +37,28 @@ android {
         versionName = flutter.versionName
     }
 
+    // Three shippable apps from one codebase. Each flavor gets its own
+    // applicationId (so all three can be installed side by side) and its own
+    // launcher name. Pair every build with the matching Dart entry point, e.g.
+    //   flutter build apk --release --flavor admin --dart-define=APP_FLAVOR=admin
+    flavorDimensions += "role"
+    productFlavors {
+        create("customer") {
+            dimension = "role"
+            manifestPlaceholders["appLabel"] = "ধোপা বাড়ি"
+        }
+        create("admin") {
+            dimension = "role"
+            applicationIdSuffix = ".admin"
+            manifestPlaceholders["appLabel"] = "ধোপা বাড়ি Admin"
+        }
+        create("rider") {
+            dimension = "role"
+            applicationIdSuffix = ".rider"
+            manifestPlaceholders["appLabel"] = "ধোপা বাড়ি Rider"
+        }
+    }
+
     signingConfigs {
         create("release") {
             if (keystorePropertiesFile.exists()) {

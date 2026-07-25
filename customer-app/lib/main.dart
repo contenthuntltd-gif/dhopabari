@@ -15,6 +15,7 @@ import 'data/catalog.dart';
 import 'data/catalog_meta.dart';
 import 'data/business_info.dart';
 import 'app_globals.dart';
+import 'app_flavor.dart';
 import 'services/auth_service.dart';
 import 'services/supabase_config.dart';
 import 'services/language.dart';
@@ -117,6 +118,10 @@ class _DhopaBariAppState extends State<DhopaBariApp> {
   ///   everything else     → the customer app (splash → home)
   /// nginx serves index.html for every path, so the app just reads the path.
   Widget _initialScreen() {
+    // Dedicated admin/rider builds (separate APKs) open straight into their
+    // own login — no customer flow at all.
+    if (isAdminApp) return const AdminLoginScreen();
+    if (isRiderApp) return const RiderLoginScreen();
     if (kIsWeb) {
       final path = Uri.base.path.toLowerCase();
       if (path.contains('admin')) return const AdminLoginScreen();

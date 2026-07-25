@@ -9,8 +9,6 @@ import '../widgets/support_fab.dart';
 import '../services/language.dart';
 import '../services/auth_service.dart';
 import 'register_screen.dart';
-import 'rider_login_screen.dart';
-import 'admin_login_screen.dart';
 import 'root_shell.dart';
 
 /// Customer login — phone number only (no password). The shop chose the
@@ -78,24 +76,6 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     }
   }
 
-  /// The ⋮ menu — staff access: Rider or Admin.
-  void _openRiderSheet() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (_) => _StaffSheet(
-        onRider: () {
-          Navigator.pop(context);
-          Navigator.push(context, AppPageRoute(builder: (_) => const RiderLoginScreen()));
-        },
-        onAdmin: () {
-          Navigator.pop(context);
-          Navigator.push(context, AppPageRoute(builder: (_) => const AdminLoginScreen()));
-        },
-      ),
-    );
-  }
-
   Future<void> _onLoginSucceeded() async {
     if (!mounted) return;
     setState(() {
@@ -121,10 +101,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
             child: SingleChildScrollView(
               child: Column(
                 children: [
-                  _Hero(
-                    bubbleController: _bubbleController,
-                    onMenu: _openRiderSheet,
-                  ),
+                  _Hero(bubbleController: _bubbleController),
                   Padding(
                     padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
                     child: Column(
@@ -418,8 +395,7 @@ class _GradientButtonState extends State<_GradientButton> {
 
 class _Hero extends StatelessWidget {
   final AnimationController bubbleController;
-  final VoidCallback onMenu;
-  const _Hero({required this.bubbleController, required this.onMenu});
+  const _Hero({required this.bubbleController});
 
   @override
   Widget build(BuildContext context) {
@@ -440,18 +416,6 @@ class _Hero extends StatelessWidget {
           child: Stack(
             children: [
               ..._bubbles(),
-              // ⋮ menu — rider-only access (admins sign in via the /admin URL).
-              Positioned(
-                top: 20,
-                left: 20,
-                child: _TouchTarget(
-                  child: _RoundIconButton(
-                    icon: Icons.more_vert_rounded,
-                    tooltip: 'রাইডার লগইন',
-                    onTap: onMenu,
-                  ),
-                ),
-              ),
               Positioned(
                 top: 20,
                 right: 20,
@@ -510,141 +474,6 @@ class _Hero extends StatelessWidget {
             shape: BoxShape.circle,
             color: Colors.white.withValues(alpha: 0.18),
             border: Border.all(color: Colors.white.withValues(alpha: 0.35)),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// The ⋮ menu sheet — staff access: Rider or Admin.
-class _StaffSheet extends StatelessWidget {
-  final VoidCallback onRider;
-  final VoidCallback onAdmin;
-  const _StaffSheet({required this.onRider, required this.onAdmin});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.only(topLeft: Radius.circular(24), topRight: Radius.circular(24))),
-      padding: EdgeInsets.fromLTRB(22, 12, 22, MediaQuery.of(context).padding.bottom + 20),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.line, borderRadius: BorderRadius.circular(2))),
-          const SizedBox(height: 16),
-          const Text('লগইন করুন', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w900, color: AppColors.ink)),
-          const SizedBox(height: 4),
-          const Text('আপনার অ্যাকাউন্ট টাইপ নির্বাচন করুন', style: TextStyle(fontSize: 12.5, color: AppColors.muted, fontWeight: FontWeight.w600)),
-          const SizedBox(height: 18),
-          _option(
-            bg: AppColors.tealSoft,
-            iconBg: AppColors.teal,
-            emoji: '🏍️',
-            title: 'Rider',
-            titleColor: AppColors.teal,
-            subtitle: 'রাইডার অ্যাপে লগইন করুন',
-            onTap: onRider,
-          ),
-          const SizedBox(height: 12),
-          _option(
-            bg: AppColors.blueSoft,
-            iconBg: AppColors.blue,
-            emoji: '🛠️',
-            title: 'Admin',
-            titleColor: AppColors.blue,
-            subtitle: 'অ্যাডমিন প্যানেলে লগইন করুন',
-            onTap: onAdmin,
-          ),
-          const SizedBox(height: 14),
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton(
-              style: OutlinedButton.styleFrom(side: const BorderSide(color: AppColors.line), foregroundColor: AppColors.ink),
-              onPressed: () => Navigator.pop(context),
-              child: const Text('বাতিল করুন'),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _option({
-    required Color bg,
-    required Color iconBg,
-    required String emoji,
-    required String title,
-    required Color titleColor,
-    required String subtitle,
-    required VoidCallback onTap,
-  }) {
-    return Material(
-      color: bg,
-      borderRadius: BorderRadius.circular(16),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(14),
-          child: Row(
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(color: iconBg, borderRadius: BorderRadius.circular(14)),
-                child: Center(child: Text(emoji, style: const TextStyle(fontSize: 20))),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(title, style: TextStyle(fontSize: 15.5, fontWeight: FontWeight.w900, color: titleColor)),
-                    Text(subtitle, style: const TextStyle(fontSize: 11.5, color: AppColors.muted, fontWeight: FontWeight.w600)),
-                  ],
-                ),
-              ),
-              Icon(Icons.chevron_right_rounded, color: titleColor, size: 26),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Expands the tappable region to a 44x44 minimum touch target without
-/// changing the visible size of the child (accessibility best practice).
-class _TouchTarget extends StatelessWidget {
-  final Widget child;
-  const _TouchTarget({required this.child});
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(width: 44, height: 44, child: Center(child: child));
-  }
-}
-
-class _RoundIconButton extends StatelessWidget {
-  final IconData icon;
-  final String tooltip;
-  final VoidCallback onTap;
-  const _RoundIconButton({required this.icon, required this.tooltip, required this.onTap});
-  @override
-  Widget build(BuildContext context) {
-    return Tooltip(
-      message: tooltip,
-      child: Material(
-        color: Colors.white,
-        shape: const CircleBorder(),
-        elevation: 0,
-        shadowColor: Colors.transparent,
-        child: Container(
-          decoration: BoxDecoration(shape: BoxShape.circle, boxShadow: [BoxShadow(color: AppColors.blueDeep.withValues(alpha: 0.14), blurRadius: 8, offset: const Offset(0, 3))]),
-          child: InkWell(
-            customBorder: const CircleBorder(),
-            onTap: onTap,
-            child: Padding(padding: const EdgeInsets.all(7), child: Icon(icon, color: AppColors.blue, size: 20)),
           ),
         ),
       ),
