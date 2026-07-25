@@ -81,115 +81,149 @@ class _SupportSettingsScreenState extends State<SupportSettingsScreen> {
       appBar: AppBar(title: const Text('সাপোর্ট সেটিংস')),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
-          : ListView(
+          : Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 720),
+              child: ListView(
               padding: const EdgeInsets.all(16),
               children: [
+                // Hero
                 Container(
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(color: AppColors.blueSoft.withValues(alpha: 0.5), borderRadius: BorderRadius.circular(AppRadius.md)),
+                  padding: const EdgeInsets.all(18),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(colors: [AppColors.blue, AppColors.blueDeep], begin: Alignment.topLeft, end: Alignment.bottomRight),
+                    borderRadius: BorderRadius.circular(AppRadius.lg),
+                    boxShadow: [BoxShadow(color: AppColors.blue.withValues(alpha: 0.3), blurRadius: 18, offset: const Offset(0, 8))],
+                  ),
                   child: Row(
                     children: const [
-                      Icon(Icons.info_outline_rounded, size: 18, color: AppColors.blue),
-                      SizedBox(width: 10),
+                      Icon(Icons.settings_suggest_rounded, color: Colors.white, size: 30),
+                      SizedBox(width: 14),
                       Expanded(
-                        child: Text(
-                          'এই নম্বর দুটো কাস্টমার অ্যাপের "যোগাযোগ" ট্যাবে WhatsApp সাপোর্ট হিসেবে দেখাবে। খালি রাখলে ওই লাইনটি দেখাবে না।',
-                          style: TextStyle(fontSize: 12, color: AppColors.ink, fontWeight: FontWeight.w600, height: 1.4),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(AppRadius.md), border: Border.all(color: AppColors.line)),
-                  child: Column(
-                    children: [
-                      TextField(
-                        controller: _one,
-                        keyboardType: TextInputType.phone,
-                        decoration: const InputDecoration(
-                          labelText: 'সাপোর্ট WhatsApp ১',
-                          hintText: '8801XXXXXXXXX (দেশ কোড সহ)',
-                          prefixIcon: Icon(Icons.chat_rounded, size: 20, color: Color(0xFF25D366)),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      TextField(
-                        controller: _two,
-                        keyboardType: TextInputType.phone,
-                        decoration: const InputDecoration(
-                          labelText: 'সাপোর্ট WhatsApp ২ (ঐচ্ছিক)',
-                          hintText: '8801XXXXXXXXX',
-                          prefixIcon: Icon(Icons.chat_rounded, size: 20, color: Color(0xFF25D366)),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      TextField(
-                        controller: _facebook,
-                        keyboardType: TextInputType.url,
-                        decoration: const InputDecoration(
-                          labelText: 'ফেসবুক পেজ লিংক (ঐচ্ছিক)',
-                          hintText: 'https://facebook.com/yourpage',
-                          prefixIcon: Icon(Icons.facebook_rounded, size: 20, color: Color(0xFF1877F2)),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 8),
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 4),
-                  child: Text(
-                    'নম্বর ফরম্যাট: দেশ কোড সহ, + ছাড়া — যেমন 8801712345678',
-                    style: TextStyle(fontSize: 11, color: AppColors.muted, fontWeight: FontWeight.w600),
-                  ),
-                ),
-                const SizedBox(height: 22),
-                // ── About / Privacy page text (shown in customer Profile) ──
-                const Text('প্রোফাইল পেজের লেখা', style: AppText.h3),
-                const SizedBox(height: 4),
-                const Text(
-                  'নিচের লেখা কাস্টমার অ্যাপের প্রোফাইল → "সম্পর্কে" ও "প্রাইভেসি পলিসি"-তে দেখাবে।',
-                  style: TextStyle(fontSize: 11.5, color: AppColors.muted, fontWeight: FontWeight.w600),
-                ),
-                const SizedBox(height: 12),
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(AppRadius.md), border: Border.all(color: AppColors.line)),
-                  child: Column(
-                    children: [
-                      TextField(
-                        controller: _about,
-                        maxLines: 5,
-                        minLines: 3,
-                        decoration: const InputDecoration(
-                          labelText: 'সম্পর্কে (About)',
-                          hintText: 'ধোপা বাড়ি সম্পর্কে লিখুন…',
-                          alignLabelWithHint: true,
-                          prefixIcon: Padding(padding: EdgeInsets.only(bottom: 60), child: Icon(Icons.info_outline_rounded, size: 20, color: AppColors.blue)),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      TextField(
-                        controller: _privacy,
-                        maxLines: 7,
-                        minLines: 4,
-                        decoration: const InputDecoration(
-                          labelText: 'প্রাইভেসি পলিসি',
-                          hintText: 'প্রাইভেসি পলিসি লিখুন…',
-                          alignLabelWithHint: true,
-                          prefixIcon: Padding(padding: EdgeInsets.only(bottom: 90), child: Icon(Icons.privacy_tip_outlined, size: 20, color: AppColors.blue)),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('যোগাযোগ ও পেজ সেটিংস', style: TextStyle(color: Colors.white, fontSize: 16.5, fontWeight: FontWeight.w900)),
+                            SizedBox(height: 3),
+                            Text('কাস্টমার অ্যাপে যা দেখাবে — এখান থেকেই নিয়ন্ত্রণ করুন', style: TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w600)),
+                          ],
                         ),
                       ),
                     ],
                   ),
                 ),
                 const SizedBox(height: 20),
-                AppButton(label: 'সংরক্ষণ করুন', loading: _saving, onPressed: _save),
+
+                // ── Contact section ──
+                _sectionHeader(Icons.contact_phone_rounded, 'যোগাযোগ', 'কাস্টমার অ্যাপের "যোগাযোগ" ট্যাবে দেখাবে'),
+                const SizedBox(height: 12),
+                _card(children: [
+                  TextField(
+                    controller: _one,
+                    keyboardType: TextInputType.phone,
+                    decoration: const InputDecoration(
+                      labelText: 'সাপোর্ট WhatsApp ১',
+                      hintText: '8801XXXXXXXXX (দেশ কোড সহ)',
+                      prefixIcon: Icon(Icons.chat_rounded, size: 20, color: Color(0xFF25D366)),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: _two,
+                    keyboardType: TextInputType.phone,
+                    decoration: const InputDecoration(
+                      labelText: 'সাপোর্ট WhatsApp ২ (ঐচ্ছিক)',
+                      hintText: '8801XXXXXXXXX',
+                      prefixIcon: Icon(Icons.chat_rounded, size: 20, color: Color(0xFF25D366)),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: _facebook,
+                    keyboardType: TextInputType.url,
+                    decoration: const InputDecoration(
+                      labelText: 'ফেসবুক পেজ লিংক (ঐচ্ছিক)',
+                      hintText: 'https://facebook.com/yourpage',
+                      prefixIcon: Icon(Icons.facebook_rounded, size: 20, color: Color(0xFF1877F2)),
+                    ),
+                  ),
+                ]),
+                const SizedBox(height: 8),
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 4),
+                  child: Text(
+                    'নম্বর ফরম্যাট: দেশ কোড সহ, + ছাড়া — যেমন 8801712345678। খালি রাখলে ওই লাইন দেখাবে না।',
+                    style: TextStyle(fontSize: 11, color: AppColors.muted, fontWeight: FontWeight.w600),
+                  ),
+                ),
+                const SizedBox(height: 22),
+
+                // ── Profile pages section ──
+                _sectionHeader(Icons.article_rounded, 'প্রোফাইল পেজের লেখা', 'প্রোফাইল → "সম্পর্কে" ও "প্রাইভেসি পলিসি"-তে দেখাবে'),
+                const SizedBox(height: 12),
+                _card(children: [
+                  TextField(
+                    controller: _about,
+                    maxLines: 5,
+                    minLines: 3,
+                    decoration: const InputDecoration(
+                      labelText: 'সম্পর্কে (About)',
+                      hintText: 'ধোপা বাড়ি সম্পর্কে লিখুন…',
+                      alignLabelWithHint: true,
+                      prefixIcon: Padding(padding: EdgeInsets.only(bottom: 60), child: Icon(Icons.info_outline_rounded, size: 20, color: AppColors.blue)),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: _privacy,
+                    maxLines: 7,
+                    minLines: 4,
+                    decoration: const InputDecoration(
+                      labelText: 'প্রাইভেসি পলিসি',
+                      hintText: 'প্রাইভেসি পলিসি লিখুন…',
+                      alignLabelWithHint: true,
+                      prefixIcon: Padding(padding: EdgeInsets.only(bottom: 90), child: Icon(Icons.privacy_tip_outlined, size: 20, color: AppColors.blue)),
+                    ),
+                  ),
+                ]),
+                const SizedBox(height: 22),
+                AppButton(label: 'সব সংরক্ষণ করুন', loading: _saving, onPressed: _save),
+                const SizedBox(height: 8),
               ],
+              ),
             ),
+            ),
+    );
+  }
+
+  Widget _sectionHeader(IconData icon, String title, String subtitle) {
+    return Row(
+      children: [
+        Container(
+          width: 38,
+          height: 38,
+          decoration: BoxDecoration(color: AppColors.blueSoft, borderRadius: BorderRadius.circular(11)),
+          child: Icon(icon, size: 20, color: AppColors.blue),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title, style: const TextStyle(fontSize: 15.5, fontWeight: FontWeight.w900, color: AppColors.ink)),
+              Text(subtitle, style: const TextStyle(fontSize: 11.5, color: AppColors.muted, fontWeight: FontWeight.w600)),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _card({required List<Widget> children}) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(AppRadius.md), border: Border.all(color: AppColors.line), boxShadow: AppShadows.soft),
+      child: Column(children: children),
     );
   }
 }

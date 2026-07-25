@@ -179,7 +179,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
           _grid(avail, minItem: 196, gap: 16, cards: [
             _kpi('আয় ($_periodLabel)', money(ps.revenue), Icons.payments_rounded, AppColors.blue, primary: true),
             _kpi('অর্ডার ($_periodLabel)', toBn(ps.orders), Icons.receipt_long_rounded, AppColors.teal),
-            _kpi('গড় অর্ডার মূল্য', money(ps.avgOrderValue), Icons.insights_rounded, AppColors.green),
+            // Running = not yet delivered and not cancelled — what the team is
+            // actively working on right now.
+            _kpi('চলমান অর্ডার', toBn(ps.orders - ps.status('Delivered') - ps.status('Cancelled')), Icons.autorenew_rounded, AppColors.green),
             _kpi('মোট কাস্টমার', toBn(s.totalCustomers), Icons.people_alt_rounded, AppColors.amber),
             _kpi('মোট রাইডার', toBn(s.totalRiders), Icons.two_wheeler_rounded, const Color(0xFF7C5CFC)),
           ]),
