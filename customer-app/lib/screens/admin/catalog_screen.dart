@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
 import '../../data/admin_mock_data.dart';
 import '../../data/catalog.dart';
+import '../../data/catalog_meta.dart';
 import '../../data/mock_data.dart';
 import '../../services/admin_service.dart';
 import '../../widgets/fade_slide_in.dart';
@@ -97,7 +98,17 @@ class _ServicesTabState extends State<_ServicesTab> {
           AdminMockData.services.add(CatalogService(id: 's_${DateTime.now().millisecondsSinceEpoch}', name: nameCtrl.text.trim(), nameBn: nameBnCtrl.text.trim()));
         }
       });
-      widget.onSnack('সার্ভিস সংরক্ষিত হয়েছে');
+      _persist('সার্ভিস সংরক্ষিত হয়েছে');
+    }
+  }
+
+  /// Saves services to the DB, reporting success or a readable error.
+  Future<void> _persist(String okMsg) async {
+    try {
+      await CatalogMeta.saveServices();
+      if (mounted) widget.onSnack(okMsg);
+    } catch (e) {
+      if (mounted) widget.onSnack(AdminService.messageFor(e));
     }
   }
 
@@ -115,9 +126,15 @@ class _ServicesTabState extends State<_ServicesTab> {
                 title: AdminMockData.services[i].nameBn,
                 subtitle: AdminMockData.services[i].name,
                 enabled: AdminMockData.services[i].enabled,
-                onToggle: (v) => setState(() => AdminMockData.services[i].enabled = v),
+                onToggle: (v) {
+                  setState(() => AdminMockData.services[i].enabled = v);
+                  _persist(v ? 'সার্ভিস চালু হয়েছে' : 'সার্ভিস বন্ধ হয়েছে');
+                },
                 onEdit: () => _editDialog(existing: AdminMockData.services[i]),
-                onDelete: () => setState(() => AdminMockData.services.removeAt(i)),
+                onDelete: () {
+                  setState(() => AdminMockData.services.removeAt(i));
+                  _persist('সার্ভিস মুছে ফেলা হয়েছে');
+                },
               ),
             ),
           ),
@@ -169,7 +186,17 @@ class _CategoriesTabState extends State<_CategoriesTab> {
           AdminMockData.categories.add(CatalogCategory(id: 'c_${DateTime.now().millisecondsSinceEpoch}', name: nameCtrl.text.trim(), nameBn: nameBnCtrl.text.trim()));
         }
       });
-      widget.onSnack('ক্যাটাগরি সংরক্ষিত হয়েছে');
+      _persist('ক্যাটাগরি সংরক্ষিত হয়েছে');
+    }
+  }
+
+  /// Saves categories to the DB, reporting success or a readable error.
+  Future<void> _persist(String okMsg) async {
+    try {
+      await CatalogMeta.saveCategories();
+      if (mounted) widget.onSnack(okMsg);
+    } catch (e) {
+      if (mounted) widget.onSnack(AdminService.messageFor(e));
     }
   }
 
@@ -187,9 +214,15 @@ class _CategoriesTabState extends State<_CategoriesTab> {
                 title: AdminMockData.categories[i].nameBn,
                 subtitle: AdminMockData.categories[i].name,
                 enabled: AdminMockData.categories[i].enabled,
-                onToggle: (v) => setState(() => AdminMockData.categories[i].enabled = v),
+                onToggle: (v) {
+                  setState(() => AdminMockData.categories[i].enabled = v);
+                  _persist(v ? 'ক্যাটাগরি চালু হয়েছে' : 'ক্যাটাগরি বন্ধ হয়েছে');
+                },
                 onEdit: () => _editDialog(existing: AdminMockData.categories[i]),
-                onDelete: () => setState(() => AdminMockData.categories.removeAt(i)),
+                onDelete: () {
+                  setState(() => AdminMockData.categories.removeAt(i));
+                  _persist('ক্যাটাগরি মুছে ফেলা হয়েছে');
+                },
               ),
             ),
           ),
@@ -239,7 +272,9 @@ class _PriceListTabState extends State<_PriceListTab> {
     final nameBnCtrl = TextEditingController();
     final washCtrl = TextEditingController();
     final dryCtrl = TextEditingController();
-    String category = MockData.categories.first;
+    String category = AdminMockData.categories.isNotEmpty
+        ? AdminMockData.categories.first.name
+        : 'Men';
 
     final result = await showDialog<bool>(
       context: context,
@@ -255,8 +290,8 @@ class _PriceListTabState extends State<_PriceListTab> {
                   initialValue: category,
                   decoration: const InputDecoration(labelText: 'ক্যাটাগরি', prefixIcon: Icon(Icons.category_outlined, size: 20)),
                   items: [
-                    for (final c in MockData.categories)
-                      DropdownMenuItem(value: c, child: Text(MockData.categoriesBn[c] ?? c)),
+                    for (final c in AdminMockData.categories)
+                      DropdownMenuItem(value: c.name, child: Text(c.nameBn)),
                   ],
                   onChanged: (v) => setLocal(() => category = v ?? category),
                 ),
@@ -408,23 +443,23 @@ class _PriceListTabState extends State<_PriceListTab> {
             ],
           ),
         ),
-        for (final category in MockData.categories) ...[
+        for (final cat in AdminMockData.categories) ...[
           Padding(
             padding: const EdgeInsets.only(bottom: 8, top: 10),
-            child: Text(MockData.categoriesBn[category] ?? category, style: AppText.h3),
+            child: Text(cat.nameBn, style: AppText.h3),
           ),
           Container(
             decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(AppRadius.md), border: Border.all(color: AppColors.line), boxShadow: AppShadows.soft),
             child: Column(
               children: [
-                for (final item in Catalog.forCategory(category))
+                for (final item in Catalog.forCategory(cat.name))
                   InkWell(
                     onTap: _saving ? null : () => _editPrice(item),
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                       decoration: BoxDecoration(
                         border: Border(
-                          bottom: BorderSide(color: item == Catalog.forCategory(category).last ? Colors.transparent : AppColors.line),
+                          bottom: BorderSide(color: item == Catalog.forCategory(cat.name).last ? Colors.transparent : AppColors.line),
                         ),
                       ),
                       child: Row(

@@ -1,4 +1,5 @@
 import 'catalog.dart';
+import 'catalog_meta.dart';
 
 /// Local mock data for UI preview — no backend calls. Mirrors the shape of
 /// the real API (see backend/prisma/schema.prisma) so swapping this for
@@ -85,13 +86,10 @@ class ChatPreview {
 }
 
 class MockData {
-  static const categories = ['Men', 'Women', 'Kids', 'Home'];
-  static const categoriesBn = {
-    'Men': 'পুরুষ',
-    'Women': 'মহিলা',
-    'Kids': 'শিশু',
-    'Home': 'ঘরের কাপড়',
-  };
+  // Customer-facing categories — the admin-managed, enabled ones (see
+  // [CatalogMeta]). Getters so an admin add/rename/toggle reflects here.
+  static List<String> get categories => CatalogMeta.enabledCategoryNames;
+  static Map<String, String> get categoriesBn => CatalogMeta.categoryBnByName;
 
   /// The official Dhopa Bari price list — see [Catalog]. Everything that
   /// reads items/prices goes through here, so an admin price change (or a

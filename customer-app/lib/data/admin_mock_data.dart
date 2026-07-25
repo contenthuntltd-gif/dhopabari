@@ -1,5 +1,7 @@
 import '../widgets/bn_number.dart';
 import 'mock_data.dart';
+import 'catalog_meta.dart';
+export 'catalog_meta.dart' show CatalogCategory, CatalogService;
 
 /// Admin Panel data models, plus the seed/mock lists still used by the
 /// screens that have no database backing yet (catalog, withdrawals).
@@ -249,22 +251,6 @@ class WithdrawalRequest {
   });
 }
 
-class CatalogCategory {
-  final String id;
-  String name;
-  String nameBn;
-  bool enabled;
-  CatalogCategory({required this.id, required this.name, required this.nameBn, this.enabled = true});
-}
-
-class CatalogService {
-  final String id;
-  String name;
-  String nameBn;
-  bool enabled;
-  CatalogService({required this.id, required this.name, required this.nameBn, this.enabled = true});
-}
-
 class CatalogItem {
   final String id;
   String name;
@@ -339,17 +325,11 @@ class AdminMockData {
     WithdrawalRequest(id: 'w4', riderId: 'rider_rasel', riderName: 'রাসেল ভাই', amount: 500, status: 'Rejected', date: '৫ জুন, ২০২৪'),
   ];
 
-  static final categories = <CatalogCategory>[
-    CatalogCategory(id: 'men', name: 'Men', nameBn: 'পুরুষ'),
-    CatalogCategory(id: 'women', name: 'Women', nameBn: 'মহিলা'),
-    CatalogCategory(id: 'kids', name: 'Kids', nameBn: 'শিশু'),
-    CatalogCategory(id: 'home', name: 'Home', nameBn: 'ঘরের কাপড়'),
-  ];
-
-  static final services = <CatalogService>[
-    CatalogService(id: 'wash', name: 'Wash', nameBn: 'ওয়াশ'),
-    CatalogService(id: 'dry', name: 'Dry Clean', nameBn: 'ড্রাই ক্লিন'),
-  ];
+  // Categories & services now live in [CatalogMeta] (persisted to app_settings
+  // so admin changes survive restarts and reach the customer app). These
+  // getters keep older call-sites working.
+  static List<CatalogCategory> get categories => CatalogMeta.categories;
+  static List<CatalogService> get services => CatalogMeta.services;
 
   static final items = <CatalogItem>[
     CatalogItem(id: 'shirt', name: 'Shirt', nameBn: 'শার্ট', categoryId: 'men', washPrice: 30, dryPrice: 60),

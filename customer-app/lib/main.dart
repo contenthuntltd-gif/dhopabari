@@ -12,6 +12,7 @@ import 'widgets/app_page_route.dart';
 import 'data/app_settings.dart';
 import 'data/cart.dart';
 import 'data/catalog.dart';
+import 'data/catalog_meta.dart';
 import 'services/auth_service.dart';
 import 'services/supabase_config.dart';
 import 'services/language.dart';
@@ -46,6 +47,9 @@ void main() async {
       Catalog.refresh();
       // ignore: unawaited_futures
       AppSettings.load();
+      // Categories/services drive the customer order screen's tabs, so load
+      // them before first paint (a single, quick key/value read).
+      await CatalogMeta.load();
     } catch (e) {
       debugPrint('Supabase init/session restore failed: $e');
     }
