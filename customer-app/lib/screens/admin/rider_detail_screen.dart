@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
 import '../../data/admin_mock_data.dart';
 import '../../services/admin_service.dart';
+import '../../widgets/bn_number.dart';
 import '../../widgets/fade_slide_in.dart';
 import '../../widgets/app_page_route.dart';
 import '../../widgets/centered_max_width.dart';
@@ -19,11 +20,52 @@ class _RiderDetailScreenState extends State<RiderDetailScreen> {
   bool? _canSeeCustomers; // null until loaded
   bool _savingAccess = false;
 
+  // Delivery / payment tracking.
+  List<AdminOrder> _orders = const [];
+  bool _ordersLoading = true;
+  DateTime _date = DateTime.now();
+
   @override
   void initState() {
     super.initState();
     _loadAccess();
+    _loadOrders();
   }
+
+  Future<void> _loadOrders() async {
+    try {
+      final orders = await AdminService.orders(riderId: widget.rider.id, limit: 500);
+      if (mounted) setState(() { _orders = orders; _ordersLoading = false; });
+    } catch (_) {
+      if (mounted) setState(() => _ordersLoading = false);
+    }
+  }
+
+  bool _sameDay(DateTime? a, DateTime b) =>
+      a != null && a.year == b.year && a.month == b.month && a.day == b.day;
+
+  /// Delivered orders for the selected date (uses delivery time, falling back
+  /// to order time for older rows).
+  List<AdminOrder> get _deliveredOnDate => _orders
+      .where((o) => o.status == 'Delivered' && _sameDay(o.deliveredAt ?? o.createdAt, _date))
+      .toList();
+
+  int get _collectedOnDate => _deliveredOnDate.where((o) {
+        final p = o.paymentMethod.toLowerCase();
+        return p.contains('cash') || p.contains('cod') || o.paymentMethod.contains('নগদ');
+      }).fold(0, (s, o) => s + o.total);
+
+  Future<void> _pickDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _date,
+      firstDate: DateTime(2024),
+      lastDate: DateTime.now(),
+    );
+    if (picked != null && mounted) setState(() => _date = picked);
+  }
+
+  bool get _isToday => _sameDay(_date, DateTime.now());
 
   Future<void> _loadAccess() async {
     try {
@@ -212,6 +254,9 @@ class _RiderDetailScreenState extends State<RiderDetailScreen> {
             ),
           ),
           const SizedBox(height: 16),
+          // Delivery + collected-payment tracking, by date.
+          FadeSlideIn(delayMs: 110, child: _paymentCard()),
+          const SizedBox(height: 16),
           // Admin control: whether this rider may browse the full customer list.
           FadeSlideIn(
             delayMs: 120,
@@ -271,6 +316,87 @@ class _RiderDetailScreenState extends State<RiderDetailScreen> {
           ),
         ],
       )),
+    );
+  }
+
+  Widget _paymentCard() {
+    final delivered = _deliveredOnDate.length;
+    final collected = _collectedOnDate;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(AppRadius.md), border: Border.all(color: AppColors.line), boxShadow: AppShadows.soft),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.insights_rounded, color: AppColors.blue, size: 20),
+              const SizedBox(width: 8),
+              const Text('ডেলিভারি ও হিসাব', style: AppText.h3),
+            ],
+          ),
+          const SizedBox(height: 12),
+          // Date selector: আজ / pick a date.
+          Row(
+            children: [
+              _dateChip('আজ', selected: _isToday, onTap: () => setState(() => _date = DateTime.now())),
+              const SizedBox(width: 8),
+              _dateChip('📅 ${bnDate(_date)}', selected: !_isToday, onTap: _pickDate),
+            ],
+          ),
+          const SizedBox(height: 14),
+          if (_ordersLoading)
+            const Padding(padding: EdgeInsets.symmetric(vertical: 10), child: Center(child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))))
+          else
+            Row(
+              children: [
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(color: AppColors.blueSoft.withValues(alpha: 0.5), borderRadius: BorderRadius.circular(AppRadius.sm)),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(toBn(delivered), style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: AppColors.blue)),
+                        const Text('ডেলিভারি সম্পন্ন', style: TextStyle(fontSize: 11, color: AppColors.muted, fontWeight: FontWeight.w700)),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(color: AppColors.green.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(AppRadius.sm)),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('৳$collected', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: AppColors.green)),
+                        const Text('সংগৃহীত ক্যাশ', style: TextStyle(fontSize: 11, color: AppColors.muted, fontWeight: FontWeight.w700)),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _dateChip(String label, {required bool selected, required VoidCallback onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: selected ? AppColors.blue : Colors.white,
+          border: Border.all(color: selected ? AppColors.blue : AppColors.line),
+          borderRadius: BorderRadius.circular(999),
+        ),
+        child: Text(label, style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: selected ? Colors.white : AppColors.ink)),
+      ),
     );
   }
 

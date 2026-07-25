@@ -471,7 +471,12 @@ class AdminService {
   }
 
   static Future<void> updateOrderStatus(String orderId, String status) async {
-    await _db.from('orders').update({'status': status}).eq('id', orderId);
+    final patch = <String, dynamic>{'status': status};
+    // Stamp the delivery time so rider payment/date reports can be computed.
+    if (status == 'Delivered') {
+      patch['delivered_at'] = DateTime.now().toUtc().toIso8601String();
+    }
+    await _db.from('orders').update(patch).eq('id', orderId);
   }
 
   static Future<void> assignRider(String orderId, String? riderId) async {

@@ -31,6 +31,8 @@ class AdminOrder {
   final int total;
   String status;
   final String date;
+  final DateTime? createdAt;
+  final DateTime? deliveredAt;
   final String address;
   final String paymentMethod;
   AdminOrder({
@@ -50,6 +52,8 @@ class AdminOrder {
     required this.total,
     required this.status,
     required this.date,
+    this.createdAt,
+    this.deliveredAt,
     required this.address,
     required this.paymentMethod,
   });
@@ -81,6 +85,8 @@ class AdminOrder {
       total: (r['total'] as num?)?.toInt() ?? 0,
       status: (r['status'] as String?) ?? 'Confirmed',
       date: bnDateTime(r['created_at'] as String?),
+      createdAt: DateTime.tryParse((r['created_at'] as String?) ?? '')?.toLocal(),
+      deliveredAt: DateTime.tryParse((r['delivered_at'] as String?) ?? '')?.toLocal(),
       address: (r['address'] as String?) ?? '',
       paymentMethod: (r['payment_method'] as String?) ?? 'নগদ (COD)',
     );
