@@ -200,10 +200,10 @@ class _OrdersScreenState extends State<OrdersScreen> {
                         subtitle: isFiltering
                             ? AppLanguage.tr('ভিন্ন ফিল্টার বা সার্চ শব্দ ব্যবহার করে দেখুন।')
                             : AppLanguage.tr('আপনার প্রথম অর্ডার দিন এবং প্রিমিয়াম লন্ড্রি সেবা উপভোগ করুন।'),
-                        actionLabel: isFiltering ? null : AppLanguage.tr('নতুন অর্ডার করুন'),
-                        onAction: isFiltering
-                            ? null
-                            : () => Navigator.pop(context),
+                        // No action button here — the bottom "New Order" tab
+                        // already covers placing an order.
+                        actionLabel: null,
+                        onAction: null,
                       )
                     : RefreshIndicator(
                         key: const ValueKey('content'),
