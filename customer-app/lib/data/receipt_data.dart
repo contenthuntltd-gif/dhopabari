@@ -182,6 +182,7 @@ class ReceiptData {
       riderPhone: order.riderPhone,
       deliveredBy: order.riderName ?? 'করিম ভাই',
       customerConfirmed: order.progress >= 1,
+      pickupAddress: order.area, // customer's location on the memo
       items: _reconstructItems(order),
     );
   }
@@ -195,6 +196,7 @@ class ReceiptData {
       customerName: MockData.userName,
       customerPhone: MockData.userPhone,
       customerId: 'CUST-${MockData.userPhone}',
+      pickupAddress: order.area, // customer's location on the memo
       items: _reconstructItems(order),
       paymentMethod: 'নগদ (COD)',
       paymentStatus: order.progress >= 1 ? 'পরিশোধিত' : 'বাকি',
