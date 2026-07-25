@@ -71,6 +71,41 @@ class _OrdersScreenState extends State<OrdersScreen> {
 
   Future<void> _refresh() => _load();
 
+  /// Confirms, then cancels a still-cancellable order. RLS enforces the same
+  /// rule server-side, so a race (rider assigned meanwhile) fails safely.
+  Future<void> _confirmCancel(MockOrder o) async {
+    if (o.uuid == null) return;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.lg)),
+        title: Text(AppLanguage.tr('অর্ডার বাতিল করবেন?')),
+        content: Text(
+          AppLanguage.tr('${o.id} অর্ডারটি বাতিল হয়ে যাবে। এটি আর ফেরানো যাবে না।'),
+          style: const TextStyle(fontSize: 13.5, height: 1.5),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(AppLanguage.tr('না'))),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.danger),
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(AppLanguage.tr('হ্যাঁ, বাতিল করুন')),
+          ),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    try {
+      await AdminService.cancelOrder(o.uuid!);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLanguage.tr('অর্ডার বাতিল করা হয়েছে'))));
+      _load();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AdminService.messageFor(e))));
+    }
+  }
+
   List<MockOrder> get _filtered {
     var list = _orders;
     switch (_filter) {
@@ -217,7 +252,10 @@ class _OrdersScreenState extends State<OrdersScreen> {
                               const SizedBox(height: AppSpace.xs),
                           itemBuilder: (context, i) => FadeSlideIn(
                             delayMs: i * 50,
-                            child: _OrderCard(order: orders[i]),
+                            child: _OrderCard(
+                              order: orders[i],
+                              onCancel: () => _confirmCancel(orders[i]),
+                            ),
                           ),
                         ),
                       ),
@@ -275,7 +313,8 @@ class _FilterChip extends StatelessWidget {
 
 class _OrderCard extends StatelessWidget {
   final MockOrder order;
-  const _OrderCard({required this.order});
+  final VoidCallback? onCancel;
+  const _OrderCard({required this.order, this.onCancel});
 
   @override
   Widget build(BuildContext context) {
@@ -419,6 +458,23 @@ class _OrderCard extends StatelessWidget {
                   ),
                 ],
               ),
+              if (order.isCancellable && order.uuid != null) ...[
+                const SizedBox(height: 10),
+                const Divider(height: 1, color: AppColors.line),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton.icon(
+                    onPressed: onCancel,
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppColors.danger,
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      minimumSize: const Size(0, 34),
+                    ),
+                    icon: const Icon(Icons.cancel_outlined, size: 16),
+                    label: Text(AppLanguage.tr('অর্ডার বাতিল করুন'), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800)),
+                  ),
+                ),
+              ],
             ],
           ),
         ),

@@ -44,6 +44,14 @@ class MockOrder {
   final String? riderPhone;
   final String? etaLabel;
 
+  /// The raw DB status ('Confirmed', 'Picked Up', … 'Cancelled'). Drives
+  /// [isCancellable]. Defaults to 'Confirmed' for demo/mock orders.
+  final String rawStatus;
+
+  /// The order's database primary key (UUID), needed to cancel it. Null for
+  /// demo/mock orders that have no DB row.
+  final String? uuid;
+
   /// Real line items (name/name_bn/service/qty/unit_price maps) when this
   /// order came from the database; empty for demo/mock orders. Receipts
   /// print these verbatim instead of reconstructing a guess.
@@ -61,9 +69,18 @@ class MockOrder {
     this.riderPhone,
     this.etaLabel,
     this.items = const [],
+    this.rawStatus = 'Confirmed',
+    this.uuid,
   });
 
   String get currentStatusLabel => timeline.firstWhere((s) => s.current, orElse: () => timeline.last).label;
+
+  /// A customer may cancel only while the order is freshly confirmed and no
+  /// rider has been assigned yet — once staff/rider act on it, cancel is gone.
+  bool get isCancellable =>
+      rawStatus == 'Confirmed' && (riderName == null || riderName!.trim().isEmpty);
+
+  bool get isCancelled => rawStatus == 'Cancelled';
   double get progress {
     final doneCount = timeline.where((s) => s.done).length;
     return doneCount / timeline.length;

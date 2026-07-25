@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../theme/app_theme.dart';
+import '../services/admin_service.dart';
+import '../services/language.dart';
 import '../widgets/app_page_route.dart';
 import '../widgets/fade_slide_in.dart';
 import '../widgets/app_logo.dart';
@@ -8,7 +10,13 @@ import 'root_shell.dart';
 
 class OrderSuccessScreen extends StatefulWidget {
   final bool placedOffHours;
-  const OrderSuccessScreen({super.key, this.placedOffHours = false});
+
+  /// The just-placed order's display code (#DB…) and DB uuid. When the uuid
+  /// is present the screen offers a "cancel order" action (valid only while
+  /// the order is still Confirmed with no rider — enforced by RLS).
+  final String? orderNo;
+  final String? orderUuid;
+  const OrderSuccessScreen({super.key, this.placedOffHours = false, this.orderNo, this.orderUuid});
 
   @override
   State<OrderSuccessScreen> createState() => _OrderSuccessScreenState();
@@ -16,7 +24,11 @@ class OrderSuccessScreen extends StatefulWidget {
 
 class _OrderSuccessScreenState extends State<OrderSuccessScreen> with SingleTickerProviderStateMixin {
   late final AnimationController _ringController;
-  static const _orderId = '#DB123457';
+  bool _cancelled = false;
+  bool _cancelling = false;
+
+  String get _orderId => (widget.orderNo?.trim().isNotEmpty ?? false) ? widget.orderNo!.trim() : '#DB';
+  bool get _canCancel => (widget.orderUuid?.trim().isNotEmpty ?? false) && !_cancelled;
 
   @override
   void initState() {
@@ -31,8 +43,44 @@ class _OrderSuccessScreenState extends State<OrderSuccessScreen> with SingleTick
   }
 
   void _copyOrderId() {
-    Clipboard.setData(const ClipboardData(text: _orderId));
+    Clipboard.setData(ClipboardData(text: _orderId));
     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('অর্ডার নম্বর কপি করা হয়েছে')));
+  }
+
+  Future<void> _cancelOrder() async {
+    final uuid = widget.orderUuid?.trim();
+    if (uuid == null || uuid.isEmpty || _cancelling) return;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.lg)),
+        title: Text(AppLanguage.tr('অর্ডার বাতিল করবেন?')),
+        content: Text(AppLanguage.tr('অর্ডারটি বাতিল হয়ে যাবে। এটি আর ফেরানো যাবে না।'), style: const TextStyle(fontSize: 13.5, height: 1.5)),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(AppLanguage.tr('না'))),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.danger),
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(AppLanguage.tr('হ্যাঁ, বাতিল করুন')),
+          ),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    setState(() => _cancelling = true);
+    try {
+      await AdminService.cancelOrder(uuid);
+      if (!mounted) return;
+      setState(() {
+        _cancelling = false;
+        _cancelled = true;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLanguage.tr('অর্ডার বাতিল করা হয়েছে'))));
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _cancelling = false);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AdminService.messageFor(e))));
+    }
   }
 
   @override
@@ -87,10 +135,10 @@ class _OrderSuccessScreenState extends State<OrderSuccessScreen> with SingleTick
                 delayMs: 150,
                 child: const Column(
                   children: [
-                    Text('অর্ডার সফল হয়েছে! 🎉', style: AppText.display, textAlign: TextAlign.center),
+                    Text('দারুণ! অর্ডারটি সফল হয়েছে 🎉', style: AppText.display, textAlign: TextAlign.center),
                     SizedBox(height: 6),
                     Text(
-                      'আমরা শীঘ্রই আপনার বাসায় পৌঁছে যাব।',
+                      'আপনার কাপড় সংগ্রহ করতে আমরা আসছি আপনার দরজায়!',
                       textAlign: TextAlign.center,
                       style: AppText.bodyMuted,
                     ),
@@ -111,7 +159,7 @@ class _OrderSuccessScreenState extends State<OrderSuccessScreen> with SingleTick
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(
-                          'আমাদের ধোপা বাড়ি টিম শীঘ্রই আপনার সাথে যোগাযোগ করবে।',
+                          'আমাদের \'ধোপা বাড়ি\' টিম খুব দ্রুতই আপনাকে কল করবে।',
                           style: const TextStyle(fontSize: 12, color: AppColors.ink, fontWeight: FontWeight.w700, height: 1.45),
                         ),
                       ),
@@ -129,15 +177,36 @@ class _OrderSuccessScreenState extends State<OrderSuccessScreen> with SingleTick
                     decoration: BoxDecoration(color: AppColors.paper, borderRadius: BorderRadius.circular(999), border: Border.all(color: AppColors.line)),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
-                      children: const [
-                        Text(_orderId, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900, color: AppColors.ink, letterSpacing: 0.5)),
-                        SizedBox(width: 8),
-                        Icon(Icons.copy_rounded, size: 14, color: AppColors.muted),
+                      children: [
+                        Text(_orderId, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w900, color: AppColors.ink, letterSpacing: 0.5)),
+                        const SizedBox(width: 8),
+                        const Icon(Icons.copy_rounded, size: 14, color: AppColors.muted),
                       ],
                     ),
                   ),
                 ),
               ),
+              // Cancel — only while the order is still cancellable (uuid known
+              // and not already cancelled here). RLS is the real gatekeeper.
+              if (_canCancel) ...[
+                const SizedBox(height: 12),
+                TextButton.icon(
+                  onPressed: _cancelling ? null : _cancelOrder,
+                  style: TextButton.styleFrom(foregroundColor: AppColors.danger),
+                  icon: _cancelling
+                      ? const SizedBox(width: 15, height: 15, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.danger))
+                      : const Icon(Icons.cancel_outlined, size: 17),
+                  label: Text(AppLanguage.tr('অর্ডার বাতিল করুন'), style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800)),
+                ),
+              ],
+              if (_cancelled) ...[
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  decoration: BoxDecoration(color: AppColors.danger.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(999)),
+                  child: Text('❌ ${AppLanguage.tr('অর্ডার বাতিল করা হয়েছে')}', style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800, color: AppColors.danger)),
+                ),
+              ],
               const SizedBox(height: 22),
               FadeSlideIn(
                 delayMs: 250,
@@ -158,10 +227,10 @@ class _OrderSuccessScreenState extends State<OrderSuccessScreen> with SingleTick
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('কাপড় সংগ্রহের সময়', style: TextStyle(fontSize: 11.5, color: AppColors.muted, fontWeight: FontWeight.w700)),
+                            Text('কাপড় সংগ্রহ', style: TextStyle(fontSize: 11.5, color: AppColors.muted, fontWeight: FontWeight.w700)),
                             SizedBox(height: 2),
                             Text(
-                              'আমাদের রাইডার আজ দুপুর ১টা থেকে রাত ৯টার মধ্যে আপনার কাপড় সংগ্রহ করতে আসবেন। অনুগ্রহ করে কাপড় প্রস্তুত রাখুন। 🙏',
+                              'আপনার কাপড়গুলো প্রস্তুত রাখুন! আজ দুপুর ১টা থেকে রাত ৯টার মধ্যে আমাদের প্রতিনিধি এসে সেগুলো সংগ্রহ করে নিয়ে যাবেন।',
                               style: TextStyle(fontSize: 12.5, color: AppColors.ink, fontWeight: FontWeight.w700, height: 1.45),
                             ),
                           ],

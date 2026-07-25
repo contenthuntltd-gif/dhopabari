@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import '../data/cart.dart';
 import '../data/mock_data.dart';
+import '../data/admin_mock_data.dart';
 import '../data/business_info.dart';
 import '../services/language.dart';
 import '../services/admin_service.dart';
@@ -159,9 +160,10 @@ class _NewOrderScreenState extends State<NewOrderScreen> {
     setState(() => _confirming = true);
 
     try {
+      final AdminOrder placed;
       if (_isGuest) {
         // No login: the phone becomes the customer's auto-created account.
-        await AdminService.guestOrder(
+        placed = await AdminService.guestOrder(
           name: _guestName.text.trim(),
           phone: _guestPhone.text.trim(),
           address: _guestAddress.text.trim(),
@@ -173,7 +175,7 @@ class _NewOrderScreenState extends State<NewOrderScreen> {
           note: _deliveryType == DeliveryType.express ? 'Express delivery' : null,
         );
       } else {
-        await AdminService.createOrder(
+        placed = await AdminService.createOrder(
           customerId: widget.forCustomerId,
           // 'Wash', 'Dry Clean', or 'Wash + Dry Clean' for a mixed order —
           // each line in items carries its own service and unit price.
@@ -204,7 +206,13 @@ class _NewOrderScreenState extends State<NewOrderScreen> {
 
       Navigator.pushReplacement(
         context,
-        AppPageRoute(builder: (_) => OrderSuccessScreen(placedOffHours: !BusinessHours.isOpenNow)),
+        AppPageRoute(
+          builder: (_) => OrderSuccessScreen(
+            placedOffHours: !BusinessHours.isOpenNow,
+            orderNo: placed.id,
+            orderUuid: placed.uuid,
+          ),
+        ),
       );
     } catch (e) {
       if (!mounted) return;
@@ -1357,44 +1365,6 @@ class _AddressTimeStepState extends State<_AddressTimeStep> {
             ),
           );
         }),
-        const SizedBox(height: 16),
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: AppColors.blueSoft.withValues(alpha: 0.5),
-            borderRadius: BorderRadius.circular(AppRadius.md),
-            border: Border.all(color: AppColors.blue.withValues(alpha: 0.18)),
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: const BoxDecoration(color: AppColors.blue, shape: BoxShape.circle),
-                child: const Icon(Icons.access_time_filled_rounded, color: Colors.white, size: 20),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'পিকআপের সময়',
-                      style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w900, color: AppColors.ink),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      'আমাদের টিম অফিস সময়ে (${BusinessHours.label}) আপনার সাথে যোগাযোগ করে পিকআপ নিশ্চিত করবে।',
-                      style: const TextStyle(fontSize: 11.5, color: AppColors.muted, fontWeight: FontWeight.w600, height: 1.4),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
         const SizedBox(height: AppSpace.md),
         const Text('ডেলিভারি অপশন', style: AppText.h3),
         const SizedBox(height: 10),

@@ -52,6 +52,65 @@ class _ChatListScreenState extends State<ChatListScreen> {
     }
   }
 
+  Future<void> _openEmail(String email) async {
+    final uri = Uri(scheme: 'mailto', path: email.trim());
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLanguage.tr('ইমেইল অ্যাপ খোলা যায়নি'))),
+        );
+      }
+    }
+  }
+
+  Widget _emailCard(String email) {
+    return PressableScale(
+      onTap: () => _openEmail(email),
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          border: Border.all(color: AppColors.line),
+          boxShadow: AppShadows.soft,
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 46,
+              height: 46,
+              decoration: BoxDecoration(color: AppColors.blue.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(13)),
+              child: const Icon(Icons.email_rounded, color: AppColors.blue, size: 24),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(AppLanguage.tr('আমাদের ইমেইল করুন'), style: const TextStyle(fontSize: 11.5, color: AppColors.muted, fontWeight: FontWeight.w700)),
+                  const SizedBox(height: 2),
+                  Text(email, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w900, color: AppColors.ink)),
+                ],
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(color: AppColors.blue, borderRadius: BorderRadius.circular(999)),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.send_rounded, color: Colors.white, size: 14),
+                  const SizedBox(width: 5),
+                  Text(AppLanguage.tr('মেইল'), style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w800)),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _facebookCard(String url) {
     return PressableScale(
       onTap: () => _openFacebook(url),
@@ -116,30 +175,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
           child: ListView(
             padding: const EdgeInsets.all(AppSpace.sm),
             children: [
-              // Hero
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(18),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(colors: [AppColors.blue, AppColors.blueDeep], begin: Alignment.topLeft, end: Alignment.bottomRight),
-                  borderRadius: BorderRadius.circular(AppRadius.lg),
-                  boxShadow: [BoxShadow(color: AppColors.blue.withValues(alpha: 0.3), blurRadius: 20, offset: const Offset(0, 10))],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Icon(Icons.support_agent_rounded, color: Colors.white, size: 34),
-                    const SizedBox(height: 10),
-                    Text(AppLanguage.tr('সাহায্য দরকার?'), style: const TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w900)),
-                    const SizedBox(height: 3),
-                    Text(
-                      AppLanguage.tr('অর্ডার, পিকআপ বা যেকোনো বিষয়ে আমাদের WhatsApp-এ মেসেজ করুন — দ্রুত সাড়া দেব।'),
-                      style: const TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w600, height: 1.4),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: AppSpace.md),
+              const SizedBox(height: AppSpace.xs),
               Text(AppLanguage.tr('WhatsApp সাপোর্ট'), style: AppText.h3),
               const SizedBox(height: AppSpace.xs),
               if (numbers.isEmpty)
@@ -165,6 +201,16 @@ class _ChatListScreenState extends State<ChatListScreen> {
                 FadeSlideIn(
                   delayMs: 40,
                   child: _facebookCard(AppSettings.facebookUrl.trim()),
+                ),
+              ],
+              // Email support (admin-configurable).
+              if (AppSettings.supportEmail.trim().isNotEmpty) ...[
+                const SizedBox(height: AppSpace.md),
+                Text(AppLanguage.tr('ইমেইল'), style: AppText.h3),
+                const SizedBox(height: AppSpace.xs),
+                FadeSlideIn(
+                  delayMs: 60,
+                  child: _emailCard(AppSettings.supportEmail.trim()),
                 ),
               ],
             ],

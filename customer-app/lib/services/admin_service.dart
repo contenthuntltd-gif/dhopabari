@@ -483,6 +483,13 @@ class AdminService {
     await _db.from('orders').update({'rider_id': riderId}).eq('id', orderId);
   }
 
+  /// Customer-initiated cancellation. RLS (`orders_cancel_own`) only lets this
+  /// succeed while the order is still 'Confirmed' with no rider assigned — so
+  /// once staff/rider act on it, the database rejects the change.
+  static Future<void> cancelOrder(String orderId) async {
+    await _db.from('orders').update({'status': 'Cancelled'}).eq('id', orderId);
+  }
+
   // ----- Cash settlement (হিসাব) -----
 
   /// Delivered Cash-on-Delivery orders, split by whether their cash has been

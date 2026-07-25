@@ -17,6 +17,7 @@ class _SupportSettingsScreenState extends State<SupportSettingsScreen> {
   late final _one = TextEditingController(text: AppSettings.supportWhatsapp1);
   late final _two = TextEditingController(text: AppSettings.supportWhatsapp2);
   late final _facebook = TextEditingController(text: AppSettings.facebookUrl);
+  late final _email = TextEditingController(text: AppSettings.supportEmail);
   late final _about = TextEditingController(text: AppSettings.aboutText);
   late final _privacy = TextEditingController(text: AppSettings.privacyText);
   bool _loading = true;
@@ -32,6 +33,7 @@ class _SupportSettingsScreenState extends State<SupportSettingsScreen> {
         _one.text = AppSettings.supportWhatsapp1;
         _two.text = AppSettings.supportWhatsapp2;
         _facebook.text = AppSettings.facebookUrl;
+        _email.text = AppSettings.supportEmail;
         _about.text = AppSettings.aboutText;
         _privacy.text = AppSettings.privacyText;
         _loading = false;
@@ -48,6 +50,7 @@ class _SupportSettingsScreenState extends State<SupportSettingsScreen> {
         whatsapp1: _one.text,
         whatsapp2: _two.text,
         facebook: _facebook.text,
+        email: _email.text,
       );
       await AppSettings.setPages(about: _about.text, privacy: _privacy.text);
       if (!mounted) return;
@@ -69,6 +72,7 @@ class _SupportSettingsScreenState extends State<SupportSettingsScreen> {
     _one.dispose();
     _two.dispose();
     _facebook.dispose();
+    _email.dispose();
     _about.dispose();
     _privacy.dispose();
     super.dispose();
@@ -145,6 +149,16 @@ class _SupportSettingsScreenState extends State<SupportSettingsScreen> {
                       labelText: 'ফেসবুক পেজ লিংক (ঐচ্ছিক)',
                       hintText: 'https://facebook.com/yourpage',
                       prefixIcon: Icon(Icons.facebook_rounded, size: 20, color: Color(0xFF1877F2)),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: _email,
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: const InputDecoration(
+                      labelText: 'সাপোর্ট ইমেইল (ঐচ্ছিক)',
+                      hintText: 'support@dhopabari.com',
+                      prefixIcon: Icon(Icons.email_rounded, size: 20, color: AppColors.blue),
                     ),
                   ),
                 ]),

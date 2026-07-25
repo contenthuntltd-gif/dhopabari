@@ -120,6 +120,8 @@ extension AdminOrderView on AdminOrder {
       riderPhone: riderPhone,
       timeline: timeline,
       items: items,
+      rawStatus: status,
+      uuid: uuid,
     );
   }
 }

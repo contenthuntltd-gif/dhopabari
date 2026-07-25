@@ -12,6 +12,7 @@ class AppSettings {
   static String supportWhatsapp1 = '';
   static String supportWhatsapp2 = '';
   static String facebookUrl = '';
+  static String supportEmail = '';
   static String aboutText = '';
   static String privacyText = '';
 
@@ -31,6 +32,8 @@ class AppSettings {
             supportWhatsapp2 = v.trim();
           case 'facebook_url':
             facebookUrl = v.trim();
+          case 'support_email':
+            supportEmail = v.trim();
           case 'about_text':
             aboutText = v;
           case 'privacy_text':
@@ -48,18 +51,22 @@ class AppSettings {
     required String whatsapp1,
     required String whatsapp2,
     required String facebook,
+    required String email,
   }) async {
     final n1 = whatsapp1.trim();
     final n2 = whatsapp2.trim();
     final fb = facebook.trim();
+    final em = email.trim();
     await _db.from('app_settings').upsert([
       {'key': 'support_whatsapp_1', 'value': n1},
       {'key': 'support_whatsapp_2', 'value': n2},
       {'key': 'facebook_url', 'value': fb},
+      {'key': 'support_email', 'value': em},
     ]);
     supportWhatsapp1 = n1;
     supportWhatsapp2 = n2;
     facebookUrl = fb;
+    supportEmail = em;
   }
 
   /// Saves the About + Privacy Policy text (staff only).
