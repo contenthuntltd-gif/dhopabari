@@ -5,6 +5,7 @@ import '../../widgets/app_logo.dart';
 import '../../widgets/phone_frame.dart';
 import '../../services/admin_service.dart';
 import '../../services/auth_service.dart';
+import '../../services/language.dart';
 import '../../data/mock_data.dart';
 import 'dashboard_screen.dart';
 import 'orders_screen.dart';
@@ -125,11 +126,16 @@ class _AdminRootShellState extends State<AdminRootShell> {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isDesktop = constraints.maxWidth >= _desktopBreakpoint;
-        return isDesktop ? _buildDesktop(context) : _buildMobile(context);
-      },
+    // Rebuild the whole panel when the language toggles so every tr()-wrapped
+    // label (nav, top bar) switches between বাংলা and English.
+    return ValueListenableBuilder<bool>(
+      valueListenable: AppLanguage.isEnglish,
+      builder: (context, _, _) => LayoutBuilder(
+        builder: (context, constraints) {
+          final isDesktop = constraints.maxWidth >= _desktopBreakpoint;
+          return isDesktop ? _buildDesktop(context) : _buildMobile(context);
+        },
+      ),
     );
   }
 
@@ -181,7 +187,7 @@ class _AdminRootShellState extends State<AdminRootShell> {
       appBar: AppBar(
         leadingWidth: 52,
         leading: const Padding(padding: EdgeInsets.all(6), child: AppLogo(size: 40)),
-        title: Text(_primaryNav[mobileIndex].label),
+        title: Text(AppLanguage.tr(_primaryNav[mobileIndex].label)),
         centerTitle: false,
       ),
       drawer: _MobileDrawer(
@@ -201,7 +207,7 @@ class _AdminRootShellState extends State<AdminRootShell> {
             NavigationDestination(
               icon: Icon(_primaryNav[i].icon),
               selectedIcon: Icon(_primaryNav[i].activeIcon, color: AppColors.blue),
-              label: _primaryNav[i].label,
+              label: AppLanguage.tr(_primaryNav[i].label),
             ),
         ],
       ),
@@ -237,9 +243,9 @@ class _Sidebar extends StatelessWidget {
                 const SizedBox(width: 12),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [
-                    Text('ধোপা বাড়ি', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 15)),
-                    Text('অ্যাডমিন প্যানেল', style: TextStyle(color: Colors.white54, fontSize: 10.5, fontWeight: FontWeight.w700, letterSpacing: 0.4)),
+                  children: [
+                    const Text('ধোপা বাড়ি', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 15)),
+                    Text(AppLanguage.tr('অ্যাডমিন প্যানেল'), style: const TextStyle(color: Colors.white54, fontSize: 10.5, fontWeight: FontWeight.w700, letterSpacing: 0.4)),
                   ],
                 ),
               ],
@@ -328,7 +334,7 @@ class _Sidebar extends StatelessWidget {
   Widget _label(String text) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 6),
-      child: Text(text.toUpperCase(), style: const TextStyle(fontSize: 9.5, fontWeight: FontWeight.w800, color: Colors.white38, letterSpacing: 0.8)),
+      child: Text(AppLanguage.tr(text).toUpperCase(), style: const TextStyle(fontSize: 9.5, fontWeight: FontWeight.w800, color: Colors.white38, letterSpacing: 0.8)),
     );
   }
 
@@ -348,7 +354,7 @@ class _Sidebar extends StatelessWidget {
                 Icon(active ? item.activeIcon : item.icon, size: 19, color: active ? Colors.white : Colors.white70),
                 const SizedBox(width: 12),
                 Text(
-                  item.label,
+                  AppLanguage.tr(item.label),
                   style: TextStyle(fontSize: 13, fontWeight: active ? FontWeight.w800 : FontWeight.w600, color: active ? Colors.white : Colors.white70),
                 ),
               ],
@@ -377,8 +383,21 @@ class _TopBar extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: AppColors.ink)),
+          Text(AppLanguage.tr(title), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: AppColors.ink)),
           const Spacer(),
+          // Language toggle.
+          GestureDetector(
+            onTap: () => AppLanguage.showPicker(context),
+            child: Container(
+              margin: const EdgeInsets.only(right: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+              decoration: BoxDecoration(color: AppColors.blueSoft, borderRadius: BorderRadius.circular(999)),
+              child: Text(
+                AppLanguage.isEnglish.value ? '🌐 English ⌄' : '🌐 বাংলা ⌄',
+                style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w800, color: AppColors.blue),
+              ),
+            ),
+          ),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
             decoration: BoxDecoration(color: AppColors.paper, borderRadius: BorderRadius.circular(999)),

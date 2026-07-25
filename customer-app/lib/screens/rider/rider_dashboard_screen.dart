@@ -4,6 +4,7 @@ import '../../theme/app_theme.dart';
 import '../../data/admin_mock_data.dart';
 import '../../services/admin_service.dart';
 import '../../services/auth_service.dart';
+import '../../services/language.dart';
 import '../../widgets/bn_number.dart';
 import '../admin/customers_screen.dart';
 import '../../widgets/fade_slide_in.dart';
@@ -196,6 +197,11 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
                           const Text('ডেলিভারি পার্টনার', style: TextStyle(fontSize: 11.5, color: AppColors.muted, fontWeight: FontWeight.w600)),
                         ],
                       ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.language_rounded, color: AppColors.blue),
+                      onPressed: () => AppLanguage.showPicker(context),
+                      tooltip: 'ভাষা / Language',
                     ),
                     IconButton(icon: const Icon(Icons.logout_rounded, color: AppColors.danger), onPressed: _logout, tooltip: 'লগআউট'),
                   ],
