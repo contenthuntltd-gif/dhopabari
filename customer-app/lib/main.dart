@@ -17,6 +17,7 @@ import 'data/business_info.dart';
 import 'app_globals.dart';
 import 'app_flavor.dart';
 import 'services/auth_service.dart';
+import 'services/push_service.dart';
 import 'services/supabase_config.dart';
 import 'services/language.dart';
 
@@ -54,6 +55,10 @@ void main() async {
       // them before first paint (a single, quick key/value read).
       await CatalogMeta.load();
       await DeliveryOptions.load();
+      // Phone push (FCM) — Android only; registers this device's token for the
+      // signed-in user. No-op on web.
+      // ignore: unawaited_futures
+      PushService.init();
     } catch (e) {
       debugPrint('Supabase init/session restore failed: $e');
     }
@@ -88,6 +93,9 @@ class _DhopaBariAppState extends State<DhopaBariApp> {
             // rider, guest order, login) navigate themselves, and hijacking
             // the navigator here would tear down their flow mid-step.
             await AuthService.syncProfile();
+            // Bind this phone's push token to the freshly signed-in user.
+            // ignore: unawaited_futures
+            PushService.onLogin();
             if (!AuthService.recentlyProgrammatic) {
               navigatorKey.currentState?.pushAndRemoveUntil(
                 AppPageRoute(builder: (_) => const RootShell()),
@@ -95,6 +103,9 @@ class _DhopaBariAppState extends State<DhopaBariApp> {
               );
             }
           case AuthChangeEvent.signedOut:
+            // Stop pushes reaching this now-signed-out phone.
+            // ignore: unawaited_futures
+            PushService.onLogout();
             // Each logout site drives its own navigation (profile → guest
             // home, rider/admin → their login). Navigating here too would
             // race that and briefly leave a blank white page. So do nothing.

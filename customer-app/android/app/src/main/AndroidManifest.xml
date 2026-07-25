@@ -2,6 +2,8 @@
     <!-- Network access — required for Supabase, order APIs, receipts, etc.
          Without this the release build cannot reach the internet. -->
     <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- Show push notifications on Android 13+ (runtime-requested by FCM). -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <application
         android:label="${appLabel}"
         android:name="${applicationName}"
