@@ -31,6 +31,7 @@ class Cart {
   Cart._();
 
   static const _prefsKey = 'cart_v1';
+  static const _customKey = 'cart_custom_v1';
 
   /// "itemId|service" → qty. Values are always > 0 (zero removes the key).
   static final Map<String, int> _qty = {};
@@ -38,7 +39,35 @@ class Cart {
   /// Bumped on every mutation so screens can listen and rebuild.
   static final ValueNotifier<int> revision = ValueNotifier(0);
 
+  /// Custom (manual) items added by staff during an order — garments not in
+  /// the catalog, with a typed name and price. Keyed by their generated id so
+  /// [lines] can resolve them like any catalog item.
+  static final Map<String, PriceItem> _custom = {};
+
   static String _key(String itemId, String service) => '$itemId|$service';
+
+  /// Adds a one-off manual item (staff order) and puts [qty] of it in the cart
+  /// under [service]. Wash and dry prices are the same typed price. Returns id.
+  static String addCustom({
+    required String category,
+    required String nameBn,
+    String? name,
+    required int price,
+    required String service,
+    int qty = 1,
+  }) {
+    final id = 'custom_${DateTime.now().microsecondsSinceEpoch}';
+    _custom[id] = PriceItem(
+      id: id,
+      category: category,
+      name: (name == null || name.trim().isEmpty) ? nameBn : name.trim(),
+      nameBn: nameBn,
+      washPrice: price,
+      dryPrice: price,
+    );
+    setQty(id, service, qty); // triggers revision + save
+    return id;
+  }
 
   static int qtyOf(String itemId, String service) =>
       _qty[_key(itemId, service)] ?? 0;
@@ -64,7 +93,8 @@ class Cart {
     _qty.forEach((key, qty) {
       final sep = key.lastIndexOf('|');
       if (sep < 0) return;
-      final item = Catalog.byId(key.substring(0, sep));
+      final id = key.substring(0, sep);
+      final item = Catalog.byId(id) ?? _custom[id];
       if (item == null) return;
       result.add(CartLine(item: item, service: key.substring(sep + 1), qty: qty));
     });
@@ -114,6 +144,7 @@ class Cart {
   /// Called ONLY after an order is successfully placed.
   static Future<void> clear() async {
     _qty.clear();
+    _custom.clear();
     revision.value++;
     await _save();
   }
@@ -130,6 +161,29 @@ class Cart {
         ..clear()
         ..addAll(decoded.map((k, v) => MapEntry(k, (v as num).toInt())));
       _qty.removeWhere((_, v) => v <= 0);
+
+      // Restore any custom (manual) items so their qty keys resolve.
+      final rawCustom = prefs.getString(_customKey);
+      if (rawCustom != null && rawCustom.isNotEmpty) {
+        final cm = jsonDecode(rawCustom) as Map<String, dynamic>;
+        _custom
+          ..clear()
+          ..addAll(cm.map((id, v) {
+            final m = v as Map<String, dynamic>;
+            final price = (m['price'] as num?)?.toInt() ?? 0;
+            return MapEntry(
+              id,
+              PriceItem(
+                id: id,
+                category: (m['category'] as String?) ?? 'Men',
+                name: (m['name'] as String?) ?? (m['nameBn'] as String? ?? ''),
+                nameBn: (m['nameBn'] as String?) ?? (m['name'] as String? ?? ''),
+                washPrice: price,
+                dryPrice: price,
+              ),
+            );
+          }));
+      }
       revision.value++;
     } catch (_) {
       // Corrupt/old data — start with an empty cart rather than crash.
@@ -140,6 +194,15 @@ class Cart {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_prefsKey, jsonEncode(_qty));
+      await prefs.setString(_customKey, jsonEncode({
+        for (final e in _custom.entries)
+          e.key: {
+            'category': e.value.category,
+            'name': e.value.name,
+            'nameBn': e.value.nameBn,
+            'price': e.value.washPrice,
+          }
+      }));
     } catch (_) {
       // Persistence is best-effort; the in-memory cart still works.
     }

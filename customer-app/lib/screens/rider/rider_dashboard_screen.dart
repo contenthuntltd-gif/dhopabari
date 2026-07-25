@@ -17,6 +17,7 @@ import '../../widgets/stat_card.dart';
 import '../../widgets/app_logo.dart';
 import '../login_screen.dart';
 import '../receipt_screen.dart';
+import 'rider_queue_screen.dart';
 
 /// Which slice of the rider's orders the list shows. Mirrors the four stat
 /// tiles: everything, delivered, still-active, cancelled.
@@ -105,6 +106,73 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
 
   void _openCustomers() {
     Navigator.push(context, AppPageRoute(builder: (_) => const CustomersScreen())).then((_) => _load());
+  }
+
+  /// The ☰ menu — pickup / delivery / collection, each a two-tab (today / all)
+  /// screen. The main dashboard (stats + assigned list) stays as the home view.
+  void _openMenu() {
+    final id = _me?.id;
+    if (id == null) return;
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (_) => Container(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+        decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.only(topLeft: Radius.circular(24), topRight: Radius.circular(24))),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.line, borderRadius: BorderRadius.circular(2)))),
+            const SizedBox(height: 14),
+            _menuItem(Icons.inventory_2_rounded, AppColors.blue, AppLanguage.tr('পিকআপ'), AppLanguage.tr('আজকের ও সব পিকআপ'), () {
+              Navigator.pop(context);
+              Navigator.push(context, AppPageRoute(builder: (_) => RiderQueueScreen(mode: RiderQueueMode.pickup, riderId: id))).then((_) => _load());
+            }),
+            _menuItem(Icons.local_shipping_rounded, AppColors.teal, AppLanguage.tr('ডেলিভারি'), AppLanguage.tr('আজকের ও সম্পন্ন ডেলিভারি'), () {
+              Navigator.pop(context);
+              Navigator.push(context, AppPageRoute(builder: (_) => RiderQueueScreen(mode: RiderQueueMode.delivery, riderId: id))).then((_) => _load());
+            }),
+            _menuItem(Icons.account_balance_wallet_rounded, AppColors.green, AppLanguage.tr('কালেক্ট'), AppLanguage.tr('আজকের ও তারিখ অনুযায়ী হিসাব'), () {
+              Navigator.pop(context);
+              Navigator.push(context, AppPageRoute(builder: (_) => RiderCollectionScreen(riderId: id))).then((_) => _load());
+            }),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _menuItem(IconData icon, Color color, String title, String subtitle, VoidCallback onTap) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Material(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(14),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(14),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Row(
+              children: [
+                Container(width: 44, height: 44, decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(13)), child: Icon(icon, color: Colors.white, size: 22)),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(title, style: TextStyle(fontSize: 15.5, fontWeight: FontWeight.w900, color: color)),
+                      Text(subtitle, style: const TextStyle(fontSize: 11.5, color: AppColors.muted, fontWeight: FontWeight.w600)),
+                    ],
+                  ),
+                ),
+                Icon(Icons.chevron_right_rounded, color: color, size: 24),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   // ── Order actions ──
@@ -243,6 +311,7 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
                       ),
                     ),
                     IconButton(icon: const Icon(Icons.language_rounded, color: AppColors.blue), onPressed: () => AppLanguage.showPicker(context), tooltip: 'ভাষা / Language'),
+                    IconButton(icon: const Icon(Icons.menu_rounded, color: AppColors.ink), onPressed: _openMenu, tooltip: AppLanguage.tr('মেনু')),
                     IconButton(icon: const Icon(Icons.logout_rounded, color: AppColors.danger), onPressed: _logout, tooltip: 'লগআউট'),
                   ],
                 ),

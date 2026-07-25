@@ -292,6 +292,7 @@ class _NewOrderScreenState extends State<NewOrderScreen> {
           key: const ValueKey(0),
           service: _service,
           category: _category,
+          isStaffOrder: widget.isStaffOrder,
           onServiceChanged: (s) => setState(() => _service = s),
           onCategoryChanged: (c) => setState(() => _category = c),
         );
@@ -468,6 +469,9 @@ class _ServiceItemsStep extends StatelessWidget {
   final String category;
   final ValueChanged<String> onServiceChanged;
   final ValueChanged<String> onCategoryChanged;
+  // Staff (admin/rider) placing an order for a customer may add off-list items
+  // by hand — pick a category, type the name and price.
+  final bool isStaffOrder;
 
   const _ServiceItemsStep({
     super.key,
@@ -475,7 +479,56 @@ class _ServiceItemsStep extends StatelessWidget {
     required this.category,
     required this.onServiceChanged,
     required this.onCategoryChanged,
+    this.isStaffOrder = false,
   });
+
+  Future<void> _addCustomItem(BuildContext context) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final nameCtrl = TextEditingController();
+    final priceCtrl = TextEditingController();
+    String cat = category;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setLocal) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.lg)),
+          title: Text('${AppLanguage.tr('কাস্টম আইটেম')} ($service)', style: AppText.h2),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                DropdownButtonFormField<String>(
+                  initialValue: MockData.categories.contains(cat) ? cat : MockData.categories.first,
+                  decoration: InputDecoration(labelText: AppLanguage.tr('ক্যাটাগরি'), prefixIcon: const Icon(Icons.category_outlined, size: 20)),
+                  items: [
+                    for (final c in MockData.categories)
+                      DropdownMenuItem(value: c, child: Text(MockData.categoriesBn[c] ?? c)),
+                  ],
+                  onChanged: (v) => setLocal(() => cat = v ?? cat),
+                ),
+                const SizedBox(height: 10),
+                TextField(controller: nameCtrl, decoration: InputDecoration(hintText: AppLanguage.tr('আইটেমের নাম'), prefixIcon: const Icon(Icons.label_outline_rounded, size: 20))),
+                const SizedBox(height: 10),
+                TextField(controller: priceCtrl, keyboardType: TextInputType.number, decoration: InputDecoration(hintText: AppLanguage.tr('দাম (৳)'), prefixIcon: const Icon(Icons.payments_outlined, size: 20))),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context, false), child: Text(AppLanguage.tr('বাতিল'))),
+            ElevatedButton(onPressed: () => Navigator.pop(context, true), child: Text(AppLanguage.tr('যোগ করুন'))),
+          ],
+        ),
+      ),
+    );
+    if (ok != true) return;
+    final name = nameCtrl.text.trim();
+    final price = int.tryParse(priceCtrl.text.trim()) ?? 0;
+    if (name.isEmpty || price <= 0) {
+      messenger.showSnackBar(SnackBar(content: Text(AppLanguage.tr('নাম ও দাম দিন'))));
+      return;
+    }
+    Cart.addCustom(category: cat, nameBn: name, price: price, service: service);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -733,6 +786,22 @@ class _ServiceItemsStep extends StatelessWidget {
             }).toList(),
           ),
         ),
+        if (isStaffOrder) ...[
+          const SizedBox(height: 10),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () => _addCustomItem(context),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.blue,
+                side: const BorderSide(color: AppColors.blue, style: BorderStyle.solid),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+              ),
+              icon: const Icon(Icons.add_circle_outline_rounded, size: 18),
+              label: Text(AppLanguage.tr('কাস্টম আইটেম যোগ করুন'), style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13)),
+            ),
+          ),
+        ],
         if (Cart.isEmpty) ...[
           const SizedBox(height: AppSpace.sm),
           Container(
