@@ -480,15 +480,17 @@ class AdminService {
 
   // ----- Cash settlement (হিসাব) -----
 
-  /// Delivered Cash-on-Delivery orders whose cash the rider has not yet
-  /// handed in. These are what the accounts screen groups by rider.
-  static Future<List<AdminOrder>> unsettledCodOrders() async {
+  /// Delivered Cash-on-Delivery orders, split by whether their cash has been
+  /// received at the office. [settled] false = "বুঝে পাইনি" (waiting),
+  /// true = "বুঝে পেয়েছি" (received). Only delivered orders show here.
+  static Future<List<AdminOrder>> codOrders({required bool settled}) async {
     final rows = await _db
         .from('orders')
         .select('*, customer:customer_id(name, phone), rider:rider_id(name, phone)')
         .eq('status', 'Delivered')
-        .eq('cash_settled', false)
-        .order('created_at', ascending: false)
+        .eq('cash_settled', settled)
+        .isFilter('deleted_at', null)
+        .order(settled ? 'settled_at' : 'created_at', ascending: false)
         .limit(500);
     final all = (rows as List).map((r) => AdminOrder.fromRow(r)).toList();
     // Keep only cash orders (online-paid orders hold no cash to hand over).
@@ -498,11 +500,19 @@ class AdminService {
     }).toList();
   }
 
-  /// Marks one order's cash as received at the office.
+  /// Marks one order's cash as received at the office (waiting → received).
   static Future<void> settleOrder(String orderUuid) async {
     await _db.from('orders').update({
       'cash_settled': true,
       'settled_at': DateTime.now().toUtc().toIso8601String(),
+    }).eq('id', orderUuid);
+  }
+
+  /// Moves a settled order back to waiting (received → বুঝে পাইনি).
+  static Future<void> unsettleOrder(String orderUuid) async {
+    await _db.from('orders').update({
+      'cash_settled': false,
+      'settled_at': null,
     }).eq('id', orderUuid);
   }
 
