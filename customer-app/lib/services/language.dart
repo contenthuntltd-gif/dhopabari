@@ -228,7 +228,6 @@ class AppLanguage {
     'কাস্টম': 'Custom',
     'মোট কাস্টমার': 'Total Customers',
     'মোট রাইডার': 'Total Riders',
-    'সাম্প্রতিক অর্ডার': 'Recent Orders',
     'সব দেখুন →': 'View all →',
     'ডেলিভারি সম্পন্ন': 'Delivered',
     'সংগৃহীত ক্যাশ': 'Cash Collected',
