@@ -134,6 +134,7 @@ class AppLanguage {
     'অর্ডার বাতিল করুন': 'Cancel Order',
     'অর্ডার বাতিল করবেন?': 'Cancel this order?',
     'হ্যাঁ, বাতিল করুন': 'Yes, cancel',
+    'অর্ডারটি বাতিল হয়ে যাবে। প্রয়োজনে বাতিল করে আবার নতুন করে অর্ডার করুন।': 'The order will be cancelled. If needed, cancel and place a new order.',
     'অর্ডার বাতিল করা হয়েছে': 'Order cancelled',
     'না': 'No',
     'হ্যাঁ': 'Yes',

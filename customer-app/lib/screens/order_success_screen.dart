@@ -55,13 +55,13 @@ class _OrderSuccessScreenState extends State<OrderSuccessScreen> with SingleTick
       builder: (_) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.lg)),
         title: Text(AppLanguage.tr('অর্ডার বাতিল করবেন?')),
-        content: Text(AppLanguage.tr('অর্ডারটি বাতিল হয়ে যাবে। এটি আর ফেরানো যাবে না।'), style: const TextStyle(fontSize: 13.5, height: 1.5)),
+        content: Text(AppLanguage.tr('অর্ডারটি বাতিল হয়ে যাবে। প্রয়োজনে বাতিল করে আবার নতুন করে অর্ডার করুন।'), style: const TextStyle(fontSize: 13.5, height: 1.5)),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context, false), child: Text(AppLanguage.tr('না'))),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.danger),
             onPressed: () => Navigator.pop(context, true),
-            child: Text(AppLanguage.tr('হ্যাঁ, বাতিল করুন')),
+            child: Text(AppLanguage.tr('হ্যাঁ')),
           ),
         ],
       ),

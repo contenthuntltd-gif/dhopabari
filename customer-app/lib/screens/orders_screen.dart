@@ -81,7 +81,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.lg)),
         title: Text(AppLanguage.tr('অর্ডার বাতিল করবেন?')),
         content: Text(
-          AppLanguage.tr('${o.id} অর্ডারটি বাতিল হয়ে যাবে। এটি আর ফেরানো যাবে না।'),
+          '${o.id} ${AppLanguage.tr('অর্ডারটি বাতিল হয়ে যাবে। প্রয়োজনে বাতিল করে আবার নতুন করে অর্ডার করুন।')}',
           style: const TextStyle(fontSize: 13.5, height: 1.5),
         ),
         actions: [
@@ -89,7 +89,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.danger),
             onPressed: () => Navigator.pop(context, true),
-            child: Text(AppLanguage.tr('হ্যাঁ, বাতিল করুন')),
+            child: Text(AppLanguage.tr('হ্যাঁ')),
           ),
         ],
       ),
