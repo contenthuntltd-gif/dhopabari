@@ -139,23 +139,41 @@ class Catalog {
     await refresh();
   }
 
-  /// Moves an item to the top of ITS category (an admin "pin to top"). Reads
-  /// the category's current lowest sort_order, drops this item just below it,
-  /// then reloads so every screen reflects the new order.
+  /// Moves an item to the top of ITS category (an admin "pin to top").
+  ///
+  /// The in-memory [items] list's order IS the display order (PriceItem has no
+  /// sort_order field), so we reorder it directly for an instant, reliable
+  /// change — no waiting on a DB round-trip, and no risk of a reload re-tying
+  /// equal sort_orders and appearing to "do nothing". The DB is then updated
+  /// (sort_order one below the category's current minimum) so the new order
+  /// survives a reload and reaches every device.
   static Future<void> moveToTop(String id) async {
     final item = byId(id);
     if (item == null) return;
-    final rows = await Supabase.instance.client
-        .from('catalog_items')
-        .select('sort_order')
-        .eq('category', item.category)
-        .order('sort_order')
-        .limit(1);
-    final min = (rows as List).isNotEmpty ? ((rows.first['sort_order'] as num?)?.toInt() ?? 0) : 0;
-    await Supabase.instance.client
-        .from('catalog_items')
-        .update({'sort_order': min - 1}).eq('id', id);
-    await refresh();
+
+    // 1. Instant local reorder: put the item just before the first item of
+    //    its own category.
+    final list = List<PriceItem>.of(items)..removeWhere((p) => p.id == id);
+    final firstOfCat = list.indexWhere((p) => p.category == item.category);
+    list.insert(firstOfCat < 0 ? list.length : firstOfCat, item);
+    items = list;
+
+    // 2. Persist to the DB. On failure, reload to restore the true order.
+    try {
+      final rows = await Supabase.instance.client
+          .from('catalog_items')
+          .select('sort_order')
+          .eq('category', item.category)
+          .order('sort_order')
+          .limit(1);
+      final min = (rows as List).isNotEmpty ? ((rows.first['sort_order'] as num?)?.toInt() ?? 0) : 0;
+      await Supabase.instance.client
+          .from('catalog_items')
+          .update({'sort_order': min - 1}).eq('id', id);
+    } catch (e) {
+      await refresh();
+      rethrow;
+    }
   }
 
   /// The official Dhopa Bari price list. Ordered so the everyday items sit
