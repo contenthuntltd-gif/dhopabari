@@ -300,23 +300,8 @@ class _TrackingScreenState extends State<TrackingScreen>
                 ),
               ),
             ),
-            // When no rider is assigned yet, a gentle note. Once a rider IS
-            // assigned the rider card at the top carries the WhatsApp + Call
-            // actions, so there is no separate button down here.
-            if (!isDone && (order.riderPhone == null || order.riderPhone!.trim().isEmpty)) ...[
-              const SizedBox(height: AppSpace.xs),
-              FadeSlideIn(
-                delayMs: 140,
-                child: SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton.icon(
-                    onPressed: null,
-                    icon: const Icon(Icons.two_wheeler_outlined, size: AppIconSize.md),
-                    label: const Text('রাইডার নির্ধারিত হলে নম্বর এখানে দেখা যাবে'),
-                  ),
-                ),
-              ),
-            ],
+            // Rider contact lives entirely on the rider card at the top (shown
+            // once a rider is assigned) — no placeholder button here.
           ],
         ),
       ),
