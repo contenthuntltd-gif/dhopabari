@@ -16,7 +16,7 @@ class ReceiptPdfService {
   static Future<Uint8List> posPdfFromImage(Uint8List png, int pxW, int pxH) async {
     final doc = pw.Document();
     final img = pw.MemoryImage(png);
-    const widthMm = 72.0;
+    const widthMm = 80.0; // standard 80mm thermal-POS roll
     final heightMm = widthMm * pxH / pxW;
     doc.addPage(
       pw.Page(

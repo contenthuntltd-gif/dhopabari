@@ -4,6 +4,8 @@
     <uses-permission android:name="android.permission.INTERNET"/>
     <!-- Show push notifications on Android 13+ (runtime-requested by FCM). -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <!-- Save the memo image to the gallery on older Android (API <= 28). -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28"/>
     <application
         android:label="${appLabel}"
         android:name="${applicationName}"

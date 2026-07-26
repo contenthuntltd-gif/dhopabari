@@ -2,11 +2,13 @@
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:share_plus/share_plus.dart';
 import '../theme/app_theme.dart';
 import '../data/receipt_data.dart';
 import '../widgets/receipt_view.dart';
 import '../widgets/app_button.dart';
 import '../services/receipt_pdf_service.dart';
+import '../services/image_download.dart';
 
 enum ReceiptViewerRole { customer, rider, admin }
 
@@ -73,10 +75,25 @@ class _ReceiptScreenState extends State<ReceiptScreen> {
     await ReceiptPdfService.printPos(cap.png, cap.w, cap.h, widget.receipt.receiptNumber);
   }
 
+  /// Download the memo as a PHOTO (PNG) — saved to the gallery on mobile, a
+  /// normal file download on web.
+  Future<void> _download() async {
+    final cap = await _capturePos();
+    if (cap == null) return;
+    await downloadReceiptImage(cap.png, widget.receipt.receiptNumber);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('মেমো ছবি হিসেবে সেভ হয়েছে ✅')),
+    );
+  }
+
+  /// Share the memo as a PNG image.
   Future<void> _share() async {
     final cap = await _capturePos();
     if (cap == null) return;
-    await ReceiptPdfService.sharePos(cap.png, cap.w, cap.h, widget.receipt.receiptNumber);
+    await Share.shareXFiles([
+      XFile.fromData(cap.png, name: '${widget.receipt.receiptNumber}.png', mimeType: 'image/png'),
+    ]);
   }
 
   Future<void> _emailReceipt() async {
@@ -155,7 +172,7 @@ class _ReceiptScreenState extends State<ReceiptScreen> {
           children: [
             Expanded(
               child: OutlinedButton.icon(
-                onPressed: _busy ? null : () => _runAction(_print),
+                onPressed: _busy ? null : () => _runAction(_download),
                 icon: const Icon(Icons.download_rounded, size: 18),
                 label: const Text('ডাউনলোড'),
               ),
@@ -220,7 +237,7 @@ class _ReceiptScreenState extends State<ReceiptScreen> {
                 const SizedBox(width: 10),
                 Expanded(
                   child: OutlinedButton.icon(
-                    onPressed: _busy ? null : () => _runAction(_print),
+                    onPressed: _busy ? null : () => _runAction(_download),
                     icon: const Icon(Icons.download_rounded, size: 18),
                     label: const Text('ডাউনলোড'),
                   ),
