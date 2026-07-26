@@ -507,6 +507,12 @@ class AdminService {
     await _db.from('orders').update({'rider_id': riderId}).eq('id', orderId);
   }
 
+  /// Admin approves an order — the gate that must clear before a rider can be
+  /// assigned.
+  static Future<void> approveOrder(String orderId) async {
+    await _db.from('orders').update({'approved': true}).eq('id', orderId);
+  }
+
   /// Customer-initiated cancellation. RLS (`orders_cancel_own`) only lets this
   /// succeed while the order is still 'Confirmed' with no rider assigned — so
   /// once staff/rider act on it, the database rejects the change.

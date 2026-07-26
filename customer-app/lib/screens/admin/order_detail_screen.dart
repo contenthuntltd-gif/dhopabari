@@ -91,6 +91,18 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     }
   }
 
+  Future<void> _approve() async {
+    setState(() => widget.order.approved = true);
+    try {
+      await AdminService.approveOrder(widget.order.uuid);
+      _snack('অর্ডার অ্যাপ্রুভ করা হয়েছে — এখন রাইডার বরাদ্দ করতে পারবেন');
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => widget.order.approved = false);
+      _snack(AdminService.messageFor(e));
+    }
+  }
+
   Future<void> _assignRider() async {
     final riders = await AdminService.riders();
     if (!mounted) return;
@@ -196,6 +208,55 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               ),
             ),
           ),
+          // Approval gate — admin must approve before assigning a rider.
+          if (!isTerminal) ...[
+            const SizedBox(height: 16),
+            FadeSlideIn(
+              delayMs: 50,
+              child: order.approved
+                  ? Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(color: AppColors.tealSoft, borderRadius: BorderRadius.circular(AppRadius.sm)),
+                      child: Row(
+                        children: const [
+                          Icon(Icons.verified_rounded, color: AppColors.teal, size: 20),
+                          SizedBox(width: 10),
+                          Text('অর্ডার অ্যাপ্রুভ করা হয়েছে', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800, color: Color(0xFF0C8B85))),
+                        ],
+                      ),
+                    )
+                  : Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(color: AppColors.amberSoft, borderRadius: BorderRadius.circular(AppRadius.md), border: Border.all(color: AppColors.amber.withValues(alpha: 0.4))),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: const [
+                              Icon(Icons.pending_actions_rounded, color: AppColors.amber, size: 20),
+                              SizedBox(width: 8),
+                              Expanded(child: Text('অর্ডারটি অ্যাপ্রুভের অপেক্ষায়', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: AppColors.ink))),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          const Text('অ্যাপ্রুভ করার পরেই রাইডার বরাদ্দ করা যাবে।', style: TextStyle(fontSize: 11, color: AppColors.muted, fontWeight: FontWeight.w600)),
+                          const SizedBox(height: 10),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton.icon(
+                              style: ElevatedButton.styleFrom(backgroundColor: AppColors.teal, padding: const EdgeInsets.symmetric(vertical: 11)),
+                              onPressed: _approve,
+                              icon: const Icon(Icons.check_circle_rounded, size: 18),
+                              label: const Text('অর্ডার অ্যাপ্রুভ করুন', style: TextStyle(fontWeight: FontWeight.w800)),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+            ),
+          ],
           const SizedBox(height: 16),
           FadeSlideIn(
             delayMs: 60,
@@ -255,7 +316,10 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                         const Icon(Icons.two_wheeler_outlined, color: AppColors.muted),
                         const SizedBox(width: 12),
                         const Expanded(child: Text('এখনো কোনো রাইডার বরাদ্দ হয়নি', style: TextStyle(fontSize: 12.5, color: AppColors.muted, fontWeight: FontWeight.w700))),
-                        TextButton(onPressed: _assignRider, child: const Text('বরাদ্দ করুন')),
+                        // Rider can only be assigned after the order is approved.
+                        order.approved
+                            ? TextButton(onPressed: _assignRider, child: const Text('বরাদ্দ করুন'))
+                            : const Text('অ্যাপ্রুভ বাকি', style: TextStyle(fontSize: 11.5, color: AppColors.amber, fontWeight: FontWeight.w800)),
                       ],
                     )
                   : Row(

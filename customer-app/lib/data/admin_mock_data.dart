@@ -32,6 +32,9 @@ class AdminOrder {
   final int pieces;
   final int total;
   String status;
+  /// Admin approval gate — an order must be approved before a rider can be
+  /// assigned to it. New orders arrive unapproved (false).
+  bool approved;
   final String date;
   final DateTime? createdAt;
   final DateTime? deliveredAt;
@@ -53,6 +56,7 @@ class AdminOrder {
     required this.pieces,
     required this.total,
     required this.status,
+    this.approved = false,
     required this.date,
     this.createdAt,
     this.deliveredAt,
@@ -86,6 +90,7 @@ class AdminOrder {
       pieces: (r['pieces'] as num?)?.toInt() ?? 0,
       total: (r['total'] as num?)?.toInt() ?? 0,
       status: (r['status'] as String?) ?? 'Confirmed',
+      approved: r['approved'] as bool? ?? false,
       date: bnDateTime(r['created_at'] as String?),
       createdAt: DateTime.tryParse((r['created_at'] as String?) ?? '')?.toLocal(),
       deliveredAt: DateTime.tryParse((r['delivered_at'] as String?) ?? '')?.toLocal(),
