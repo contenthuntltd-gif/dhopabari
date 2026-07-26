@@ -134,22 +134,22 @@ class _RiderDashboardScreenState extends State<RiderDashboardScreen> {
     return AdminMockData.orderStatuses[idx + 1];
   }
 
-  bool _riderCanAdvance(AdminOrder o) {
-    final next = _nextStatusFor(o);
-    return next != null && AdminMockData.riderAllowedStatuses.contains(next);
-  }
+  // Riders can now advance an order through EVERY step (not just the
+  // rider-owned ones) — one step forward at a time.
+  bool _riderCanAdvance(AdminOrder o) => _nextStatusFor(o) != null;
 
   /// The action-button label for the rider's next move on this order.
   String _advanceLabel(AdminOrder o) {
     final next = _nextStatusFor(o);
-    if (next == 'Picked Up') return AppLanguage.tr('পিকআপ শুরু');
+    if (next == 'Picked Up') return AppLanguage.tr('পিকআপ সম্পন্ন');
     if (next == 'Delivered') return AppLanguage.tr('ডেলিভারি সম্পন্ন');
+    if (next != null) return AdminMockData.orderStatusesBn[next] ?? AppLanguage.tr('পরবর্তী ধাপ');
     return AppLanguage.tr('পরবর্তী ধাপ');
   }
 
   Future<void> _advance(AdminOrder o) async {
     final next = _nextStatusFor(o);
-    if (next == null || !AdminMockData.riderAllowedStatuses.contains(next)) return;
+    if (next == null) return;
     final prev = o.status;
     setState(() => o.status = next);
     try {

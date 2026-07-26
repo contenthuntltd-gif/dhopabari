@@ -52,6 +52,10 @@ class MockOrder {
   /// demo/mock orders that have no DB row.
   final String? uuid;
 
+  /// Whether an admin has approved this order. Once approved, the customer can
+  /// no longer cancel it (the shop has committed to it).
+  final bool approved;
+
   /// Real line items (name/name_bn/service/qty/unit_price maps) when this
   /// order came from the database; empty for demo/mock orders. Receipts
   /// print these verbatim instead of reconstructing a guess.
@@ -71,14 +75,18 @@ class MockOrder {
     this.items = const [],
     this.rawStatus = 'Confirmed',
     this.uuid,
+    this.approved = false,
   });
 
   String get currentStatusLabel => timeline.firstWhere((s) => s.current, orElse: () => timeline.last).label;
 
-  /// A customer may cancel only while the order is freshly confirmed and no
-  /// rider has been assigned yet — once staff/rider act on it, cancel is gone.
+  /// A customer may cancel only while the order is freshly confirmed, not yet
+  /// approved by an admin, and no rider assigned — once the shop approves (or
+  /// staff/rider act on it), cancel is gone.
   bool get isCancellable =>
-      rawStatus == 'Confirmed' && (riderName == null || riderName!.trim().isEmpty);
+      rawStatus == 'Confirmed' &&
+      !approved &&
+      (riderName == null || riderName!.trim().isEmpty);
 
   bool get isCancelled => rawStatus == 'Cancelled';
   double get progress {

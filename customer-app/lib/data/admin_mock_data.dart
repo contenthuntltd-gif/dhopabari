@@ -127,6 +127,7 @@ extension AdminOrderView on AdminOrder {
       items: items,
       rawStatus: status,
       uuid: uuid,
+      approved: approved,
     );
   }
 }

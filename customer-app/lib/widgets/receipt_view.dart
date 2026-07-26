@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import '../theme/app_theme.dart';
 import '../data/receipt_data.dart';
+import '../data/app_settings.dart';
 import 'bn_number.dart';
 import 'app_logo.dart';
 
@@ -16,6 +17,14 @@ class ReceiptView extends StatelessWidget {
   bool get _isPickup => receipt.type == ReceiptType.pickup;
   bool get _isDelivery => receipt.type == ReceiptType.delivery;
   bool get _isPayment => receipt.type == ReceiptType.payment;
+
+  /// The fallback QR content: a wa.me link to the shop's support number, so a
+  /// scan opens WhatsApp. Falls back to the receipt's own payload if no number
+  /// is set.
+  String get _whatsappQrData {
+    final digits = AppSettings.supportWhatsapp1.replaceAll(RegExp(r'\D'), '');
+    return digits.isNotEmpty ? 'https://wa.me/$digits' : receipt.qrPayload;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -91,17 +100,24 @@ class ReceiptView extends StatelessWidget {
                   _isPickup ? 'PICKUP MEMO' : (_isDelivery ? 'DELIVERY MEMO' : 'PAYMENT RECEIPT'),
                   style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w900, letterSpacing: 0.5),
                 ),
-                const SizedBox(height: 2),
-                Text(receipt.receiptNumber, style: const TextStyle(color: Colors.white70, fontSize: 11.5, fontWeight: FontWeight.w700)),
-                const SizedBox(height: 1),
-                Text(_formatDateTime(receipt.issuedAt), style: TextStyle(color: Colors.white.withValues(alpha: 0.75), fontSize: 10.5, fontWeight: FontWeight.w600)),
+                const SizedBox(height: 3),
+                Text(_formatDateTime(receipt.issuedAt), style: TextStyle(color: Colors.white.withValues(alpha: 0.85), fontSize: 11, fontWeight: FontWeight.w600)),
               ],
             ),
           ),
           Container(
             padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10)),
-            child: QrImageView(data: receipt.qrPayload, size: 56, backgroundColor: Colors.white),
+            // WhatsApp QR — scanning opens a chat with the shop. Uses the
+            // shop's uploaded QR image (assets/branding/whatsapp_qr.png) when
+            // present, otherwise a live QR generated from the support number.
+            child: Image.asset(
+              'assets/branding/whatsapp_qr.png',
+              width: 56,
+              height: 56,
+              fit: BoxFit.contain,
+              errorBuilder: (_, _, _) => QrImageView(data: _whatsappQrData, size: 56, backgroundColor: Colors.white),
+            ),
           ),
         ],
       ),
@@ -112,7 +128,7 @@ class ReceiptView extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Row(children: [Expanded(child: _infoTile('অর্ডার আইডি', receipt.orderId)), const SizedBox(width: 10), Expanded(child: _infoTile('রিসিট আইডি', receipt.receiptNumber))]),
+        _infoTile('অর্ডার আইডি', receipt.orderId),
         const SizedBox(height: 8),
         Row(children: [Expanded(child: _infoTile('কাস্টমার নাম', receipt.customerName)), const SizedBox(width: 10), Expanded(child: _infoTile('কাস্টমার ফোন', receipt.customerPhone))]),
         // Customer location — shown on every receipt type (pickup / delivery /

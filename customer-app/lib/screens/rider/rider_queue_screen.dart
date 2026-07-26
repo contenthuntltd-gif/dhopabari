@@ -110,14 +110,20 @@ class _RiderQueueScreenState extends State<RiderQueueScreen> with SingleTickerPr
     return AdminMockData.orderStatuses[idx + 1];
   }
 
-  bool _riderCanAdvance(AdminOrder o) {
+  // Riders can advance an order through every step now.
+  bool _riderCanAdvance(AdminOrder o) => _nextStatusFor(o) != null;
+
+  String _advanceLabel(AdminOrder o) {
     final next = _nextStatusFor(o);
-    return next != null && AdminMockData.riderAllowedStatuses.contains(next);
+    if (next == 'Picked Up') return AppLanguage.tr('পিকআপ সম্পন্ন');
+    if (next == 'Delivered') return AppLanguage.tr('ডেলিভারি সম্পন্ন');
+    if (next != null) return AdminMockData.orderStatusesBn[next] ?? AppLanguage.tr('পরবর্তী ধাপ');
+    return AppLanguage.tr('পরবর্তী ধাপ');
   }
 
   Future<void> _advance(AdminOrder o) async {
     final next = _nextStatusFor(o);
-    if (next == null || !AdminMockData.riderAllowedStatuses.contains(next)) return;
+    if (next == null) return;
     final prev = o.status;
     setState(() => o.status = next);
     try {
@@ -260,14 +266,11 @@ class _RiderQueueScreenState extends State<RiderQueueScreen> with SingleTickerPr
                     ? ElevatedButton(
                         onPressed: () => _advance(o),
                         style: ElevatedButton.styleFrom(backgroundColor: AppColors.teal),
-                        child: Text(o.status == 'Confirmed' ? AppLanguage.tr('পিকআপ সম্পন্ন') : AppLanguage.tr('ডেলিভারি সম্পন্ন')),
+                        child: Text(_advanceLabel(o), style: const TextStyle(fontSize: 12)),
                       )
                     : OutlinedButton(
                         onPressed: null,
-                        child: Text(
-                          o.status == 'Delivered' ? AppLanguage.tr('সম্পন্ন হয়েছে') : AppLanguage.tr('লন্ড্রিতে প্রসেসিং হচ্ছে'),
-                          style: const TextStyle(fontSize: 11.5),
-                        ),
+                        child: Text(AppLanguage.tr('সম্পন্ন হয়েছে'), style: const TextStyle(fontSize: 11.5)),
                       ),
               ),
             ],
