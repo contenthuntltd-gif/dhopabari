@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:qr_flutter/qr_flutter.dart';
 import '../theme/app_theme.dart';
 import '../data/receipt_data.dart';
-import '../data/app_settings.dart';
 import 'bn_number.dart';
 import 'app_logo.dart';
 
@@ -17,14 +15,6 @@ class ReceiptView extends StatelessWidget {
   bool get _isPickup => receipt.type == ReceiptType.pickup;
   bool get _isDelivery => receipt.type == ReceiptType.delivery;
   bool get _isPayment => receipt.type == ReceiptType.payment;
-
-  /// The fallback QR content: a wa.me link to the shop's support number, so a
-  /// scan opens WhatsApp. Falls back to the receipt's own payload if no number
-  /// is set.
-  String get _whatsappQrData {
-    final digits = AppSettings.supportWhatsapp1.replaceAll(RegExp(r'\D'), '');
-    return digits.isNotEmpty ? 'https://wa.me/$digits' : receipt.qrPayload;
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -99,18 +89,19 @@ class ReceiptView extends StatelessWidget {
               ],
             ),
           ),
+          // A warm brand tagline in place of the old QR.
           Container(
-            padding: const EdgeInsets.all(6),
-            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10)),
-            // WhatsApp QR — scanning opens a chat with the shop. Uses the
-            // shop's uploaded QR image (assets/branding/whatsapp_qr.png) when
-            // present, otherwise a live QR generated from the support number.
-            child: Image.asset(
-              'assets/branding/whatsapp_qr.png',
-              width: 56,
-              height: 56,
-              fit: BoxFit.contain,
-              errorBuilder: (_, _, _) => QrImageView(data: _whatsappQrData, size: 56, backgroundColor: Colors.white),
+            constraints: const BoxConstraints(maxWidth: 96),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.18), borderRadius: BorderRadius.circular(10)),
+            child: const Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text('ধোপা বাড়ি', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w900), textAlign: TextAlign.right),
+                SizedBox(height: 1),
+                Text('আপনার সাথে সবসময়', style: TextStyle(color: Colors.white70, fontSize: 9.5, fontWeight: FontWeight.w700), textAlign: TextAlign.right),
+              ],
             ),
           ),
         ],

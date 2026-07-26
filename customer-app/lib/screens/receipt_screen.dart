@@ -195,20 +195,26 @@ class _ReceiptScreenState extends State<ReceiptScreen> {
               children: [
                 Expanded(
                   child: OutlinedButton.icon(
-                    onPressed: _busy ? null : () => _runAction(_share),
-                    icon: const Icon(Icons.share_rounded, size: 18),
-                    label: const Text('শেয়ার করুন'),
+                    onPressed: _busy ? null : () => _runAction(_download),
+                    icon: const Icon(Icons.download_rounded, size: 18),
+                    label: const Text('ডাউনলোড'),
                   ),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: OutlinedButton.icon(
-                    onPressed: () => setState(() => _presenting = true),
-                    icon: const Icon(Icons.visibility_rounded, size: 18),
-                    label: const Text('কাস্টমারকে দেখান'),
+                    onPressed: _busy ? null : () => _runAction(_share),
+                    icon: const Icon(Icons.share_rounded, size: 18),
+                    label: const Text('শেয়ার করুন'),
                   ),
                 ),
               ],
+            ),
+            const SizedBox(height: 10),
+            OutlinedButton.icon(
+              onPressed: () => setState(() => _presenting = true),
+              icon: const Icon(Icons.visibility_rounded, size: 18),
+              label: const Text('কাস্টমারকে দেখান'),
             ),
             if (widget.receipt.type == ReceiptType.pickup) ...[
               const SizedBox(height: 10),
