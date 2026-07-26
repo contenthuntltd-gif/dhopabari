@@ -82,7 +82,9 @@ class AuthService {
   static Future<bool> restoreSession() async {
     if (_supabase.auth.currentSession == null) return false;
     try {
-      await _supabase.auth.refreshSession();
+      // Timeout so a slow/flaky network can't freeze app startup on the splash
+      // — the persisted session keeps working either way.
+      await _supabase.auth.refreshSession().timeout(const Duration(seconds: 8));
     } catch (_) {
       // Best-effort — the existing session (if still valid) keeps working;
       // a genuinely expired/revoked refresh token would fail the same way

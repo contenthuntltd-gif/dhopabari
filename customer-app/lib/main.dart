@@ -7,6 +7,8 @@ import 'screens/splash_screen.dart';
 import 'screens/root_shell.dart';
 import 'screens/admin_login_screen.dart';
 import 'screens/rider_login_screen.dart';
+import 'screens/admin/admin_root_shell.dart';
+import 'screens/rider/rider_dashboard_screen.dart';
 import 'widgets/phone_frame.dart';
 import 'widgets/app_page_route.dart';
 import 'data/app_settings.dart';
@@ -93,6 +95,18 @@ class DhopaBariApp extends StatefulWidget {
 class _DhopaBariAppState extends State<DhopaBariApp> {
   StreamSubscription<AuthState>? _authSub;
 
+  /// True in an admin/rider build or on the /admin, /rider web URLs — where
+  /// the staff screens own navigation and the customer-home auto-route must
+  /// stay out of the way.
+  bool get _isStaffContext {
+    if (isAdminApp || isRiderApp) return true;
+    if (kIsWeb) {
+      final path = Uri.base.path.toLowerCase();
+      return path.contains('admin') || path.contains('rider');
+    }
+    return false;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -109,7 +123,12 @@ class _DhopaBariAppState extends State<DhopaBariApp> {
             // Bind this phone's push token to the freshly signed-in user.
             // ignore: unawaited_futures
             PushService.onLogin();
-            if (!AuthService.recentlyProgrammatic) {
+            // Only auto-route to the CUSTOMER home for a sign-in we didn't
+            // drive from a screen (the Google web-redirect returning). In an
+            // admin/rider context (dedicated APK or /admin, /rider URL) this
+            // must never fire — otherwise a restored staff session would get
+            // yanked to the customer home on a page refresh.
+            if (!AuthService.recentlyProgrammatic && !_isStaffContext) {
               navigatorKey.currentState?.pushAndRemoveUntil(
                 AppPageRoute(builder: (_) => const RootShell()),
                 (route) => false,
@@ -137,19 +156,27 @@ class _DhopaBariAppState extends State<DhopaBariApp> {
   }
 
   /// Deep-link entry by URL path (web):
-  ///   dhopabari.bd/admin  → admin login
-  ///   dhopabari.bd/rider  → rider login
+  ///   dhopabari.bd/admin  → admin panel (login if not already an admin)
+  ///   dhopabari.bd/rider  → rider panel (login if not already a rider)
   ///   everything else     → the customer app (splash → home)
   /// nginx serves index.html for every path, so the app just reads the path.
+  ///
+  /// The session is restored (and its role loaded) in [main] before this runs,
+  /// so a still-signed-in admin/rider lands straight on their panel — a page
+  /// refresh (web) or app restart no longer bounces them back to the login
+  /// screen, which read as "logged out on every refresh".
   Widget _initialScreen() {
-    // Dedicated admin/rider builds (separate APKs) open straight into their
-    // own login — no customer flow at all.
-    if (isAdminApp) return const AdminLoginScreen();
-    if (isRiderApp) return const RiderLoginScreen();
-    if (kIsWeb) {
-      final path = Uri.base.path.toLowerCase();
-      if (path.contains('admin')) return const AdminLoginScreen();
-      if (path.contains('rider')) return const RiderLoginScreen();
+    final loggedIn = AuthService.isLoggedIn;
+    final role = AuthService.currentRole;
+
+    final wantsAdmin = isAdminApp || (kIsWeb && Uri.base.path.toLowerCase().contains('admin'));
+    final wantsRider = isRiderApp || (kIsWeb && Uri.base.path.toLowerCase().contains('rider'));
+
+    if (wantsAdmin) {
+      return (loggedIn && role == 'admin') ? const AdminRootShell() : const AdminLoginScreen();
+    }
+    if (wantsRider) {
+      return (loggedIn && role == 'rider') ? const RiderDashboardScreen() : const RiderLoginScreen();
     }
     return const SplashScreen();
   }
