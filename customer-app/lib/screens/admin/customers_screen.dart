@@ -23,10 +23,21 @@ class _CustomersScreenState extends State<CustomersScreen> {
   Timer? _debounce;
   late Future<List<AdminCustomer>> _future = AdminService.customers();
 
-  // Multi-select for bulk delete → recycle bin.
+  // Multi-select for bulk delete → recycle bin. Delete is admin-only — a
+  // rider may create customers but never delete them (checked both here and,
+  // as the real gate, by a DB trigger + the delete Edge Function).
   bool _selectMode = false;
   final Set<String> _selected = {};
   List<AdminCustomer> _loaded = const [];
+  bool _isAdmin = false;
+
+  @override
+  void initState() {
+    super.initState();
+    AdminService.isAdmin.then((v) {
+      if (mounted) setState(() => _isAdmin = v);
+    });
+  }
 
   void _reload() {
     setState(() => _future = AdminService.customers(search: _search));
@@ -116,22 +127,24 @@ class _CustomersScreenState extends State<CustomersScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(width: 8),
-                SizedBox(
-                  height: 48,
-                  child: OutlinedButton(
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: _selectMode ? AppColors.danger : AppColors.ink,
-                      side: BorderSide(color: _selectMode ? AppColors.danger : AppColors.line),
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                if (_isAdmin) ...[
+                  const SizedBox(width: 8),
+                  SizedBox(
+                    height: 48,
+                    child: OutlinedButton(
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: _selectMode ? AppColors.danger : AppColors.ink,
+                        side: BorderSide(color: _selectMode ? AppColors.danger : AppColors.line),
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                      ),
+                      onPressed: () => setState(() {
+                        _selectMode = !_selectMode;
+                        _selected.clear();
+                      }),
+                      child: Icon(_selectMode ? Icons.close_rounded : Icons.checklist_rounded, size: 20),
                     ),
-                    onPressed: () => setState(() {
-                      _selectMode = !_selectMode;
-                      _selected.clear();
-                    }),
-                    child: Icon(_selectMode ? Icons.close_rounded : Icons.checklist_rounded, size: 20),
                   ),
-                ),
+                ],
               ],
             ),
           ),

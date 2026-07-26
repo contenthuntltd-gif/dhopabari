@@ -25,6 +25,18 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
   late Future<List<AdminOrder>> _orders = AdminService.orders(customerId: _c.id);
   bool _busy = false;
   bool _activeOnly = false; // order-history filter: All vs Active (running)
+  // Delete is admin-only — a rider may create/register customers but never
+  // delete one (enforced for real by a DB trigger + the delete Edge Function;
+  // this just keeps the button off a rider's screen).
+  bool _isAdmin = false;
+
+  @override
+  void initState() {
+    super.initState();
+    AdminService.isAdmin.then((v) {
+      if (mounted) setState(() => _isAdmin = v);
+    });
+  }
 
   /// Running = not yet delivered and not cancelled.
   bool _isActive(AdminOrder o) => o.status != 'Delivered' && o.status != 'Cancelled';
@@ -383,19 +395,21 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
             label: Text(c.blocked ? 'আনব্লক করুন' : 'ব্লক করুন'),
           ),
         ),
-        const SizedBox(height: 10),
-        SizedBox(
-          width: double.infinity,
-          child: OutlinedButton.icon(
-            style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.danger,
-              side: const BorderSide(color: AppColors.danger),
+        if (_isAdmin) ...[
+          const SizedBox(height: 10),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.danger,
+                side: const BorderSide(color: AppColors.danger),
+              ),
+              onPressed: _busy ? null : _confirmDelete,
+              icon: const Icon(Icons.delete_outline_rounded, size: 18),
+              label: const Text('কাস্টমার মুছে ফেলুন'),
             ),
-            onPressed: _busy ? null : _confirmDelete,
-            icon: const Icon(Icons.delete_outline_rounded, size: 18),
-            label: const Text('কাস্টমার মুছে ফেলুন'),
           ),
-        ),
+        ],
       ],
     );
   }

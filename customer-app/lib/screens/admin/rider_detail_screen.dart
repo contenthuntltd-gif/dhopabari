@@ -17,7 +17,7 @@ class RiderDetailScreen extends StatefulWidget {
 }
 
 class _RiderDetailScreenState extends State<RiderDetailScreen> {
-  bool? _canSeeCustomers; // null until loaded
+  RiderPerms? _perms; // null until loaded
   bool _savingAccess = false;
 
   // Delivery / payment tracking.
@@ -69,28 +69,49 @@ class _RiderDetailScreenState extends State<RiderDetailScreen> {
 
   Future<void> _loadAccess() async {
     try {
-      final allow = await AdminService.riderCanSeeCustomers(widget.rider.id);
-      if (mounted) setState(() => _canSeeCustomers = allow);
+      final perms = await AdminService.riderPerms(widget.rider.id);
+      if (mounted) setState(() => _perms = perms);
     } catch (_) {
-      if (mounted) setState(() => _canSeeCustomers = false);
+      if (mounted) setState(() => _perms = const RiderPerms(customers: false));
     }
   }
 
-  Future<void> _setAccess(bool allow) async {
-    if (_savingAccess) return;
+  /// Toggles one of the four independent access flags. Each is granted or
+  /// revoked separately — a rider might have pickup+delivery but not collect,
+  /// or customer access without any of the queue sections, etc.
+  Future<void> _setPerm({
+    bool? customers,
+    bool? pickup,
+    bool? delivery,
+    bool? collect,
+  }) async {
+    if (_savingAccess || _perms == null) return;
+    final prev = _perms!;
+    final next = RiderPerms(
+      customers: customers ?? prev.customers,
+      pickup: pickup ?? prev.pickup,
+      delivery: delivery ?? prev.delivery,
+      collect: collect ?? prev.collect,
+    );
     setState(() {
-      _canSeeCustomers = allow;
+      _perms = next;
       _savingAccess = true;
     });
     try {
-      await AdminService.setRiderCustomerAccess(widget.rider.id, allow);
+      await AdminService.setRiderPerms(
+        widget.rider.id,
+        customers: customers,
+        pickup: pickup,
+        delivery: delivery,
+        collect: collect,
+      );
       if (!mounted) return;
       setState(() => _savingAccess = false);
-      _snack(allow ? 'রাইডার এখন সব কাস্টমার দেখতে পারবে' : 'রাইডারের কাস্টমার অ্যাক্সেস বন্ধ করা হয়েছে');
+      _snack('অ্যাক্সেস আপডেট হয়েছে');
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _canSeeCustomers = !allow;
+        _perms = prev;
         _savingAccess = false;
       });
       _snack(AdminService.messageFor(e));
@@ -257,32 +278,56 @@ class _RiderDetailScreenState extends State<RiderDetailScreen> {
           // Delivery + collected-payment tracking, by date.
           FadeSlideIn(delayMs: 110, child: _paymentCard()),
           const SizedBox(height: 16),
-          // Admin control: whether this rider may browse the full customer list.
+          // Admin control: each dashboard section granted to this rider
+          // individually — pickup, delivery, collection and customer access
+          // are all independent switches.
           FadeSlideIn(
             delayMs: 120,
             child: Container(
-              padding: const EdgeInsets.fromLTRB(16, 6, 8, 6),
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(AppRadius.md), border: Border.all(color: AppColors.line), boxShadow: AppShadows.soft),
-              child: Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(Icons.groups_outlined, color: AppColors.blue, size: 22),
-                  const SizedBox(width: 12),
-                  const Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('সব কাস্টমার দেখতে পারবে', style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w800, color: AppColors.ink)),
-                        Text('চালু থাকলে রাইডার কাস্টমার তালিকা দেখে অর্ডার করতে পারবে', style: TextStyle(fontSize: 10.5, color: AppColors.muted, fontWeight: FontWeight.w600)),
-                      ],
+                  const Text('অ্যাক্সেস নিয়ন্ত্রণ', style: AppText.h3),
+                  const SizedBox(height: 4),
+                  const Text('রাইডারের ড্যাশবোর্ডে কোন কোন অংশ দেখাবে, আলাদাভাবে নির্ধারণ করুন', style: TextStyle(fontSize: 10.5, color: AppColors.muted, fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 10),
+                  if (_perms == null)
+                    const Padding(padding: EdgeInsets.symmetric(vertical: 16), child: Center(child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))))
+                  else ...[
+                    _accessRow(
+                      icon: Icons.inventory_2_outlined,
+                      title: 'পিকআপ',
+                      subtitle: 'আজকের ও সব পিকআপ দেখতে পারবে',
+                      value: _perms!.pickup,
+                      onChanged: (v) => _setPerm(pickup: v),
                     ),
-                  ),
-                  _canSeeCustomers == null
-                      ? const Padding(padding: EdgeInsets.all(12), child: SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)))
-                      : Switch(
-                          value: _canSeeCustomers!,
-                          onChanged: _savingAccess ? null : _setAccess,
-                          activeTrackColor: AppColors.blue,
-                        ),
+                    const Divider(height: 20),
+                    _accessRow(
+                      icon: Icons.local_shipping_outlined,
+                      title: 'ডেলিভারি',
+                      subtitle: 'আজকের ও সম্পন্ন ডেলিভারি দেখতে পারবে',
+                      value: _perms!.delivery,
+                      onChanged: (v) => _setPerm(delivery: v),
+                    ),
+                    const Divider(height: 20),
+                    _accessRow(
+                      icon: Icons.account_balance_wallet_outlined,
+                      title: 'কালেক্ট',
+                      subtitle: 'আজকের ও তারিখ অনুযায়ী হিসাব দেখতে পারবে',
+                      value: _perms!.collect,
+                      onChanged: (v) => _setPerm(collect: v),
+                    ),
+                    const Divider(height: 20),
+                    _accessRow(
+                      icon: Icons.groups_outlined,
+                      title: 'কাস্টমার ও অর্ডার',
+                      subtitle: 'কাস্টমার তালিকা দেখে অর্ডার করতে পারবে (মুছতে পারবে না)',
+                      value: _perms!.customers,
+                      onChanged: (v) => _setPerm(customers: v),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -316,6 +361,31 @@ class _RiderDetailScreenState extends State<RiderDetailScreen> {
           ),
         ],
       )),
+    );
+  }
+
+  Widget _accessRow({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required bool value,
+    required ValueChanged<bool> onChanged,
+  }) {
+    return Row(
+      children: [
+        Icon(icon, color: AppColors.blue, size: 20),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: AppColors.ink)),
+              Text(subtitle, style: const TextStyle(fontSize: 10.5, color: AppColors.muted, fontWeight: FontWeight.w600)),
+            ],
+          ),
+        ),
+        Switch(value: value, onChanged: _savingAccess ? null : onChanged, activeTrackColor: AppColors.blue),
+      ],
     );
   }
 

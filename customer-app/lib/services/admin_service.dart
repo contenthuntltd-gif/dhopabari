@@ -290,25 +290,44 @@ class AdminService {
     await _db.from('orders').delete().inFilter('id', uuids);
   }
 
-  // ----- Rider customer-list access (admin-controlled) -----
-
-  /// Whether [riderId] is allowed to browse the full customer list.
-  static Future<bool> riderCanSeeCustomers(String riderId) async {
-    final row = await _db.from('profiles').select('can_see_customers').eq('id', riderId).maybeSingle();
-    return (row?['can_see_customers'] as bool?) ?? false;
-  }
-
-  /// Admin grants/revokes a rider's access to browse all customers.
-  static Future<void> setRiderCustomerAccess(String riderId, bool allow) async {
-    await _db.from('profiles').update({'can_see_customers': allow}).eq('id', riderId);
-  }
+  // ----- Rider access permissions (admin-controlled) -----
 
   /// For the signed-in rider: may they browse all customers right now?
   static Future<bool> currentCanSeeCustomers() async {
+    return (await currentRiderPerms()).customers;
+  }
+
+  /// A rider's full permission set (admin-controlled).
+  static Future<RiderPerms> riderPerms(String riderId) async {
+    final row = await _db
+        .from('profiles')
+        .select('can_see_customers, can_see_pickup, can_see_delivery, can_see_collect')
+        .eq('id', riderId)
+        .maybeSingle();
+    return RiderPerms.fromRow(row ?? const {});
+  }
+
+  /// The signed-in rider's own permission set.
+  static Future<RiderPerms> currentRiderPerms() async {
     final id = _uid;
-    if (id == null) return false;
-    final row = await _db.from('profiles').select('can_see_customers').eq('id', id).maybeSingle();
-    return (row?['can_see_customers'] as bool?) ?? false;
+    if (id == null) return const RiderPerms(customers: false);
+    return riderPerms(id);
+  }
+
+  /// Admin sets a rider's permissions (only the passed fields change).
+  static Future<void> setRiderPerms(
+    String riderId, {
+    bool? customers,
+    bool? pickup,
+    bool? delivery,
+    bool? collect,
+  }) async {
+    await _db.from('profiles').update({
+      if (customers != null) 'can_see_customers': customers,
+      if (pickup != null) 'can_see_pickup': pickup,
+      if (delivery != null) 'can_see_delivery': delivery,
+      if (collect != null) 'can_see_collect': collect,
+    }).eq('id', riderId);
   }
 
   /// Places an order. Omit [customerId] for a customer ordering for
@@ -330,11 +349,16 @@ class AdminService {
     final me = _uid;
     if (me == null) throw AdminServiceException('আপনি লগইন করা নেই');
 
+    // An order a rider enters is automatically assigned to that rider — it
+    // lands straight in their own pickup/delivery/collect lists.
+    final role = await currentRole();
+
     final row = await _db
         .from('orders')
         .insert({
           'customer_id': customerId ?? me,
           'placed_by': me,
+          if (role == 'rider') 'rider_id': me,
           'service': service,
           if (category != null) 'category': category,
           'items': items,
@@ -688,6 +712,28 @@ class DashboardStats {
     }
     return PeriodStats(revenue: revenue, orders: orders, byStatus: byStatus);
   }
+}
+
+/// A rider's admin-granted access flags. Customer access defaults OFF; the
+/// core rider sections default ON.
+class RiderPerms {
+  final bool customers;
+  final bool pickup;
+  final bool delivery;
+  final bool collect;
+  const RiderPerms({
+    this.customers = false,
+    this.pickup = true,
+    this.delivery = true,
+    this.collect = true,
+  });
+
+  factory RiderPerms.fromRow(Map<dynamic, dynamic> row) => RiderPerms(
+        customers: row['can_see_customers'] as bool? ?? false,
+        pickup: row['can_see_pickup'] as bool? ?? true,
+        delivery: row['can_see_delivery'] as bool? ?? true,
+        collect: row['can_see_collect'] as bool? ?? true,
+      );
 }
 
 /// An error with a message already written for the user, in Bengali.

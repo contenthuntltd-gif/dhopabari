@@ -96,6 +96,12 @@ Deno.serve(async (req) => {
     }
 
     case 'delete': {
+      // Only an admin may permanently delete an account — a rider can create
+      // customers (via admin-create-user) but never delete anyone, staff or
+      // customer alike.
+      if (callerRole !== 'admin') {
+        return json({ error: 'শুধুমাত্র অ্যাডমিন অ্যাকাউন্ট মুছে ফেলতে পারেন' }, 403);
+      }
       if (targetId === user.id) {
         return json({ error: 'নিজের অ্যাকাউন্ট মুছে ফেলা যাবে না' }, 400);
       }
