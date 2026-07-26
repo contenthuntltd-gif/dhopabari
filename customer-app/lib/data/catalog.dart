@@ -176,6 +176,52 @@ class Catalog {
     }
   }
 
+  /// Moves an item one place up within its category.
+  static Future<void> moveUp(String id) => _shift(id, -1);
+
+  /// Moves an item one place down within its category.
+  static Future<void> moveDown(String id) => _shift(id, 1);
+
+  /// Swaps an item with its neighbour ([dir] = -1 up, +1 down) inside its
+  /// category. The in-memory list is reordered instantly (display order = list
+  /// order), and the two rows' sort_order values are swapped in the DB so the
+  /// new order survives a reload.
+  static Future<void> _shift(String id, int dir) async {
+    final item = byId(id);
+    if (item == null) return;
+    final cat = forCategory(item.category);
+    final idx = cat.indexWhere((p) => p.id == id);
+    final targetIdx = idx + dir;
+    if (idx < 0 || targetIdx < 0 || targetIdx >= cat.length) return; // at an edge
+    final other = cat[targetIdx];
+
+    // 1. Instant in-memory swap.
+    final list = List<PriceItem>.of(items);
+    final gi = list.indexWhere((p) => p.id == id);
+    final gj = list.indexWhere((p) => p.id == other.id);
+    if (gi < 0 || gj < 0) return;
+    final tmp = list[gi];
+    list[gi] = list[gj];
+    list[gj] = tmp;
+    items = list;
+
+    // 2. Persist: swap the two rows' sort_order values.
+    try {
+      final db = Supabase.instance.client;
+      final rows = await db.from('catalog_items').select('id, sort_order').inFilter('id', [id, other.id]);
+      final map = {for (final r in (rows as List)) r['id'] as String: (r['sort_order'] as num?)?.toInt() ?? 0};
+      final soSelf = map[id] ?? 0;
+      final soOther = map[other.id] ?? 0;
+      // If they happen to be equal, nudge to guarantee a strict order.
+      final newSelf = soOther == soSelf ? soOther + dir : soOther;
+      await db.from('catalog_items').update({'sort_order': newSelf}).eq('id', id);
+      await db.from('catalog_items').update({'sort_order': soSelf}).eq('id', other.id);
+    } catch (e) {
+      await refresh();
+      rethrow;
+    }
+  }
+
   /// The official Dhopa Bari price list. Ordered so the everyday items sit
   /// at the top of each category; admins can re-pin from the catalog screen.
   /// This is the bundled fallback — the live order comes from catalog_items.

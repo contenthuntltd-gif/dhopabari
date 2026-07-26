@@ -254,15 +254,14 @@ class _PriceListTab extends StatefulWidget {
 class _PriceListTabState extends State<_PriceListTab> {
   bool _saving = false;
 
-  /// Pins an item to the top of its category (persists via Catalog.moveToTop).
-  Future<void> _moveToTop(PriceItem item) async {
+  /// Moves an item one step up or down within its category.
+  Future<void> _shift(PriceItem item, bool up) async {
     if (_saving) return;
     setState(() => _saving = true);
     try {
-      await Catalog.moveToTop(item.id);
+      up ? await Catalog.moveUp(item.id) : await Catalog.moveDown(item.id);
       if (!mounted) return;
       setState(() => _saving = false);
-      widget.onSnack('${item.nameBn} উপরে তোলা হয়েছে');
     } catch (e) {
       if (!mounted) return;
       setState(() => _saving = false);
@@ -488,22 +487,37 @@ class _PriceListTabState extends State<_PriceListTab> {
                           // English numerals — official price list typography
                           SizedBox(width: 44, child: Text('৳${item.washPrice}', textAlign: TextAlign.right, style: const TextStyle(fontSize: 12.5, color: AppColors.blue, fontWeight: FontWeight.w900))),
                           SizedBox(width: 52, child: Text('৳${item.dryPrice}', textAlign: TextAlign.right, style: const TextStyle(fontSize: 12.5, color: AppColors.teal, fontWeight: FontWeight.w900))),
-                          // Pin to top / edit / delete.
+                          // Reorder up / down within the category, then edit / delete.
                           IconButton(
-                            tooltip: 'উপরে তুলুন',
+                            tooltip: 'উপরে',
                             visualDensity: VisualDensity.compact,
-                            icon: const Icon(Icons.vertical_align_top_rounded, size: 19, color: AppColors.blue),
-                            onPressed: _saving ? null : () => _moveToTop(item),
+                            padding: const EdgeInsets.all(4),
+                            constraints: const BoxConstraints(),
+                            icon: const Icon(Icons.keyboard_arrow_up_rounded, size: 22, color: AppColors.blue),
+                            onPressed: _saving ? null : () => _shift(item, true),
                           ),
+                          IconButton(
+                            tooltip: 'নিচে',
+                            visualDensity: VisualDensity.compact,
+                            padding: const EdgeInsets.all(4),
+                            constraints: const BoxConstraints(),
+                            icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 22, color: AppColors.blue),
+                            onPressed: _saving ? null : () => _shift(item, false),
+                          ),
+                          const SizedBox(width: 2),
                           IconButton(
                             tooltip: 'মূল্য সম্পাদনা',
                             visualDensity: VisualDensity.compact,
+                            padding: const EdgeInsets.all(4),
+                            constraints: const BoxConstraints(),
                             icon: const Icon(Icons.edit_rounded, size: 18, color: AppColors.muted),
                             onPressed: _saving ? null : () => _editPrice(item),
                           ),
                           IconButton(
                             tooltip: 'মুছুন',
                             visualDensity: VisualDensity.compact,
+                            padding: const EdgeInsets.all(4),
+                            constraints: const BoxConstraints(),
                             icon: const Icon(Icons.delete_outline_rounded, size: 19, color: AppColors.danger),
                             onPressed: _saving ? null : () => _deleteItem(item),
                           ),

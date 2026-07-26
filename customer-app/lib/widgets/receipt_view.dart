@@ -63,12 +63,6 @@ class ReceiptView extends StatelessWidget {
                   const SizedBox(height: AppSpace.xs),
                   _deliveryConfirmationBlock(),
                 ],
-                if (!_isPayment) ...[
-                  const SizedBox(height: AppSpace.sm),
-                  const _SectionDivider(label: 'স্বাক্ষর'),
-                  const SizedBox(height: AppSpace.xs),
-                  _signatureRow(),
-                ],
               ],
             ),
           ),
@@ -311,36 +305,6 @@ class ReceiptView extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-
-  Widget _signatureRow() {
-    return Row(
-      children: [
-        Expanded(child: _signatureBox('কাস্টমার স্বাক্ষর')),
-        const SizedBox(width: 10),
-        Expanded(child: _signatureBox('রাইডার স্বাক্ষর')),
-      ],
-    );
-  }
-
-  Widget _signatureBox(String label) {
-    return Container(
-      height: 64,
-      decoration: BoxDecoration(
-        border: Border.all(color: AppColors.line, width: 1.2),
-        borderRadius: BorderRadius.circular(AppRadius.sm),
-      ),
-      alignment: Alignment.center,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.draw_outlined, size: AppIconSize.md, color: AppColors.muted),
-          const SizedBox(height: 2),
-          Text(label, style: const TextStyle(fontSize: 9.5, color: AppColors.muted, fontWeight: FontWeight.w700)),
-          const Text('(শীঘ্রই আসছে)', style: TextStyle(fontSize: 8.5, color: AppColors.muted, fontWeight: FontWeight.w600)),
-        ],
-      ),
     );
   }
 
