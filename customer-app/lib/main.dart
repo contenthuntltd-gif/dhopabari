@@ -44,24 +44,37 @@ void main() async {
           autoRefreshToken: true,
         ),
       );
+    } catch (e) {
+      debugPrint('Supabase.initialize failed: $e');
+    }
+
+    // Session restore gets its OWN try/catch — a hiccup loading the price
+    // list or app settings below must never be able to make a real,
+    // persisted login look "logged out". Each of these is independent and
+    // one failing must not skip (or be skipped by) the others.
+    try {
       await AuthService.restoreSession();
-      // Live price list + admin-set support numbers — no await: they render
-      // from defaults instantly and swap to the DB copy when it arrives.
-      // ignore: unawaited_futures
-      Catalog.refresh();
-      // ignore: unawaited_futures
-      AppSettings.load();
-      // Categories/services drive the customer order screen's tabs, so load
-      // them before first paint (a single, quick key/value read).
+    } catch (e) {
+      debugPrint('Session restore failed: $e');
+    }
+    // Live price list + admin-set support numbers — no await: they render
+    // from defaults instantly and swap to the DB copy when it arrives.
+    // ignore: unawaited_futures
+    Catalog.refresh();
+    // ignore: unawaited_futures
+    AppSettings.load();
+    // Categories/services drive the customer order screen's tabs, so load
+    // them before first paint (a single, quick key/value read).
+    try {
       await CatalogMeta.load();
       await DeliveryOptions.load();
-      // Phone push (FCM) — Android only; registers this device's token for the
-      // signed-in user. No-op on web.
-      // ignore: unawaited_futures
-      PushService.init();
     } catch (e) {
-      debugPrint('Supabase init/session restore failed: $e');
+      debugPrint('Catalog meta / delivery options load failed: $e');
     }
+    // Phone push (FCM) — Android only; registers this device's token for the
+    // signed-in user. No-op on web.
+    // ignore: unawaited_futures
+    PushService.init();
   } else {
     debugPrint('SUPABASE_ANON_KEY not set — auth disabled. See lib/services/supabase_config.dart');
   }

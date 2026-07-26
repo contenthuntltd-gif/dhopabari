@@ -71,8 +71,23 @@ class AuthService {
 
   /// True if a session was restored (Supabase does this from disk on init).
   /// Loads the user's profile into [MockData] for the UI.
+  ///
+  /// Also proactively refreshes the access token right away rather than
+  /// waiting for the first API call to hit a 401 and trigger a reactive
+  /// refresh — on a device that was offline/backgrounded for a while, this
+  /// is what keeps a real, still-valid login from ever *looking* logged out.
+  /// A refresh failure here is swallowed: the persisted session (and this
+  /// device's identity) stays exactly as it was: Supabase itself is the only
+  /// thing that may actually invalidate it.
   static Future<bool> restoreSession() async {
     if (_supabase.auth.currentSession == null) return false;
+    try {
+      await _supabase.auth.refreshSession();
+    } catch (_) {
+      // Best-effort — the existing session (if still valid) keeps working;
+      // a genuinely expired/revoked refresh token would fail the same way
+      // on the first real API call regardless.
+    }
     await _loadProfile();
     return true;
   }
