@@ -429,6 +429,12 @@ class _QuickOrderSectionState extends State<_QuickOrderSection> {
   Widget _itemRow(PriceItem item, {required bool last}) {
     final price = _service == 'Wash' ? item.washPrice : item.dryPrice;
     final qty = Cart.qtyOf(item.id, _service);
+    // Bilingual label — "পলিশ শাড়ি (Polish Saree)" — dropping the English
+    // part only when it's identical to the Bengali (e.g. a custom item).
+    final en = item.name.trim();
+    final label = (en.isNotEmpty && en.toLowerCase() != item.nameBn.trim().toLowerCase())
+        ? '${item.nameBn} ($en)'
+        : item.nameBn;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
@@ -444,20 +450,23 @@ class _QuickOrderSectionState extends State<_QuickOrderSection> {
             child: LaundryIcon(item.id, size: 20, color: AppColors.blue),
           ),
           const SizedBox(width: 9),
+          // Name takes the free space; price sits on the right, just before the
+          // add/stepper control, so every row lines up in a clean column.
           Expanded(
-            child: Row(
-              children: [
-                Flexible(child: Text(item.nameBn, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.ink))),
-                const SizedBox(width: 6),
-                Text('৳$price', style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w900, color: AppColors.blue)),
-              ],
-            ),
+            child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.ink)),
           ),
           const SizedBox(width: 8),
-          if (qty == 0)
-            _addButton(() => Cart.setQty(item.id, _service, 1))
-          else
-            _stepper(qty, () => Cart.setQty(item.id, _service, qty - 1), () => Cart.setQty(item.id, _service, qty + 1)),
+          Text('৳$price', style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w900, color: AppColors.blue)),
+          const SizedBox(width: 10),
+          SizedBox(
+            width: 92,
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: qty == 0
+                  ? _addButton(() => Cart.setQty(item.id, _service, 1))
+                  : _stepper(qty, () => Cart.setQty(item.id, _service, qty - 1), () => Cart.setQty(item.id, _service, qty + 1)),
+            ),
+          ),
         ],
       ),
     );

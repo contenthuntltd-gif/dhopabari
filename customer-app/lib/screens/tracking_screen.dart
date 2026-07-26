@@ -6,7 +6,6 @@ import '../data/receipt_data.dart';
 import '../widgets/bn_number.dart';
 import '../widgets/fade_slide_in.dart';
 import '../widgets/app_page_route.dart';
-import 'chat_screen.dart';
 import 'receipt_screen.dart';
 
 class TrackingScreen extends StatefulWidget {
@@ -301,31 +300,20 @@ class _TrackingScreenState extends State<TrackingScreen>
                 ),
               ),
             ),
-            if (!isDone) ...[
+            // When no rider is assigned yet, a gentle note. Once a rider IS
+            // assigned the rider card at the top carries the WhatsApp + Call
+            // actions, so there is no separate button down here.
+            if (!isDone && (order.riderPhone == null || order.riderPhone!.trim().isEmpty)) ...[
               const SizedBox(height: AppSpace.xs),
               FadeSlideIn(
                 delayMs: 140,
                 child: SizedBox(
                   width: double.infinity,
-                  // Contact the rider handling this order. If one is assigned we
-                  // show a call button with their number; otherwise a note.
-                  child: (order.riderPhone != null && order.riderPhone!.trim().isNotEmpty)
-                      ? ElevatedButton.icon(
-                          style: ElevatedButton.styleFrom(backgroundColor: AppColors.teal, padding: const EdgeInsets.symmetric(vertical: 13)),
-                          onPressed: () => launchUrl(Uri.parse('tel:${order.riderPhone!.replaceAll(' ', '')}')),
-                          icon: const Icon(Icons.call_rounded, size: AppIconSize.md),
-                          label: Text(
-                            order.riderName != null
-                                ? 'রাইডারকে কল করুন — ${order.riderName}'
-                                : 'রাইডারকে কল করুন',
-                            style: const TextStyle(fontWeight: FontWeight.w800),
-                          ),
-                        )
-                      : OutlinedButton.icon(
-                          onPressed: null,
-                          icon: const Icon(Icons.two_wheeler_outlined, size: AppIconSize.md),
-                          label: const Text('রাইডার নির্ধারিত হলে নম্বর এখানে দেখা যাবে'),
-                        ),
+                  child: OutlinedButton.icon(
+                    onPressed: null,
+                    icon: const Icon(Icons.two_wheeler_outlined, size: AppIconSize.md),
+                    label: const Text('রাইডার নির্ধারিত হলে নম্বর এখানে দেখা যাবে'),
+                  ),
                 ),
               ),
             ],
@@ -444,6 +432,20 @@ class _RiderCard extends StatelessWidget {
                     fontWeight: FontWeight.w700,
                   ),
                 ),
+                if (order.riderPhone != null && order.riderPhone!.trim().isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.phone_rounded, size: 13, color: Colors.white),
+                      const SizedBox(width: 4),
+                      Text(
+                        order.riderPhone!,
+                        style: const TextStyle(fontSize: 12, color: Colors.white, fontWeight: FontWeight.w900),
+                      ),
+                    ],
+                  ),
+                ],
                 if (order.etaLabel != null) ...[
                   const SizedBox(height: 6),
                   Row(
@@ -470,40 +472,54 @@ class _RiderCard extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 8),
+          // Two ways to reach the rider: WhatsApp + a direct call. (The old
+          // in-app chat button is gone — it pointed at mock data.)
           _riderActionButton(
-            icon: Icons.chat_bubble_rounded,
-            tooltip: 'রাইডারকে চ্যাট করুন',
-            onTap: () => Navigator.push(
-              context,
-              AppPageRoute(
-                builder: (_) => ChatScreen(
-                  chat: MockData.chats.firstWhere((c) => c.isRider),
-                ),
-              ),
-            ),
+            icon: Icons.chat_rounded,
+            bg: const Color(0xFF25D366), // WhatsApp green
+            tooltip: 'WhatsApp',
+            onTap: (order.riderPhone == null || order.riderPhone!.trim().isEmpty)
+                ? null
+                : () => launchUrl(_whatsappUri(order.riderPhone!), mode: LaunchMode.externalApplication),
           ),
           const SizedBox(width: 8),
           _riderActionButton(
             icon: Icons.call_rounded,
             tooltip: 'রাইডারকে কল করুন',
-            onTap: order.riderPhone == null
+            onTap: (order.riderPhone == null || order.riderPhone!.trim().isEmpty)
                 ? null
-                : () => launchUrl(Uri.parse('tel:${order.riderPhone}')),
+                : () => launchUrl(Uri.parse('tel:${order.riderPhone!.replaceAll(' ', '')}')),
           ),
         ],
       ),
     );
   }
 
+  /// wa.me link for a Bangladeshi rider number — strips punctuation and makes
+  /// sure the 880 country code is present (01… → 88001…).
+  Uri _whatsappUri(String phone) {
+    var d = phone.replaceAll(RegExp(r'\D'), '');
+    if (d.startsWith('880')) {
+      // already has country code
+    } else if (d.startsWith('0')) {
+      d = '880${d.substring(1)}';
+    } else {
+      d = '880$d';
+    }
+    return Uri.parse('https://wa.me/$d');
+  }
+
   Widget _riderActionButton({
     required IconData icon,
     required String tooltip,
     required VoidCallback? onTap,
+    Color? bg,
   }) {
+    final filled = bg != null;
     return Tooltip(
       message: tooltip,
       child: Material(
-        color: Colors.white,
+        color: bg ?? Colors.white,
         shape: const CircleBorder(),
         child: InkWell(
           customBorder: const CircleBorder(),
@@ -511,7 +527,7 @@ class _RiderCard extends StatelessWidget {
           child: SizedBox(
             width: 42,
             height: 42,
-            child: Icon(icon, color: AppColors.teal, size: AppIconSize.lg),
+            child: Icon(icon, color: filled ? Colors.white : AppColors.teal, size: AppIconSize.lg),
           ),
         ),
       ),
