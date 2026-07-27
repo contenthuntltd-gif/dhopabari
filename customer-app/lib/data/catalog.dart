@@ -28,6 +28,14 @@ class Catalog {
   /// True once [items] reflects the database rather than the bundle.
   static bool get isLive => _loadedFromDb;
 
+  /// Thrown when a write returns zero rows — i.e. Row Level Security blocked
+  /// it (the signed-in account isn't staff) or the row no longer exists. The
+  /// admin sees a clear message instead of a silent "saved" that reverts.
+  static Exception get _notSaved => Exception(
+        'পরিবর্তন সেভ হয়নি — আপনার অ্যাকাউন্টের এই পরিবর্তনের অনুমতি নেই '
+        '(admin হিসেবে লগইন আছেন তো?) অথবা আইটেমটি আর নেই।',
+      );
+
   static List<PriceItem> forCategory(String category) =>
       items.where((p) => p.category == category).toList();
 
@@ -75,9 +83,15 @@ class Catalog {
   static Future<void> updatePrices(String id,
       {required int washPrice, required int dryPrice}) async {
     try {
-      await Supabase.instance.client
+      final res = await Supabase.instance.client
           .from('catalog_items')
-          .update({'wash_price': washPrice, 'dry_price': dryPrice}).eq('id', id);
+          .update({'wash_price': washPrice, 'dry_price': dryPrice})
+          .eq('id', id)
+          .select();
+      // A write blocked by RLS (or a missing row) returns ZERO rows with NO
+      // error. Surface that instead of pretending it saved — otherwise the
+      // change would silently revert on the next reload.
+      if ((res as List).isEmpty) throw _notSaved;
     } on PostgrestException catch (e) {
       // 42P01 = table doesn't exist yet — local-only until migration runs.
       if (e.code != '42P01') rethrow;
@@ -118,7 +132,7 @@ class Catalog {
         .order('sort_order', ascending: false)
         .limit(1);
     final max = (rows as List).isNotEmpty ? ((rows.first['sort_order'] as num?)?.toInt() ?? 0) : 0;
-    await db.from('catalog_items').insert({
+    final res = await db.from('catalog_items').insert({
       'id': id,
       'category': category,
       'name': name,
@@ -127,7 +141,9 @@ class Catalog {
       'dry_price': dryPrice,
       'sort_order': max + 1,
       'enabled': true,
-    });
+    }).select();
+    // Zero rows back = RLS blocked the insert (not staff). Fail loudly.
+    if ((res as List).isEmpty) throw _notSaved;
     await refresh();
     return id;
   }
@@ -135,7 +151,13 @@ class Catalog {
   /// Deletes a catalog item permanently, then reloads so it disappears
   /// everywhere. Old orders keep their stored line items unchanged.
   static Future<void> deleteItem(String id) async {
-    await Supabase.instance.client.from('catalog_items').delete().eq('id', id);
+    final res = await Supabase.instance.client
+        .from('catalog_items')
+        .delete()
+        .eq('id', id)
+        .select();
+    // Zero rows deleted = RLS blocked it (not staff) or already gone.
+    if ((res as List).isEmpty) throw _notSaved;
     await refresh();
   }
 
@@ -204,7 +226,14 @@ class Catalog {
     try {
       final db = Supabase.instance.client;
       for (var n = 0; n < reordered.length; n++) {
-        await db.from('catalog_items').update({'sort_order': n}).eq('id', reordered[n].id);
+        final res = await db
+            .from('catalog_items')
+            .update({'sort_order': n})
+            .eq('id', reordered[n].id)
+            .select();
+        // First row updates zero rows → RLS blocked reordering. Stop and
+        // restore the true order rather than leaving a half-applied change.
+        if ((res as List).isEmpty) throw _notSaved;
       }
     } catch (e) {
       await refresh();

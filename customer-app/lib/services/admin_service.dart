@@ -626,6 +626,14 @@ class AdminService {
       return 'সার্ভার থেকে তথ্য আনা যায়নি';
     }
     if (error is AuthException) return 'সেশন শেষ হয়ে গেছে — আবার লগইন করুন';
+    // A plain Exception('…') carries a ready-to-show Bangla message (e.g. the
+    // catalog "পরিবর্তন সেভ হয়নি" write-blocked error). Surface it rather than
+    // the generic network fallback below.
+    if (error is Exception) {
+      const prefix = 'Exception: ';
+      final s = error.toString();
+      if (s.startsWith(prefix)) return s.substring(prefix.length);
+    }
     return 'তথ্য লোড করা যায়নি — ইন্টারনেট সংযোগ দেখুন';
   }
 
