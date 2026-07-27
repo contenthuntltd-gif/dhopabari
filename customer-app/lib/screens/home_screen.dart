@@ -47,12 +47,20 @@ class _HomeScreenState extends State<HomeScreen> {
     // A successful order clears the cart — that's our cue to refetch so
     // the new order appears as "চলমান" the moment the user lands back here.
     Cart.revision.addListener(_onCartChanged);
+    // A live admin catalog edit (via Realtime) → rebuild so the new prices/
+    // items show up instantly, no pull-to-refresh needed.
+    Catalog.revision.addListener(_onCatalogChanged);
   }
 
   @override
   void dispose() {
     Cart.revision.removeListener(_onCartChanged);
+    Catalog.revision.removeListener(_onCatalogChanged);
     super.dispose();
+  }
+
+  void _onCatalogChanged() {
+    if (mounted) setState(() {});
   }
 
   void _onCartChanged() {

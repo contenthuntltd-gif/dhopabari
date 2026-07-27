@@ -63,6 +63,8 @@ void main() async {
     // from defaults instantly and swap to the DB copy when it arrives.
     // ignore: unawaited_futures
     Catalog.refresh();
+    // Live price list: an admin edit reaches every open app/website instantly.
+    Catalog.subscribeLive();
     // ignore: unawaited_futures
     AppSettings.load();
     // Categories/services drive the customer order screen's tabs, so load

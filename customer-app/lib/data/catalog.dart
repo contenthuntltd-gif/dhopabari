@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'mock_data.dart' show PriceItem;
 
@@ -27,6 +28,17 @@ class Catalog {
 
   /// True once [items] reflects the database rather than the bundle.
   static bool get isLive => _loadedFromDb;
+
+  /// Bumped every time [items] changes (a reload, an admin write, or a live
+  /// Realtime push). Any screen showing the catalog can listen to this and
+  /// rebuild, so an admin edit reaches open customer apps WITHOUT a manual
+  /// refresh. Behaves exactly like Cart.revision.
+  static final ValueNotifier<int> revision = ValueNotifier<int>(0);
+
+  static void _bump() => revision.value++;
+
+  RealtimeChannel? _liveChannel;
+  static final Catalog _live = Catalog._();
 
   /// Thrown when a write returns zero rows — i.e. Row Level Security blocked
   /// it (the signed-in account isn't staff) or the row no longer exists. The
@@ -69,9 +81,33 @@ class Catalog {
       if (loaded.isNotEmpty) {
         items = loaded;
         _loadedFromDb = true;
+        _bump();
       }
     } catch (_) {
       // Table not created yet / offline — bundled list stays in effect.
+    }
+  }
+
+  /// Starts a live Realtime subscription: any insert/update/delete on
+  /// `catalog_items` (an admin edit) re-pulls the list and bumps [revision],
+  /// so every open customer app/website updates the price list INSTANTLY —
+  /// no restart or pull-to-refresh needed. Call once at startup. A failure
+  /// (Realtime not enabled for the table) is swallowed; the app still works
+  /// via the on-open refresh.
+  static void subscribeLive() {
+    if (_live._liveChannel != null) return;
+    try {
+      _live._liveChannel = Supabase.instance.client
+          .channel('public:catalog_items')
+          .onPostgresChanges(
+            event: PostgresChangeEvent.all,
+            schema: 'public',
+            table: 'catalog_items',
+            callback: (_) => refresh(),
+          )
+          .subscribe();
+    } catch (_) {
+      // Realtime disabled — the on-open refresh keeps things current.
     }
   }
 

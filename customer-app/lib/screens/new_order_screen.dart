@@ -94,6 +94,8 @@ class _NewOrderScreenState extends State<NewOrderScreen> {
     // The cart is global and persistent — reopening this screen shows
     // whatever was left in it. Rebuild on any cart change.
     Cart.revision.addListener(_onCartChanged);
+    // Live admin catalog edits (Realtime) → rebuild instantly.
+    Catalog.revision.addListener(_onCartChanged);
     // Pull the latest catalog/config so admin changes (prices, items,
     // categories, delivery) are reflected without an app restart.
     _refreshCatalog();
@@ -115,6 +117,7 @@ class _NewOrderScreenState extends State<NewOrderScreen> {
   @override
   void dispose() {
     Cart.revision.removeListener(_onCartChanged);
+    Catalog.revision.removeListener(_onCartChanged);
     _guestName.dispose();
     _guestPhone.dispose();
     _guestAddress.dispose();
