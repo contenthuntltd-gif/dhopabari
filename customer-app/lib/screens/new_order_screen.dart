@@ -5,6 +5,8 @@ import '../data/cart.dart';
 import '../data/mock_data.dart';
 import '../data/admin_mock_data.dart';
 import '../data/business_info.dart';
+import '../data/catalog.dart';
+import '../data/catalog_meta.dart';
 import '../services/language.dart';
 import '../services/admin_service.dart';
 import '../services/auth_service.dart';
@@ -92,6 +94,22 @@ class _NewOrderScreenState extends State<NewOrderScreen> {
     // The cart is global and persistent — reopening this screen shows
     // whatever was left in it. Rebuild on any cart change.
     Cart.revision.addListener(_onCartChanged);
+    // Pull the latest catalog/config so admin changes (prices, items,
+    // categories, delivery) are reflected without an app restart.
+    _refreshCatalog();
+  }
+
+  Future<void> _refreshCatalog() async {
+    try {
+      await Future.wait([
+        Catalog.refresh(),
+        CatalogMeta.load(),
+        DeliveryOptions.load(),
+      ]);
+    } catch (_) {
+      // Offline / table missing — keep the last-known catalog.
+    }
+    if (mounted) setState(() {});
   }
 
   @override

@@ -3,6 +3,8 @@ import '../theme/app_theme.dart';
 import '../data/admin_mock_data.dart';
 import '../data/cart.dart';
 import '../data/catalog.dart';
+import '../data/catalog_meta.dart';
+import '../data/business_info.dart';
 import '../data/mock_data.dart';
 import '../widgets/laundry_icons.dart';
 import '../services/admin_service.dart';
@@ -62,6 +64,18 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _load() async {
+    // Re-pull the DB-driven catalog/config so any admin change (prices, new
+    // items, categories, delivery options) shows up here WITHOUT an app
+    // restart. Runs on first open (initState) and on pull-to-refresh.
+    try {
+      await Future.wait([
+        Catalog.refresh(),
+        CatalogMeta.load(),
+        DeliveryOptions.load(),
+      ]);
+    } catch (_) {
+      // Offline / table missing — keep the last-known catalog.
+    }
     try {
       if (AuthService.isLoggedIn) {
         final rows = await AdminService.orders(limit: 25);
