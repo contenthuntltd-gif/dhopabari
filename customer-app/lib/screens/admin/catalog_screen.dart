@@ -255,6 +255,46 @@ class _PriceListTab extends StatefulWidget {
 class _PriceListTabState extends State<_PriceListTab> {
   bool _saving = false;
 
+  /// Which category the admin is focused on. null = show every category.
+  /// Picking one lets the admin set serials one item at a time in a clean,
+  /// single-category list.
+  String? _filterCat;
+
+  @override
+  void initState() {
+    super.initState();
+    // Live: if the catalog changes (a serial move, another admin's edit), the
+    // list here rebuilds too — serials stay in sync everywhere.
+    Catalog.revision.addListener(_onCatalogChanged);
+  }
+
+  @override
+  void dispose() {
+    Catalog.revision.removeListener(_onCatalogChanged);
+    super.dispose();
+  }
+
+  void _onCatalogChanged() {
+    if (mounted) setState(() {});
+  }
+
+  /// A category filter chip. [value] null = the "সব" (all) chip.
+  Widget _catChip(String label, String? value) {
+    final selected = _filterCat == value;
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: ChoiceChip(
+        label: Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: selected ? Colors.white : AppColors.ink)),
+        selected: selected,
+        showCheckmark: false,
+        selectedColor: AppColors.blue,
+        backgroundColor: Colors.white,
+        side: BorderSide(color: selected ? AppColors.blue : AppColors.line),
+        onSelected: (_) => setState(() => _filterCat = value),
+      ),
+    );
+  }
+
   /// Tap the serial number → type the position this item should move to,
   /// within its category. Precise reordering by serial.
   Future<void> _moveToPosition(PriceItem item) async {
@@ -466,6 +506,30 @@ class _PriceListTabState extends State<_PriceListTab> {
           ),
         ),
         const SizedBox(height: 12),
+        // Category filter — pick one to focus on it and set serials one by
+        // one; "সব" shows every category together.
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              _catChip('সব', null),
+              for (final c in AdminMockData.categories) _catChip(c.nameBn, c.name),
+            ],
+          ),
+        ),
+        const SizedBox(height: 6),
+        // Hint so the serial workflow is obvious.
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+          child: Row(
+            children: const [
+              Icon(Icons.info_outline_rounded, size: 14, color: AppColors.muted),
+              SizedBox(width: 6),
+              Expanded(child: Text('বাঁয়ের নীল সিরিয়াল নম্বরে ট্যাপ করে যেকোনো আইটেম কত নম্বরে যাবে সেট করুন — সব জায়গায় সাথে সাথে বদলে যাবে।', style: TextStyle(fontSize: 11, color: AppColors.muted, fontWeight: FontWeight.w600, height: 1.4))),
+            ],
+          ),
+        ),
+        const SizedBox(height: 6),
         // column headers, price-list style
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
@@ -478,7 +542,8 @@ class _PriceListTabState extends State<_PriceListTab> {
             ],
           ),
         ),
-        for (final cat in AdminMockData.categories) ...[
+        for (final cat in AdminMockData.categories)
+          if (_filterCat == null || _filterCat == cat.name) ...[
           Padding(
             padding: const EdgeInsets.only(bottom: 8, top: 10),
             child: Text(cat.nameBn, style: AppText.h3),
