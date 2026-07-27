@@ -9,6 +9,7 @@ import '../../data/mock_data.dart';
 import '../../services/admin_service.dart';
 import '../../widgets/fade_slide_in.dart';
 import '../../widgets/laundry_icons.dart';
+import '../../widgets/bn_number.dart';
 
 class CatalogScreen extends StatefulWidget {
   const CatalogScreen({super.key});
@@ -254,14 +255,45 @@ class _PriceListTab extends StatefulWidget {
 class _PriceListTabState extends State<_PriceListTab> {
   bool _saving = false;
 
-  /// Moves an item one step up or down within its category.
-  Future<void> _shift(PriceItem item, bool up) async {
-    if (_saving) return;
+  /// Tap the serial number → type the position this item should move to,
+  /// within its category. Precise reordering by serial.
+  Future<void> _moveToPosition(PriceItem item) async {
+    final cat = Catalog.forCategory(item.category);
+    final current = cat.indexWhere((p) => p.id == item.id) + 1;
+    final total = cat.length;
+    final ctrl = TextEditingController(text: '$current');
+    final pos = await showDialog<int>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.lg)),
+        title: Text(item.nameBn, style: AppText.h2),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('বর্তমান সিরিয়াল: $current / $total', style: const TextStyle(fontSize: 12.5, color: AppColors.muted, fontWeight: FontWeight.w600)),
+            const SizedBox(height: 12),
+            TextField(
+              controller: ctrl,
+              keyboardType: TextInputType.number,
+              autofocus: true,
+              decoration: InputDecoration(labelText: 'নতুন সিরিয়াল নম্বর (১–$total)', prefixIcon: const Icon(Icons.format_list_numbered_rounded, size: 20)),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('বাতিল')),
+          ElevatedButton(onPressed: () => Navigator.pop(context, int.tryParse(ctrl.text.trim())), child: const Text('সরান')),
+        ],
+      ),
+    );
+    if (pos == null || pos == current || _saving) return;
     setState(() => _saving = true);
     try {
-      up ? await Catalog.moveUp(item.id) : await Catalog.moveDown(item.id);
+      await Catalog.moveToPosition(item.id, pos);
       if (!mounted) return;
       setState(() => _saving = false);
+      widget.onSnack('${item.nameBn} সিরিয়াল $pos-এ সরানো হয়েছে');
     } catch (e) {
       if (!mounted) return;
       setState(() => _saving = false);
@@ -467,6 +499,22 @@ class _PriceListTabState extends State<_PriceListTab> {
                       ),
                       child: Row(
                         children: [
+                          // Tappable serial number — tap to move this item to an
+                          // exact position within its category.
+                          GestureDetector(
+                            onTap: _saving ? null : () => _moveToPosition(item),
+                            child: Container(
+                              width: 30,
+                              height: 30,
+                              margin: const EdgeInsets.only(right: 8),
+                              decoration: BoxDecoration(color: AppColors.blue.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8), border: Border.all(color: AppColors.blue.withValues(alpha: 0.3))),
+                              alignment: Alignment.center,
+                              child: Text(
+                                toBn(Catalog.forCategory(cat.name).indexOf(item) + 1),
+                                style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w900, color: AppColors.blue),
+                              ),
+                            ),
+                          ),
                           Container(
                             width: 36,
                             height: 36,
@@ -487,24 +535,6 @@ class _PriceListTabState extends State<_PriceListTab> {
                           // English numerals — official price list typography
                           SizedBox(width: 44, child: Text('৳${item.washPrice}', textAlign: TextAlign.right, style: const TextStyle(fontSize: 12.5, color: AppColors.blue, fontWeight: FontWeight.w900))),
                           SizedBox(width: 52, child: Text('৳${item.dryPrice}', textAlign: TextAlign.right, style: const TextStyle(fontSize: 12.5, color: AppColors.teal, fontWeight: FontWeight.w900))),
-                          // Reorder up / down within the category, then edit / delete.
-                          IconButton(
-                            tooltip: 'উপরে',
-                            visualDensity: VisualDensity.compact,
-                            padding: const EdgeInsets.all(4),
-                            constraints: const BoxConstraints(),
-                            icon: const Icon(Icons.keyboard_arrow_up_rounded, size: 22, color: AppColors.blue),
-                            onPressed: _saving ? null : () => _shift(item, true),
-                          ),
-                          IconButton(
-                            tooltip: 'নিচে',
-                            visualDensity: VisualDensity.compact,
-                            padding: const EdgeInsets.all(4),
-                            constraints: const BoxConstraints(),
-                            icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 22, color: AppColors.blue),
-                            onPressed: _saving ? null : () => _shift(item, false),
-                          ),
-                          const SizedBox(width: 2),
                           IconButton(
                             tooltip: 'মূল্য সম্পাদনা',
                             visualDensity: VisualDensity.compact,

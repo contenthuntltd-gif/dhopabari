@@ -176,6 +176,42 @@ class Catalog {
     }
   }
 
+  /// Moves an item to an exact position (1-based) within its category, then
+  /// re-numbers the whole category's sort_order so the order is exact and
+  /// stable. Instant in-memory reorder + DB persist.
+  static Future<void> moveToPosition(String id, int position1Based) async {
+    final item = byId(id);
+    if (item == null) return;
+    final cat = forCategory(item.category);
+    final from = cat.indexWhere((p) => p.id == id);
+    if (from < 0) return;
+    final to = (position1Based - 1).clamp(0, cat.length - 1);
+    if (to == from) return;
+
+    // Reorder within the category.
+    final reordered = List<PriceItem>.of(cat)..removeAt(from);
+    reordered.insert(to, item);
+
+    // Rebuild the flat list: fill this category's slots with the reordered
+    // items in order, leaving every other category untouched.
+    final catIds = cat.map((p) => p.id).toSet();
+    var i = 0;
+    items = [
+      for (final p in items) catIds.contains(p.id) ? reordered[i++] : p,
+    ];
+
+    // Persist: sequential sort_order across the category.
+    try {
+      final db = Supabase.instance.client;
+      for (var n = 0; n < reordered.length; n++) {
+        await db.from('catalog_items').update({'sort_order': n}).eq('id', reordered[n].id);
+      }
+    } catch (e) {
+      await refresh();
+      rethrow;
+    }
+  }
+
   /// Moves an item one place up within its category.
   static Future<void> moveUp(String id) => _shift(id, -1);
 
