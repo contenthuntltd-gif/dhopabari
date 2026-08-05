@@ -477,8 +477,9 @@ class AdminService {
     try {
       return AdminOrder.fromRow(Map<String, dynamic>.from(order as Map));
     } catch (_) {
+      final code = (order as Map)['order_no']?.toString();
       return AdminOrder(
-        id: (order as Map)['order_no']?.toString() ?? '#DB',
+        id: (code == null || code.isEmpty) ? 'অপেক্ষমাণ' : code,
         customerName: name,
         customerPhone: phone,
         service: service,
@@ -505,6 +506,49 @@ class AdminService {
 
   static Future<void> assignRider(String orderId, String? riderId) async {
     await _db.from('orders').update({'rider_id': riderId}).eq('id', orderId);
+  }
+
+  /// Admin edit of the human order number (e.g. '#DB1001'). Verifies a row
+  /// actually changed; a duplicate code (unique constraint) surfaces as a
+  /// PostgrestException, and an RLS block returns zero rows → clear error.
+  static Future<void> updateOrderCode(String orderId, String code) async {
+    final res = await _db
+        .from('orders')
+        .update({'order_no': code})
+        .eq('id', orderId)
+        .select();
+    if ((res as List).isEmpty) {
+      throw Exception('অর্ডার আইডি বদলানো যায়নি — অনুমতি নেই বা অর্ডারটি পাওয়া যায়নি।');
+    }
+    // Resync the auto-number so the NEXT order continues from this one —
+    // e.g. edit an order to #DB50 → the next new order becomes #DB51.
+    final digits = RegExp(r'\d+').firstMatch(code)?.group(0);
+    final n = digits == null ? null : int.tryParse(digits);
+    if (n != null) {
+      try {
+        await _db.rpc('set_order_no_seq', params: {'n': n});
+      } catch (_) {
+        // Best-effort: the ID edit already saved. (If the 0020 migration
+        // isn't applied yet, editing still works — only the auto-continue
+        // won't kick in until it's run.)
+      }
+    }
+  }
+
+  /// Admin edit of a receipt date. [field] must be one of the whitelisted
+  /// timestamp columns. A null [date] clears it. Verifies a row changed.
+  static const _receiptDateColumns = {'picked_up_at', 'delivered_at', 'paid_at'};
+  static Future<void> updateOrderDate(String orderId, String field, DateTime? date) async {
+    assert(_receiptDateColumns.contains(field));
+    if (!_receiptDateColumns.contains(field)) return;
+    final res = await _db
+        .from('orders')
+        .update({field: date?.toUtc().toIso8601String()})
+        .eq('id', orderId)
+        .select();
+    if ((res as List).isEmpty) {
+      throw Exception('তারিখ আপডেট হয়নি — অনুমতি নেই বা অর্ডারটি পাওয়া যায়নি।');
+    }
   }
 
   /// Admin approves an order — the gate that must clear before a rider can be

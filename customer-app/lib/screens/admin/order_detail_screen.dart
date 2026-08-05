@@ -91,6 +91,106 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     }
   }
 
+  DateTime? _receiptDate(String field) => switch (field) {
+        'picked_up_at' => widget.order.pickedUpAt,
+        'delivered_at' => widget.order.deliveredAt,
+        'paid_at' => widget.order.paidAt,
+        _ => null,
+      };
+
+  void _setReceiptDate(String field, DateTime? v) {
+    switch (field) {
+      case 'picked_up_at':
+        widget.order.pickedUpAt = v;
+      case 'delivered_at':
+        widget.order.deliveredAt = v;
+      case 'paid_at':
+        widget.order.paidAt = v;
+    }
+  }
+
+  /// Admin-only: tap a receipt date → pick any date (incl. a few days back).
+  Future<void> _editReceiptDate(String field, String label) async {
+    final now = DateTime.now();
+    final current = _receiptDate(field);
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: current ?? now,
+      firstDate: DateTime(now.year - 2),
+      lastDate: DateTime(now.year + 1, 12, 31),
+      helpText: '$label তারিখ',
+    );
+    if (picked == null) return;
+    // Keep the original time-of-day (or noon) so only the date shifts.
+    final dt = DateTime(picked.year, picked.month, picked.day, current?.hour ?? 12, current?.minute ?? 0);
+    final prev = current;
+    setState(() => _setReceiptDate(field, dt));
+    try {
+      await AdminService.updateOrderDate(widget.order.uuid, field, dt);
+      _snack('$label তারিখ আপডেট হয়েছে');
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _setReceiptDate(field, prev));
+      _snack(AdminService.messageFor(e));
+    }
+  }
+
+  /// A single tappable receipt-date row.
+  Widget _dateRow(String field, String label, IconData icon, Color color) {
+    final d = _receiptDate(field);
+    final text = d == null ? 'নির্ধারণ করুন' : '${toBn(d.day)}/${toBn(d.month)}/${toBn(d.year)}';
+    return InkWell(
+      onTap: () => _editReceiptDate(field, label),
+      borderRadius: BorderRadius.circular(AppRadius.sm),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 4),
+        child: Row(
+          children: [
+            Icon(icon, size: 18, color: color),
+            const SizedBox(width: 10),
+            Expanded(child: Text(label, style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: AppColors.ink))),
+            Text(text, style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800, color: d == null ? AppColors.muted : AppColors.ink)),
+            const SizedBox(width: 6),
+            const Icon(Icons.edit_calendar_rounded, size: 16, color: AppColors.muted),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Admin edit of the order ID — tap the number, type a new one.
+  Future<void> _editOrderId() async {
+    // Don't prefill the "অপেক্ষমাণ" placeholder for a not-yet-approved order.
+    final ctrl = TextEditingController(text: widget.order.id == 'অপেক্ষমাণ' ? '' : widget.order.id);
+    final newId = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.lg)),
+        title: const Text('অর্ডার আইডি এডিট', style: AppText.h2),
+        content: TextField(
+          controller: ctrl,
+          autofocus: true,
+          decoration: const InputDecoration(labelText: 'অর্ডার আইডি', hintText: '#DB1001', prefixIcon: Icon(Icons.tag_rounded, size: 20)),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('বাতিল')),
+          ElevatedButton(onPressed: () => Navigator.pop(context, ctrl.text.trim()), child: const Text('সেভ')),
+        ],
+      ),
+    );
+    if (newId == null || newId.isEmpty || newId == widget.order.id) return;
+    final previous = widget.order.id;
+    setState(() => widget.order.id = newId);
+    try {
+      await AdminService.updateOrderCode(widget.order.uuid, newId);
+      _snack('অর্ডার আইডি আপডেট হয়েছে');
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => widget.order.id = previous);
+      _snack(AdminService.messageFor(e));
+    }
+  }
+
   Future<void> _approve() async {
     setState(() => widget.order.approved = true);
     try {
@@ -142,14 +242,44 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     // Assigning a rider does not change the order status — the rider
     // still has to mark the order picked up themselves (see backend
     // orderController.assignRider).
-    final previous = widget.order.riderName;
-    setState(() => widget.order.riderName = rider.name);
+    final prevName = widget.order.riderName;
+    final prevId = widget.order.riderId;
+    final reassigning = prevId != null;
+    setState(() {
+      widget.order.riderName = rider.name;
+      widget.order.riderId = rider.id;
+    });
     try {
       await AdminService.assignRider(widget.order.uuid, rider.id);
-      _snack('${rider.name}-কে অর্ডার বরাদ্দ করা হয়েছে');
+      _snack(reassigning ? 'রাইডার বদলে ${rider.name} করা হয়েছে' : '${rider.name}-কে অর্ডার বরাদ্দ করা হয়েছে');
     } catch (e) {
       if (!mounted) return;
-      setState(() => widget.order.riderName = previous);
+      setState(() {
+        widget.order.riderName = prevName;
+        widget.order.riderId = prevId;
+      });
+      _snack(AdminService.messageFor(e));
+    }
+  }
+
+  /// Admin-only: remove the assigned rider so the order can be handled
+  /// without one. (assignRider(null) clears rider_id in the DB.)
+  Future<void> _removeRider() async {
+    final prevName = widget.order.riderName;
+    final prevId = widget.order.riderId;
+    setState(() {
+      widget.order.riderName = null;
+      widget.order.riderId = null;
+    });
+    try {
+      await AdminService.assignRider(widget.order.uuid, null);
+      _snack('রাইডার সরানো হয়েছে — রাইডার ছাড়াই অর্ডার চালানো যাবে');
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        widget.order.riderName = prevName;
+        widget.order.riderId = prevId;
+      });
       _snack(AdminService.messageFor(e));
     }
   }
@@ -185,7 +315,22 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(order.id, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w900, color: AppColors.ink)),
+                      // Tap the order ID to edit it.
+                      InkWell(
+                        onTap: _editOrderId,
+                        borderRadius: BorderRadius.circular(6),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 2),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(order.id, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w900, color: AppColors.ink)),
+                              const SizedBox(width: 6),
+                              const Icon(Icons.edit_rounded, size: 15, color: AppColors.muted),
+                            ],
+                          ),
+                        ),
+                      ),
                       StatusBadge(status: order.status, label: AdminMockData.orderStatusesBn[order.status]),
                     ],
                   ),
@@ -340,26 +485,58 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                             ],
                           ),
                         ),
-                        TextButton(
-                          onPressed: order.riderId == null
-                              ? null
-                              : () async {
-                                  final riders = await AdminService.riders();
-                                  if (!context.mounted) return;
-                                  final r = riders.where((r) => r.id == order.riderId).firstOrNull;
-                                  if (r == null) {
-                                    _snack('রাইডার পাওয়া যায়নি');
-                                    return;
-                                  }
-                                  Navigator.push(
-                                    context,
-                                    AppPageRoute(builder: (_) => RiderDetailScreen(rider: r)),
-                                  );
-                                },
-                          child: const Text('বিস্তারিত'),
+                        PopupMenuButton<String>(
+                          tooltip: 'রাইডার অপশন',
+                          icon: const Icon(Icons.more_vert_rounded, color: AppColors.muted),
+                          onSelected: (v) async {
+                            switch (v) {
+                              case 'details':
+                                if (order.riderId == null) return;
+                                final riders = await AdminService.riders();
+                                if (!context.mounted) return;
+                                final r = riders.where((r) => r.id == order.riderId).firstOrNull;
+                                if (r == null) {
+                                  _snack('রাইডার পাওয়া যায়নি');
+                                  return;
+                                }
+                                Navigator.push(context, AppPageRoute(builder: (_) => RiderDetailScreen(rider: r)));
+                              case 'change':
+                                _assignRider();
+                              case 'remove':
+                                _removeRider();
+                            }
+                          },
+                          itemBuilder: (_) => const [
+                            PopupMenuItem(value: 'details', child: Text('বিস্তারিত')),
+                            PopupMenuItem(value: 'change', child: Text('রাইডার বদলান')),
+                            PopupMenuItem(value: 'remove', child: Text('রাইডার সরান')),
+                          ],
                         ),
                       ],
                     ),
+            ),
+          ),
+          const SizedBox(height: 18),
+          // Admin-editable receipt dates — backdate a memo if needed.
+          FadeSlideIn(
+            delayMs: 90,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(AppRadius.md), border: Border.all(color: AppColors.line)),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Padding(
+                    padding: EdgeInsets.only(left: 4, top: 6, bottom: 2),
+                    child: Text('রিসিট তারিখ', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w900, color: AppColors.ink)),
+                  ),
+                  _dateRow('picked_up_at', 'পিকআপ রিসিট', Icons.local_shipping_rounded, AppColors.blue),
+                  const Divider(height: 1, color: AppColors.line),
+                  _dateRow('delivered_at', 'ডেলিভারি রিসিট', Icons.home_rounded, AppColors.teal),
+                  const Divider(height: 1, color: AppColors.line),
+                  _dateRow('paid_at', 'পেমেন্ট রিসিট', Icons.payments_rounded, AppColors.amber),
+                ],
+              ),
             ),
           ),
           const SizedBox(height: 18),
@@ -423,20 +600,35 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                 ],
               ),
             ),
+            // Admin-only: undo an accidental forward step.
+            if (_backButton() != null) ...[
+              const SizedBox(height: 10),
+              FadeSlideIn(delayMs: 150, child: _backButton()!),
+            ],
           ] else
             FadeSlideIn(
               delayMs: 100,
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(color: isCancelled ? AppColors.dangerSoft : AppColors.tealSoft, borderRadius: BorderRadius.circular(AppRadius.sm)),
-                child: Row(
-                  children: [
-                    Icon(isCancelled ? Icons.cancel_rounded : Icons.check_circle_rounded, color: isCancelled ? AppColors.danger : AppColors.teal, size: 20),
-                    const SizedBox(width: 10),
-                    Text(isCancelled ? 'এই অর্ডারটি বাতিল করা হয়েছে' : 'এই অর্ডারটি ডেলিভারি সম্পন্ন হয়েছে', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800, color: isCancelled ? AppColors.danger : const Color(0xFF0C8B85))),
+              child: Column(
+                children: [
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(color: isCancelled ? AppColors.dangerSoft : AppColors.tealSoft, borderRadius: BorderRadius.circular(AppRadius.sm)),
+                    child: Row(
+                      children: [
+                        Icon(isCancelled ? Icons.cancel_rounded : Icons.check_circle_rounded, color: isCancelled ? AppColors.danger : AppColors.teal, size: 20),
+                        const SizedBox(width: 10),
+                        Text(isCancelled ? 'এই অর্ডারটি বাতিল করা হয়েছে' : 'এই অর্ডারটি ডেলিভারি সম্পন্ন হয়েছে', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800, color: isCancelled ? AppColors.danger : const Color(0xFF0C8B85))),
+                      ],
+                    ),
+                  ),
+                  // Delivered by mistake? Admin can step it back. (Cancelled is
+                  // final and has no back.)
+                  if (!isCancelled && _backButton() != null) ...[
+                    const SizedBox(height: 10),
+                    _backButton()!,
                   ],
-                ),
+                ],
               ),
             ),
         ],
@@ -458,6 +650,49 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       ),
     );
     if (confirmed == true) _changeStatus('Cancelled');
+  }
+
+  /// The linear processing flow (excludes the terminal 'Cancelled').
+  static const _flow = ['Confirmed', 'Picked Up', 'Cleaning', 'Packaging Done', 'Out for Delivery', 'Delivered'];
+
+  /// Admin-only: step the order ONE status back — for an accidental tap on
+  /// "next"/"delivery". Asks for confirmation first. Not available at
+  /// 'Confirmed' (nothing before it) or 'Cancelled'.
+  Future<void> _confirmGoBack() async {
+    final idx = _flow.indexOf(widget.order.status);
+    if (idx <= 0) return; // at the first step or a status outside the flow
+    final prev = _flow[idx - 1];
+    final prevBn = AdminMockData.orderStatusesBn[prev]!;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.lg)),
+        title: const Text('আগের ধাপে ফেরাবেন?', style: AppText.h2),
+        content: Text('অর্ডারটি "$prevBn" ধাপে ফিরিয়ে নেওয়া হবে।', style: AppText.bodyMuted),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('না')),
+          ElevatedButton(onPressed: () => Navigator.pop(context, true), child: const Text('হ্যাঁ, ফেরান')),
+        ],
+      ),
+    );
+    if (confirmed == true) _changeStatus(prev);
+  }
+
+  /// The "◀ আগের ধাপে ফেরান" button (labelled with the previous step), or
+  /// null when there is no previous step to go back to.
+  Widget? _backButton() {
+    final idx = _flow.indexOf(widget.order.status);
+    if (idx <= 0) return null;
+    final prevBn = AdminMockData.orderStatusesBn[_flow[idx - 1]]!;
+    return SizedBox(
+      width: double.infinity,
+      child: OutlinedButton.icon(
+        style: OutlinedButton.styleFrom(foregroundColor: AppColors.muted, side: const BorderSide(color: AppColors.line)),
+        onPressed: _confirmGoBack,
+        icon: const Icon(Icons.arrow_back_rounded, size: 17),
+        label: Text('আগের ধাপে ফেরান: $prevBn'),
+      ),
+    );
   }
 
   Widget _row(String label, String value) {

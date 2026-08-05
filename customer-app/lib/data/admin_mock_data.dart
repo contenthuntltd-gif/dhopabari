@@ -12,8 +12,9 @@ export 'catalog_meta.dart' show CatalogCategory, CatalogService;
 /// unmigrated.
 
 class AdminOrder {
-  /// Display number (#DB123456). [uuid] is the database key to update by.
-  final String id;
+  /// Display number (#DB123456). Admin-editable. [uuid] is the immutable
+  /// database key to update by.
+  String id;
   final String uuid;
   final String? customerId;
   final String customerName;
@@ -37,7 +38,10 @@ class AdminOrder {
   bool approved;
   final String date;
   final DateTime? createdAt;
-  final DateTime? deliveredAt;
+  // Admin-editable receipt dates (pickup / delivery / payment).
+  DateTime? pickedUpAt;
+  DateTime? deliveredAt;
+  DateTime? paidAt;
   final String address;
   final String paymentMethod;
   AdminOrder({
@@ -59,7 +63,9 @@ class AdminOrder {
     this.approved = false,
     required this.date,
     this.createdAt,
+    this.pickedUpAt,
     this.deliveredAt,
+    this.paidAt,
     required this.address,
     required this.paymentMethod,
   });
@@ -74,8 +80,10 @@ class AdminOrder {
         .map((m) => Map<String, dynamic>.from(m))
         .toList();
 
+    final code = r['order_no'] as String?;
     return AdminOrder(
-      id: (r['order_no'] as String?) ?? '#DB??????',
+      // No number until an admin approves the order — show "অপেক্ষমাণ" till then.
+      id: (code == null || code.isEmpty) ? 'অপেক্ষমাণ' : code,
       uuid: r['id'] as String,
       customerId: r['customer_id'] as String?,
       customerName: (customer?['name'] as String?) ?? 'নামহীন',
@@ -93,7 +101,9 @@ class AdminOrder {
       approved: r['approved'] as bool? ?? false,
       date: bnDateTime(r['created_at'] as String?),
       createdAt: DateTime.tryParse((r['created_at'] as String?) ?? '')?.toLocal(),
+      pickedUpAt: DateTime.tryParse((r['picked_up_at'] as String?) ?? '')?.toLocal(),
       deliveredAt: DateTime.tryParse((r['delivered_at'] as String?) ?? '')?.toLocal(),
+      paidAt: DateTime.tryParse((r['paid_at'] as String?) ?? '')?.toLocal(),
       address: (r['address'] as String?) ?? '',
       paymentMethod: (r['payment_method'] as String?) ?? 'নগদ (COD)',
     );

@@ -240,7 +240,8 @@ class ReceiptData {
       receiptNumber: _nextNumber(),
       orderId: order.id,
       type: ReceiptType.pickup,
-      issuedAt: DateTime.now(),
+      // Admin-set pickup date, else order date, else now.
+      issuedAt: order.pickedUpAt ?? order.createdAt ?? DateTime.now(),
       customerName: order.customerName,
       customerPhone: order.customerPhone,
       customerId: 'CUST-${order.customerPhone}',
@@ -258,7 +259,8 @@ class ReceiptData {
       receiptNumber: _nextNumber(),
       orderId: order.id,
       type: ReceiptType.delivery,
-      issuedAt: DateTime.now(),
+      // Admin-set delivery date, else now.
+      issuedAt: order.deliveredAt ?? DateTime.now(),
       customerName: order.customerName,
       customerPhone: order.customerPhone,
       customerId: 'CUST-${order.customerPhone}',
@@ -276,7 +278,8 @@ class ReceiptData {
       receiptNumber: _nextNumber(),
       orderId: order.id,
       type: ReceiptType.payment,
-      issuedAt: DateTime.now(),
+      // Admin-set payment date, else delivery date, else now.
+      issuedAt: order.paidAt ?? order.deliveredAt ?? DateTime.now(),
       customerName: order.customerName,
       customerPhone: order.customerPhone,
       customerId: 'CUST-${order.customerPhone}',
