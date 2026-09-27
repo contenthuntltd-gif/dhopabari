@@ -1,0 +1,22 @@
+# Keep the build context small. A Flutter project's build/ and .dart_tool/
+# directories are hundreds of megabytes and are rebuilt inside the image
+# anyway, so shipping them to the daemon only makes every deploy slower.
+build/
+.dart_tool/
+.packages
+.flutter-plugins
+.flutter-plugins-dependencies
+
+# Platform folders the web build never reads.
+android/
+ios/
+macos/
+windows/
+linux/
+
+test/
+.idea/
+.vscode/
+*.iml
+.git
+.gitignore
