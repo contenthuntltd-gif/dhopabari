@@ -17,8 +17,10 @@ class AdminOrder {
   String id;
   final String uuid;
   final String? customerId;
-  final String customerName;
-  final String customerPhone;
+  /// Shown on this order. Normally the customer's profile name, but an
+  /// admin can correct it for this order alone (orders.customer_name).
+  String customerName;
+  String customerPhone;
   String? riderId;
   String? riderName;
   String? riderPhone;
@@ -31,7 +33,9 @@ class AdminOrder {
   /// orders — consumers must fall back gracefully.
   final List<Map<String, dynamic>> items;
   final int pieces;
-  final int total;
+  /// The charged amount. Admin-editable — a price agreed at the door can
+  /// differ from what the catalog totalled.
+  int total;
   String status;
   /// Admin approval gate — an order must be approved before a rider can be
   /// assigned to it. New orders arrive unapproved (false).
@@ -70,6 +74,13 @@ class AdminOrder {
     required this.paymentMethod,
   });
 
+  /// Treats an empty override the same as an absent one, so a field cleared
+  /// to '' in the database falls back to the profile rather than showing blank.
+  static String? _orEmpty(Object? v) {
+    final s = v as String?;
+    return (s == null || s.trim().isEmpty) ? null : s;
+  }
+
   /// Builds from an `orders` row selected with the embedded
   /// `customer:customer_id(...)` and `rider:rider_id(...)` joins.
   factory AdminOrder.fromRow(Map<String, dynamic> r) {
@@ -86,8 +97,10 @@ class AdminOrder {
       id: (code == null || code.isEmpty) ? 'অপেক্ষমাণ' : code,
       uuid: r['id'] as String,
       customerId: r['customer_id'] as String?,
-      customerName: (customer?['name'] as String?) ?? 'নামহীন',
-      customerPhone: (customer?['phone'] as String?) ?? '',
+      // An admin correction on the order wins over the profile; null or
+      // empty means nobody edited it, so the profile stands.
+      customerName: _orEmpty(r['customer_name']) ?? (customer?['name'] as String?) ?? 'নামহীন',
+      customerPhone: _orEmpty(r['customer_phone']) ?? (customer?['phone'] as String?) ?? '',
       riderId: r['rider_id'] as String?,
       riderName: rider?['name'] as String?,
       riderPhone: rider?['phone'] as String?,

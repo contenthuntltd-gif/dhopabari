@@ -535,6 +535,63 @@ class AdminService {
     }
   }
 
+  /// Admin edit of the name and phone shown on ONE order.
+  ///
+  /// Written to the order's own columns, not the customer's profile, so
+  /// correcting a typo here cannot rewrite the customer's account or the
+  /// other orders they have placed. Pass [alsoUpdateProfile] to additionally
+  /// push the change to the account — that is the caller's explicit choice,
+  /// never a side effect of fixing one order.
+  ///
+  /// An empty string clears the override and the profile value shows again.
+  static Future<void> updateOrderCustomer(
+    String orderId, {
+    String? name,
+    String? phone,
+    String? customerId,
+    bool alsoUpdateProfile = false,
+  }) async {
+    if (name == null && phone == null) return;
+    final res = await _db
+        .from('orders')
+        .update({
+          if (name != null) 'customer_name': name.trim().isEmpty ? null : name.trim(),
+          if (phone != null) 'customer_phone': phone.trim().isEmpty ? null : phone.trim(),
+        })
+        .eq('id', orderId)
+        .select();
+    if ((res as List).isEmpty) {
+      throw Exception('কাস্টমারের তথ্য আপডেট হয়নি — অনুমতি নেই বা অর্ডারটি পাওয়া যায়নি।');
+    }
+
+    // The profile update is deliberately last and non-fatal: the order is
+    // already corrected, and a guest order may have no account to update.
+    if (alsoUpdateProfile && customerId != null) {
+      try {
+        await _db.from('profiles').update({
+          if (name != null && name.trim().isNotEmpty) 'name': name.trim(),
+          if (phone != null && phone.trim().isNotEmpty) 'phone': phone.trim(),
+        }).eq('id', customerId);
+      } catch (_) {
+        throw Exception('অর্ডারে সেভ হয়েছে, কিন্তু কাস্টমারের প্রোফাইলে সেভ করা যায়নি।');
+      }
+    }
+  }
+
+  /// Admin edit of the charged amount. Negative totals are refused here
+  /// rather than left to reach a receipt and a settlement report.
+  static Future<void> updateOrderTotal(String orderId, int total) async {
+    if (total < 0) throw AdminServiceException('দাম ঋণাত্মক হতে পারে না');
+    final res = await _db
+        .from('orders')
+        .update({'total': total})
+        .eq('id', orderId)
+        .select();
+    if ((res as List).isEmpty) {
+      throw Exception('দাম আপডেট হয়নি — অনুমতি নেই বা অর্ডারটি পাওয়া যায়নি।');
+    }
+  }
+
   /// Admin edit of a receipt date. [field] must be one of the whitelisted
   /// timestamp columns. A null [date] clears it. Verifies a row changed.
   static const _receiptDateColumns = {'picked_up_at', 'delivered_at', 'paid_at'};

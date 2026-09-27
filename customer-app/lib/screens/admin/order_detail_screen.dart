@@ -191,6 +191,142 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     }
   }
 
+  /// Admin edit of the name and phone on this order — tap the customer card.
+  ///
+  /// The edit is saved to the order, not the account, so a correction here
+  /// cannot rename the customer everywhere. The checkbox is the way to ask
+  /// for that on purpose, and it only appears when there is an account to
+  /// push to (a guest order has none).
+  Future<void> _editCustomer() async {
+    final order = widget.order;
+    final nameCtrl = TextEditingController(text: order.customerName == 'নামহীন' ? '' : order.customerName);
+    final phoneCtrl = TextEditingController(text: order.customerPhone);
+    var alsoProfile = false;
+
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setLocal) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.lg)),
+          title: const Text('কাস্টমারের তথ্য এডিট', style: AppText.h2),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameCtrl,
+                autofocus: true,
+                textCapitalization: TextCapitalization.words,
+                decoration: const InputDecoration(labelText: 'নাম', prefixIcon: Icon(Icons.person_rounded, size: 20)),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: phoneCtrl,
+                keyboardType: TextInputType.phone,
+                decoration: const InputDecoration(labelText: 'মোবাইল নম্বর', hintText: '01XXXXXXXXX', prefixIcon: Icon(Icons.phone_rounded, size: 20)),
+              ),
+              if (order.customerId != null) ...[
+                const SizedBox(height: 6),
+                CheckboxListTile(
+                  value: alsoProfile,
+                  onChanged: (v) => setLocal(() => alsoProfile = v ?? false),
+                  contentPadding: EdgeInsets.zero,
+                  controlAffinity: ListTileControlAffinity.leading,
+                  title: const Text('কাস্টমারের প্রোফাইলেও সেভ করুন', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700)),
+                  subtitle: const Text('না দিলে শুধু এই অর্ডারে বদলাবে', style: TextStyle(fontSize: 11, color: AppColors.muted)),
+                ),
+              ],
+            ],
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text('বাতিল')),
+            ElevatedButton(onPressed: () => Navigator.pop(context, true), child: const Text('সেভ')),
+          ],
+        ),
+      ),
+    );
+    if (saved != true) return;
+
+    final newName = nameCtrl.text.trim();
+    final newPhone = phoneCtrl.text.trim();
+    if (newName == order.customerName && newPhone == order.customerPhone) return;
+
+    final prevName = order.customerName;
+    final prevPhone = order.customerPhone;
+    setState(() {
+      order.customerName = newName.isEmpty ? 'নামহীন' : newName;
+      order.customerPhone = newPhone;
+    });
+    try {
+      await AdminService.updateOrderCustomer(
+        order.uuid,
+        name: newName,
+        phone: newPhone,
+        customerId: order.customerId,
+        alsoUpdateProfile: alsoProfile,
+      );
+      _snack(alsoProfile ? 'অর্ডার ও প্রোফাইল দুটোতেই সেভ হয়েছে' : 'এই অর্ডারের তথ্য আপডেট হয়েছে');
+    } catch (e) {
+      if (!mounted) return;
+      // Put the old values back — the card must not show a change the
+      // database refused.
+      setState(() {
+        order.customerName = prevName;
+        order.customerPhone = prevPhone;
+      });
+      _snack(AdminService.messageFor(e));
+    }
+  }
+
+  /// Admin edit of the charged amount — tap the total.
+  Future<void> _editTotal() async {
+    final ctrl = TextEditingController(text: '${widget.order.total}');
+    final raw = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.lg)),
+        title: const Text('দাম এডিট', style: AppText.h2),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: ctrl,
+              autofocus: true,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(labelText: 'সর্বমোট (৳)', prefixIcon: Icon(Icons.payments_rounded, size: 20)),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'আইটেমের তালিকা অপরিবর্তিত থাকবে — শুধু আদায়যোগ্য মোট টাকা বদলাবে।',
+              style: TextStyle(fontSize: 11, color: AppColors.muted, fontWeight: FontWeight.w600),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('বাতিল')),
+          ElevatedButton(onPressed: () => Navigator.pop(context, ctrl.text.trim()), child: const Text('সেভ')),
+        ],
+      ),
+    );
+    if (raw == null || raw.isEmpty) return;
+    final newTotal = int.tryParse(raw);
+    if (newTotal == null || newTotal < 0) {
+      _snack('সঠিক একটি টাকার অঙ্ক লিখুন');
+      return;
+    }
+    if (newTotal == widget.order.total) return;
+
+    final previous = widget.order.total;
+    setState(() => widget.order.total = newTotal);
+    try {
+      await AdminService.updateOrderTotal(widget.order.uuid, newTotal);
+      _snack('দাম আপডেট হয়েছে');
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => widget.order.total = previous);
+      _snack(AdminService.messageFor(e));
+    }
+  }
+
   Future<void> _approve() async {
     setState(() => widget.order.approved = true);
     try {
@@ -342,12 +478,27 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                   _row('ঠিকানা', order.address),
                   _row('পেমেন্ট', order.paymentMethod),
                   const Divider(height: 24, color: AppColors.line),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text('সর্বমোট', style: TextStyle(fontSize: 14.5, fontWeight: FontWeight.w900, color: AppColors.ink)),
-                      Text('৳${order.total}', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: AppColors.blue)),
-                    ],
+                  // Tap the total to edit the charged amount.
+                  InkWell(
+                    onTap: _editTotal,
+                    borderRadius: BorderRadius.circular(6),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 2),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text('সর্বমোট', style: TextStyle(fontSize: 14.5, fontWeight: FontWeight.w900, color: AppColors.ink)),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text('৳${order.total}', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: AppColors.blue)),
+                              const SizedBox(width: 6),
+                              const Icon(Icons.edit_rounded, size: 15, color: AppColors.muted),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -418,13 +569,27 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                     child: const Icon(Icons.person_rounded, color: AppColors.blue),
                   ),
                   const SizedBox(width: 12),
+                  // Tap the name/phone to correct them for this order.
                   Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(order.customerName, style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w800, color: AppColors.ink)),
-                        Text(order.customerPhone, style: const TextStyle(fontSize: 11.5, color: AppColors.muted, fontWeight: FontWeight.w600)),
-                      ],
+                    child: InkWell(
+                      onTap: _editCustomer,
+                      borderRadius: BorderRadius.circular(6),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Flexible(child: Text(order.customerName, style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w800, color: AppColors.ink), overflow: TextOverflow.ellipsis)),
+                                const SizedBox(width: 6),
+                                const Icon(Icons.edit_rounded, size: 14, color: AppColors.muted),
+                              ],
+                            ),
+                            Text(order.customerPhone, style: const TextStyle(fontSize: 11.5, color: AppColors.muted, fontWeight: FontWeight.w600)),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
                   TextButton(

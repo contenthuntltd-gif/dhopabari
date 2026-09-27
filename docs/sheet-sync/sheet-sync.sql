@@ -38,8 +38,11 @@ begin
   payload := jsonb_build_object(
     'uuid',           new.id,
     'order_no',       coalesce(nullif(new.order_no, ''), 'অপেক্ষমাণ'),
-    'customer_name',  coalesce(cust.name, ''),
-    'customer_phone', coalesce(cust.phone, ''),
+    -- An admin can correct the name/phone on a single order (migration
+    -- 0023). That correction is what belongs in the sheet; the profile is
+    -- only the fallback for an order nobody has edited.
+    'customer_name',  coalesce(nullif(new.customer_name, ''),  cust.name,  ''),
+    'customer_phone', coalesce(nullif(new.customer_phone, ''), cust.phone, ''),
     'service',        coalesce(new.service, ''),
     'category',       coalesce(new.category, ''),
     'items',          coalesce(items_text, ''),
