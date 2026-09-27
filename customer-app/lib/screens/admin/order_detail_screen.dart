@@ -10,6 +10,7 @@ import '../../widgets/centered_max_width.dart';
 import '../../data/receipt_data.dart';
 import '../receipt_screen.dart';
 import 'customer_detail_screen.dart';
+import 'order_items_edit_screen.dart';
 import 'rider_detail_screen.dart';
 
 class OrderDetailScreen extends StatefulWidget {
@@ -327,6 +328,20 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     }
   }
 
+  /// Opens the item editor. It saves on its own and writes the new items,
+  /// pieces and total back onto [widget.order], so this screen only has to
+  /// rebuild once it returns.
+  Future<void> _editItems() async {
+    final changed = await Navigator.push<bool>(
+      context,
+      AppPageRoute(builder: (_) => OrderItemsEditScreen(order: widget.order)),
+    );
+    if (changed == true && mounted) {
+      setState(() {});
+      _snack('অর্ডারের আইটেম আপডেট হয়েছে');
+    }
+  }
+
   Future<void> _approve() async {
     setState(() => widget.order.approved = true);
     try {
@@ -473,7 +488,30 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                   Text(order.date, style: const TextStyle(fontSize: 11.5, color: AppColors.muted, fontWeight: FontWeight.w600)),
                   const Divider(height: 24, color: AppColors.line),
                   _row('সার্ভিস', '${order.service} • ${order.category}'),
-                  _row('আইটেম', order.itemsSummary),
+                  // Tap the items to add, remove or re-price them.
+                  InkWell(
+                    onTap: _editItems,
+                    borderRadius: BorderRadius.circular(6),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 2),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(
+                            width: 96,
+                            child: Text('আইটেম',
+                                style: TextStyle(fontSize: 12.5, color: AppColors.muted, fontWeight: FontWeight.w700)),
+                          ),
+                          Expanded(
+                            child: Text(order.itemsSummary,
+                                style: const TextStyle(fontSize: 12.5, color: AppColors.ink, fontWeight: FontWeight.w700)),
+                          ),
+                          const SizedBox(width: 6),
+                          const Icon(Icons.edit_rounded, size: 15, color: AppColors.muted),
+                        ],
+                      ),
+                    ),
+                  ),
                   _row('মোট পিস', '${order.pieces}'),
                   _row('ঠিকানা', order.address),
                   _row('পেমেন্ট', order.paymentMethod),

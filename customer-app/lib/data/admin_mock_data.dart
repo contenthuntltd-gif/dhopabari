@@ -26,13 +26,20 @@ class AdminOrder {
   String? riderPhone;
   final String service;
   final String category;
-  final String itemsSummary;
+  /// Human summary of [items] ("শার্ট x৩"). Stored rather than computed
+  /// because the demo orders carry a summary with no line items behind it;
+  /// it is refreshed whenever an admin edits the items.
+  String itemsSummary;
 
   /// The real line items as stored in orders.items (jsonb snapshot):
   /// maps with name/name_bn/service/qty/unit_price. Empty for legacy/mock
   /// orders — consumers must fall back gracefully.
+  ///
+  /// Admin-editable: items can be added, removed or re-priced after the
+  /// order was placed. [pieces] and [total] are recomputed from it, so the
+  /// three always agree.
   final List<Map<String, dynamic>> items;
-  final int pieces;
+  int pieces;
   /// The charged amount. Admin-editable — a price agreed at the door can
   /// differ from what the catalog totalled.
   int total;
@@ -107,7 +114,8 @@ class AdminOrder {
       service: (r['service'] as String?) ?? '',
       category: (r['category'] as String?) ?? '',
       itemsSummary: summarizeItems(items),
-      items: items,
+      // A growable copy — the admin item editor writes back into this list.
+      items: List<Map<String, dynamic>>.from(items),
       pieces: (r['pieces'] as num?)?.toInt() ?? 0,
       total: (r['total'] as num?)?.toInt() ?? 0,
       status: (r['status'] as String?) ?? 'Confirmed',

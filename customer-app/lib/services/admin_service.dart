@@ -578,6 +578,31 @@ class AdminService {
     }
   }
 
+  /// Admin edit of the items inside an existing order.
+  ///
+  /// [items], [pieces] and [total] are written together in one statement.
+  /// Splitting them would leave a window where the order's total does not
+  /// match its lines — and that window is exactly when a rider prints the
+  /// memo.
+  static Future<void> updateOrderItems(
+    String orderId, {
+    required List<Map<String, dynamic>> items,
+    required int pieces,
+    required int total,
+  }) async {
+    if (total < 0 || pieces < 0) {
+      throw AdminServiceException('অর্ডারের হিসাব সঠিক নয়');
+    }
+    final res = await _db
+        .from('orders')
+        .update({'items': items, 'pieces': pieces, 'total': total})
+        .eq('id', orderId)
+        .select();
+    if ((res as List).isEmpty) {
+      throw Exception('আইটেম আপডেট হয়নি — অনুমতি নেই বা অর্ডারটি পাওয়া যায়নি।');
+    }
+  }
+
   /// Admin edit of the charged amount. Negative totals are refused here
   /// rather than left to reach a receipt and a settlement report.
   static Future<void> updateOrderTotal(String orderId, int total) async {
