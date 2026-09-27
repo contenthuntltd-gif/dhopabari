@@ -17,6 +17,22 @@
 # ---------- build ----------
 FROM ghcr.io/cirruslabs/flutter:stable AS build
 
+# pubspec.yaml requires Dart ^3.12.2, and the SDK bundled in this image is
+# Flutter 3.44.0 / Dart 3.12.0 — two patch versions short, which fails
+# `pub get` outright. The image's own version tags stop at 3.44.0, so the
+# checkout is moved to the exact Flutter release the app needs.
+#
+# Pinned rather than tracking stable on purpose: a business site should build
+# the same way in six months as it does today, and not break because Flutter
+# published something new.
+ARG FLUTTER_VERSION=3.47.5
+
+RUN git config --global --add safe.directory "$FLUTTER_HOME" \
+ && cd "$FLUTTER_HOME" \
+ && git fetch --depth 1 origin "refs/tags/${FLUTTER_VERSION}:refs/tags/${FLUTTER_VERSION}" \
+ && git checkout -q "tags/${FLUTTER_VERSION}" \
+ && flutter --version
+
 WORKDIR /app
 
 # Copy the manifests first so `pub get` is cached and only re-runs when the
@@ -27,9 +43,9 @@ RUN flutter pub get
 COPY . .
 
 # --pwa-strategy=none disables the Flutter service worker. Together with the
-# no-store headers below it means a browser can never hold on to a stale app:
-# every deploy is picked up on the next ordinary refresh, with no incognito
-# window and no cache clearing.
+# no-store headers in nginx.conf it means a browser can never hold on to a
+# stale app: every deploy is picked up on the next ordinary refresh, with no
+# incognito window and no cache clearing.
 RUN flutter build web --release --pwa-strategy=none
 
 # ---------- serve ----------
